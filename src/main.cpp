@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <vector>
 #include "Lexer.h"
 
 using namespace std;
@@ -18,10 +19,11 @@ int main() {
     
     if (!file.is_open()) {
         cerr << "Invalid file" << endl;
-        return;
+        return 1;
     }
 
     Lexer lexer(file);
-    
+    vector <Token> tokenize = lexer.runLexer();
+
     return 0;
 }

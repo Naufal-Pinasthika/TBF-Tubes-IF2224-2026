@@ -1,6 +1,11 @@
 #pragma once
 
 #include <fstream>
+#include <string>
+#include "Token.h"
+#include <unordered_map>
+#include <vector>
+#include <cctype>
 
 using namespace std;
 
@@ -10,6 +15,6 @@ private:
 
 public:
     Lexer(ifstream& input);
-    void runLexer();
-    ~Lexer();
+    vector<Token> runLexer();
+
 };
