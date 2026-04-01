@@ -42,11 +42,11 @@ static const unordered_map<string, string> SYMBOLS = {
     {"*", "times"},
     {"/", "rdiv"},
     {"==", "eql"},
-    {"<>", "neq"},
+    // {"<>", "neq"},
     {">", "gtr"},
     {">=", "geq"},
-    {"<", "lss"},
-    {"<=", "leq"},
+    // {"<", "lss"},
+    // {"<=", "leq"},
     {"(", "lparent"},
     {")", "rparent"},
     {"[", "lbrackm"},
@@ -65,29 +65,56 @@ vector<Token> Lexer::runLexer() {
     vector <Token> tokens;
     char ch;
     string lexeme;
-    while (input.get(ch)) {
-        while (ch != ' ' || ch != '\t' || ch != '\n') {
-            ch = tolower(ch);
-            lexeme += ch;   
+
+    while (input.peek() != EOF) {
+
+        // Ignore whitespace
+        while (input.peek() != EOF && isspace(input.peek())) {
+            input.get();
         }
 
-        auto keyword = KEYWORDS.find(lexeme);
-        if (keyword != KEYWORDS.end()) {
-            string type = KEYWORDS.at(lexeme);
-            Token token = Token(type, lexeme);
-            tokens.push_back(token);
-            
-        } else {
-            Token token = Token("ident", lexeme);
-            tokens.push_back(token);            
-        }
-        // intcon
-        // realcon
-        // char
-        // string
+        // Grab char and check the current state its in
+        char ch = static_cast<char> (input.peek());
 
-        lexeme = "";
+        if (isalpha(ch)){
+
+        } else if (isdigit(ch)){
+
+        } else if (ch == ':' || ch == ';' || ch == '+' || ch == '<' || ch == '>' || ch == '*' || ch == '/') {
+            Token result = scanSymbol();
+        }
+        
     }
+    
+
 
     return tokens;
+}
+
+Token Lexer::scanSymbol() {
+    char ch = static_cast <char>(input.get());
+    if (ch == '<') {
+
+        if (input.peek() == '=') {
+            input.get();
+            return Token("<=", "leq");
+        }
+
+        if (input.peek() == '>') {
+            input.get();
+            return Token("<>", "neq");
+        }
+
+        if (isspace(input.peek())) {
+            return Token("<", "lss");
+        }
+
+    } else if (ch == '=') {
+        if (input.peek() == '=') {
+            input.get();
+            return Token("==", "eql");
+        }        
+    } else if (ch == '>')
+
+    // please continue this, i wanna sleep
 }

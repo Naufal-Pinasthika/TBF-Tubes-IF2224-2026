@@ -16,5 +16,8 @@ private:
 public:
     Lexer(ifstream& input);
     vector<Token> runLexer();
+    Token scanSymbol();
+    Token scanIndentOrKeyword();
+    Token scanNumber();
 
 };
