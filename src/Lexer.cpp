@@ -36,6 +36,29 @@ static const unordered_map<string, string> KEYWORDS = {
     {"not", "notsy"}
 };
 
+static const unordered_map<string, string> SYMBOLS = {
+    {"+", "plus"},
+    {"-", "minus"},
+    {"*", "times"},
+    {"/", "rdiv"},
+    {"==", "eql"},
+    {"<>", "neq"},
+    {">", "gtr"},
+    {">=", "geq"},
+    {"<", "lss"},
+    {"<=", "leq"},
+    {"(", "lparent"},
+    {")", "rparent"},
+    {"[", "lbrackm"},
+    {"]", "rbrack"},
+    {",", "comma"},
+    {";", "semicolon"},
+    {".", "period"},
+    {":", "colon"},
+    {":=", "becomes"}
+};
+
+
 Lexer::Lexer(ifstream& input) : input(input) {}
 
 vector<Token> Lexer::runLexer() {
@@ -58,12 +81,13 @@ vector<Token> Lexer::runLexer() {
             Token token = Token("ident", lexeme);
             tokens.push_back(token);            
         }
+        // intcon
+        // realcon
+        // char
+        // string
 
         lexeme = "";
     }
 
     return tokens;
-}
-Lexer::~Lexer()
-{
 }

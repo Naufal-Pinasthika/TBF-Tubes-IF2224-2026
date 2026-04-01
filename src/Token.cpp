@@ -11,3 +11,17 @@ string Token::getType() const {
 string Token::getLexeme() const {
     return lexeme;
 }
+
+string Token::toString() const {
+    string result = "";
+    if (this->type == "intcon" || this->type == "realcon" || this->type == "charcon" || this->type == "string" || this->type == "ident" || this->type == "comment") {
+        result += this->type;
+        result += " (";
+        result += this->lexeme;
+        result += ")";
+        return result;
+    }
+    else {
+        return this->lexeme;
+    }
+}

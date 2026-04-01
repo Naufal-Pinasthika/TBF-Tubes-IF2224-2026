@@ -10,5 +10,5 @@ public:
     Token(const string& type, const string& lexeme);
     string getType() const;
     string getLexeme() const;
-
-};
+    string toString() const;
+};  
