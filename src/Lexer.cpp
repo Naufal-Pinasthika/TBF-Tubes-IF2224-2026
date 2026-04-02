@@ -92,8 +92,9 @@ vector<Token> Lexer::runLexer() {
             Token result = scanSymbol();
             tokens.push_back(result);
         } else {
-            // Skip unknown characters to prevent infinite loop
-            input.get();
+            // any symbol that are not recongnized as valid token will be pass as "unknown" token
+            string unknownSymbol = string(1, ch);
+            Token result = Token("unknown", unknownSymbol);
         }
         
     }
