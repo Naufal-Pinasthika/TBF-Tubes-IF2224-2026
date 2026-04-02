@@ -42,6 +42,16 @@ int main(int argc,char* argv[]){
 
         Lexer lexer(file);
         vector <Token> tokenize = lexer.runLexer();
+
+        filepath = "test/output/" + s + "_tokenize";
+        ofstream outputFile(filepath);
+        
+        for (auto token : tokenize) {
+            string out = token.toString();
+
+            
+            outputFile << out << endl;
+        }
         return 0;
     }
     else{

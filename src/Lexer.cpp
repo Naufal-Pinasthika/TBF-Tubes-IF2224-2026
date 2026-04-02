@@ -63,8 +63,6 @@ Lexer::Lexer(ifstream& input) : input(input) {}
 
 vector<Token> Lexer::runLexer() {
     vector <Token> tokens;
-    char ch;
-    string lexeme;
 
     while (input.peek() != EOF) {
 
@@ -78,6 +76,7 @@ vector<Token> Lexer::runLexer() {
 
         if (isalpha(ch)){
             Token result = scanIndentOrKeyword();
+            tokens.push_back(result);
 
         } else if (isdigit(ch)){
             Token result = scanNumber();
@@ -90,7 +89,6 @@ vector<Token> Lexer::runLexer() {
         }
         
     }
-    
 
 
     return tokens;
@@ -198,7 +196,7 @@ Token Lexer::scanIndentOrKeyword() {
 
     // we search until the longest KEYWORD (procedure, len = 9)
     // is properly validated 
-    while (tokenName.size() < 10) {
+    while (tokenName.size() < 10 && isalnum(next_ch)) {
         auto it = KEYWORDS.find(tokenName);
 
         if (it != KEYWORDS.end()) {
@@ -206,9 +204,9 @@ Token Lexer::scanIndentOrKeyword() {
             return Token(tokenName, token);
         }
 
-        char ch = static_cast <char>(input.get());
+        ch = static_cast <char>(input.get());
         
-        char next_ch = static_cast<char> (input.peek());
+        next_ch = static_cast<char> (input.peek());
 
         tokenName += ch;        
     }
