@@ -231,24 +231,29 @@ Token Lexer::scanString() {
     ch = static_cast<char>(input.get()); 
 
     if(ch == '\''){
-        return Token("string", "\'\'");
+        return Token("string", "");
     }
     tokenName += ch;
     ch = static_cast<char>(input.get());
     if(ch == '\''){
-        return Token("charcon", "\'" + tokenName + "\'") ;
-    }
-    tokenName += ch;
-    while (input.peek() != EOF && input.peek() != '\'') {
-        ch = static_cast<char>(input.get());
-        tokenName += ch;
-    }
-
-    if (input.peek() == '\'') {
+        if(input.peek() != '\'') return Token("charcon", "\'" + tokenName + "\'");
+        tokenName += '\'';
         input.get();
     }
 
-    return Token("string", tokenName);
+    tokenName += ch;
+    while (input.peek() != EOF) {
+        ch = static_cast<char>(input.get());
+        if (ch == '\'') {
+            if(input.peek() != '\'') return Token("string", tokenName);
+            tokenName += '\'';
+            input.get();
+        }
+        else tokenName += ch;
+    }
+
+    return Token("unknown", "\'" + tokenName);
+    
     // Continue until closing quote or EOF
     /*bool isCharCon = false;
     bool stringTime = false;
@@ -278,8 +283,9 @@ Token Lexer::scanCommentCurly(){
 
     if(input.peek() == '}'){
         input.get();
+        return Token("comment", "{" + tokenName + "}");
     }
-    return Token("comment", "{" + tokenName + "}");
+    return Token("unknown", "{" + tokenName);
 }
 
 
@@ -300,7 +306,7 @@ Token Lexer::scanCommentParen(){
 
     bool isClosed = false;
 
-    // Read until we find the closing delimiter "*)"
+    // Read until the closing delimiter "*)"
     while (input.peek() != EOF) {
         char ch = static_cast<char>(input.get());
 
@@ -313,7 +319,6 @@ Token Lexer::scanCommentParen(){
         tokenName += ch;
     }
 
-    // Unterminated comment: choose behavior based on your error policy
     if (!isClosed) {
         return Token("unknown", "(*" + tokenName + "*)");
     }
