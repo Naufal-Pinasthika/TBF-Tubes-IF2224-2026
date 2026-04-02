@@ -175,7 +175,7 @@ Token Lexer::scanNumber() {
 
                 tokenName += ch;
             }
-            return Token("realcon", tokenName);
+            return Token(tokenName, "realcon");
             
         }
 
@@ -184,10 +184,34 @@ Token Lexer::scanNumber() {
 
     } 
 
-    return Token("intcon", tokenName);
+    return Token(tokenName, "intcon");
     
 }
 
 Token Lexer::scanIndentOrKeyword() {
+    string tokenName = "";
+    char ch = static_cast <char>(input.get());
     
+    char next_ch = static_cast<char> (input.peek());
+
+    tokenName += ch;
+
+    // we search until the longest KEYWORD (procedure, len = 9)
+    // is properly validated 
+    while (tokenName.size() < 10) {
+        auto it = KEYWORDS.find(tokenName);
+
+        if (it != KEYWORDS.end()) {
+            string token = it->second;
+            return Token(tokenName, token);
+        }
+
+        char ch = static_cast <char>(input.get());
+        
+        char next_ch = static_cast<char> (input.peek());
+
+        tokenName += ch;        
+    }
+
+    return Token(tokenName, "ident");
 }
