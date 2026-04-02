@@ -1,4 +1,3 @@
-@ -0,0 +1,38 @@
 ## Simple Makefile for the lexer project
 
 CXX := g++
