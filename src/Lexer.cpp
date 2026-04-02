@@ -41,21 +41,21 @@ static const unordered_map<string, string> SYMBOLS = {
     {"-", "minus"},
     {"*", "times"},
     {"/", "rdiv"},
-    {"==", "eql"},
+    // {"==", "eql"},
     // {"<>", "neq"},
-    {">", "gtr"},
-    {">=", "geq"},
+    // {">", "gtr"},
+    // {">=", "geq"},
     // {"<", "lss"},
     // {"<=", "leq"},
     {"(", "lparent"},
     {")", "rparent"},
-    {"[", "lbrackm"},
+    {"[", "lbrack"},
     {"]", "rbrack"},
     {",", "comma"},
     {";", "semicolon"},
     {".", "period"},
-    {":", "colon"},
-    {":=", "becomes"}
+    // {":", "colon"},
+    // {":=", "becomes"}
 };
 
 
@@ -77,11 +77,16 @@ vector<Token> Lexer::runLexer() {
         char ch = static_cast<char> (input.peek());
 
         if (isalpha(ch)){
+            Token result = scanIndentOrKeyword();
 
         } else if (isdigit(ch)){
+            Token result = scanNumber();
+            tokens.push_back(result);
 
-        } else if (ch == ':' || ch == ';' || ch == '+' || ch == '<' || ch == '>' || ch == '*' || ch == '/') {
+        } else if (ch == ':' || ch == ';' || ch == '+' || ch == '<' || ch == '>' || ch == '*' || ch == '/' ||
+                   ch == '=' || ch == '-' || ch == '.' || ch == ',' || ch == '(' || ch == ')' || ch == '[' || ch == ']') {
             Token result = scanSymbol();
+            tokens.push_back(result);
         }
         
     }
@@ -105,16 +110,84 @@ Token Lexer::scanSymbol() {
             return Token("<>", "neq");
         }
 
-        if (isspace(input.peek())) {
-            return Token("<", "lss");
-        }
+        return Token("<", "lss");
 
     } else if (ch == '=') {
+        
         if (input.peek() == '=') {
             input.get();
             return Token("==", "eql");
-        }        
-    } else if (ch == '>')
+        }    
 
+        // for now this is special case where = need to throw
+        
+    } else if (ch == '>') {
+
+        if (input.peek() == '=') {
+            input.get();
+            return Token(">=", "geq");
+        }    
+        
+        return Token(">", "gtr");      
+        
+    } else if (ch == ':') {
+
+        if (input.peek() == '=') {
+            input.get();
+            return Token(":=", "becomes");
+        }
+
+        return Token(":", "colon");
+    } 
+
+    string symbol = string(1,ch);
+    string tokenName = SYMBOLS.at(symbol);
+    return Token(symbol, tokenName);
     // please continue this, i wanna sleep
+}
+
+Token Lexer::scanNumber() {
+
+    string tokenName = "";
+
+    char ch = static_cast <char>(input.get());
+    
+    char next_ch = static_cast<char> (input.peek());
+
+    tokenName += ch;
+
+    while (isdigit(next_ch)) {
+        ch = static_cast <char>(input.get());
+        next_ch = static_cast<char> (input.peek());
+        tokenName += ch;
+    }
+
+    if (next_ch == '.') {        
+        ch = static_cast <char>(input.get());
+        next_ch = static_cast<char> (input.peek());
+
+        tokenName += ch;
+
+        if (isdigit(next_ch)) {
+            while (isdigit(input.peek())){
+                ch = static_cast <char>(input.get());
+                next_ch = static_cast<char> (input.peek());
+
+                tokenName += ch;
+            }
+            return Token("realcon", tokenName);
+            
+        }
+
+        input.unget();
+        tokenName.pop_back();
+
+    } 
+
+    return Token("intcon", tokenName);
+    
+}
+
+Token Lexer::scanIndentOrKeyword() {
+    
 }
