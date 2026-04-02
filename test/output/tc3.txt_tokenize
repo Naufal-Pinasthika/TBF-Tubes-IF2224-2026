@@ -29,7 +29,7 @@ dosy
 beginsy
 ident (writeln)
 lparent
-charcon ('*')
+charcon (*)
 rparent
 semicolon
 

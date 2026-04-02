@@ -26,7 +26,7 @@ ident (s)
 eql
 ident (c)
 thensy
-{print when sky is blue}
+comment (print when sky is blue)
 beginsy
 ident (writeln)
 lparent

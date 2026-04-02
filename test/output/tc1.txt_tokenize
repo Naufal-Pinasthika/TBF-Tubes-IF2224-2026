@@ -31,8 +31,8 @@ ident (b)
 rparent
 semicolon
 
-i huyh
-this guy
+comment (i huyh)
+comment (this guy)
 endsy
 period
 unknown ('')
