@@ -41,12 +41,9 @@ static const unordered_map<string, string> SYMBOLS = {
     {"-", "minus"},
     {"*", "times"},
     {"/", "rdiv"},
-    // {"==", "eql"},
-    // {"<>", "neq"},
-    // {">", "gtr"},
-    // {">=", "geq"},
-    // {"<", "lss"},
-    // {"<=", "leq"},
+    {"=", "eql"},
+    {"<", "lss"},
+    {">", "gtr"},
     {"(", "lparent"},
     {")", "rparent"},
     {"[", "lbrack"},
@@ -54,8 +51,7 @@ static const unordered_map<string, string> SYMBOLS = {
     {",", "comma"},
     {";", "semicolon"},
     {".", "period"},
-    // {":", "colon"},
-    // {":=", "becomes"}
+    {":", "colon"}
 };
 
 
@@ -71,6 +67,11 @@ vector<Token> Lexer::runLexer() {
             input.get();
         }
 
+        // Check for EOF after consuming whitespace
+        if (input.peek() == EOF) {
+            break;
+        }
+
         // Grab char and check the current state its in
         char ch = static_cast<char> (input.peek());
 
@@ -82,10 +83,17 @@ vector<Token> Lexer::runLexer() {
             Token result = scanNumber();
             tokens.push_back(result);
 
+        } else if (ch == '\''){
+            Token result = scanString();
+            tokens.push_back(result);
+
         } else if (ch == ':' || ch == ';' || ch == '+' || ch == '<' || ch == '>' || ch == '*' || ch == '/' ||
                    ch == '=' || ch == '-' || ch == '.' || ch == ',' || ch == '(' || ch == ')' || ch == '[' || ch == ']') {
             Token result = scanSymbol();
             tokens.push_back(result);
+        } else {
+            // Skip unknown characters to prevent infinite loop
+            input.get();
         }
         
     }
@@ -117,7 +125,8 @@ Token Lexer::scanSymbol() {
             return Token("==", "eql");
         }    
 
-        // for now this is special case where = need to throw
+        // Standalone = is a single token
+        return Token("=", "eql");
         
     } else if (ch == '>') {
 
@@ -141,7 +150,6 @@ Token Lexer::scanSymbol() {
     string symbol = string(1,ch);
     string tokenName = SYMBOLS.at(symbol);
     return Token(symbol, tokenName);
-    // please continue this, i wanna sleep
 }
 
 Token Lexer::scanNumber() {
@@ -211,5 +219,29 @@ Token Lexer::scanIndentOrKeyword() {
         tokenName += ch;        
     }
 
+    // Check one final time after loop exits
+    auto it = KEYWORDS.find(tokenName);
+    if (it != KEYWORDS.end()) {
+        return Token(tokenName, it->second);
+    }
+
     return Token(tokenName, "ident");
+}
+
+Token Lexer::scanString() {
+    string tokenName = "";
+    char ch = static_cast<char>(input.get());  // consume opening quote
+    
+    // Continue until closing quote or EOF
+    while (input.peek() != EOF && input.peek() != '\'') {
+        ch = static_cast<char>(input.get());
+        tokenName += ch;
+    }
+    
+    // Consume closing quote if present
+    if (input.peek() == '\'') {
+        input.get();
+    }
+    
+    return Token(tokenName, "string");
 }

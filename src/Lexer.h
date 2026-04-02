@@ -19,5 +19,6 @@ public:
     Token scanSymbol();
     Token scanIndentOrKeyword();
     Token scanNumber();
+    Token scanString();
 
 };
