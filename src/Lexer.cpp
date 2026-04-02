@@ -95,6 +95,7 @@ vector<Token> Lexer::runLexer() {
             // any symbol that are not recongnized as valid token will be pass as "unknown" token
             string unknownSymbol = string(1, ch);
             Token result = Token("unknown", unknownSymbol);
+            tokens.push_back(result);
         }
         
     }
@@ -126,8 +127,8 @@ Token Lexer::scanSymbol() {
             return Token("eql", "==");
         }    
 
-        // Standalone = is a single token
-        return Token("eql", "=");        
+        // = is treated as unknown symbol
+        return Token("unknown", "=");        
 
     } else if (ch == '>') {
 
