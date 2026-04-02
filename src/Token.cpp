@@ -14,7 +14,7 @@ string Token::getLexeme() const {
 
 string Token::toString() const {
     string result = "";
-    if (this->lexeme == "intcon" || this->lexeme == "realcon" || this->lexeme == "charcon" || this->lexeme == "string" || this->lexeme == "ident" || this->lexeme == "comment") {
+    if (this->type == "intcon" || this->type == "realcon" || this->type == "charcon" || this->type == "string" || this->type == "ident" || this->type == "comment") {
         result += this->type;
         result += " (";
         result += this->lexeme;

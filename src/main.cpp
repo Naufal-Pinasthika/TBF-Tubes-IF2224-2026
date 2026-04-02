@@ -48,8 +48,6 @@ int main(int argc,char* argv[]){
         
         for (auto token : tokenize) {
             string out = token.toString();
-
-            
             outputFile << out << endl;
         }
         return 0;
