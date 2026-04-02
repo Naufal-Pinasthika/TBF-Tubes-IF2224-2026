@@ -15,13 +15,13 @@ string Token::getLexeme() const {
 string Token::toString() const {
     string result = "";
     if (this->lexeme == "intcon" || this->lexeme == "realcon" || this->lexeme == "charcon" || this->lexeme == "string" || this->lexeme == "ident" || this->lexeme == "comment") {
-        result += this->lexeme;
-        result += " (";
         result += this->type;
+        result += " (";
+        result += this->lexeme;
         result += ")";
         return result;
     }
     else {
-        return this->lexeme;
+        return this->type;
     }
 }

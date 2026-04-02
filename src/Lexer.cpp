@@ -100,21 +100,21 @@ Token Lexer::scanSymbol() {
 
         if (input.peek() == '=') {
             input.get();
-            return Token("<=", "leq");
+            return Token("leq", "<=");
         }
 
         if (input.peek() == '>') {
             input.get();
-            return Token("<>", "neq");
+            return Token("neq", "<>");
         }
 
-        return Token("<", "lss");
+        return Token("lss", "<");
 
     } else if (ch == '=') {
         
         if (input.peek() == '=') {
             input.get();
-            return Token("==", "eql");
+            return Token("eql", "==");
         }    
 
         // for now this is special case where = need to throw
@@ -123,25 +123,24 @@ Token Lexer::scanSymbol() {
 
         if (input.peek() == '=') {
             input.get();
-            return Token(">=", "geq");
+            return Token("geq", ">=");
         }    
         
-        return Token(">", "gtr");      
+        return Token("gtr", ">");    
         
     } else if (ch == ':') {
 
         if (input.peek() == '=') {
             input.get();
-            return Token(":=", "becomes");
+            return Token("becomes", ":=");
         }
 
-        return Token(":", "colon");
+        return Token("colon", ":");
     } 
 
     string symbol = string(1,ch);
     string tokenName = SYMBOLS.at(symbol);
-    return Token(symbol, tokenName);
-    // please continue this, i wanna sleep
+    return Token(tokenName, symbol);
 }
 
 Token Lexer::scanNumber() {
@@ -173,7 +172,7 @@ Token Lexer::scanNumber() {
 
                 tokenName += ch;
             }
-            return Token(tokenName, "realcon");
+            return Token("realcon", tokenName);
             
         }
 
@@ -182,7 +181,7 @@ Token Lexer::scanNumber() {
 
     } 
 
-    return Token(tokenName, "intcon");
+    return Token("intcon", tokenName);
     
 }
 
@@ -193,23 +192,21 @@ Token Lexer::scanIndentOrKeyword() {
     char next_ch = static_cast<char> (input.peek());
 
     tokenName += ch;
-
-    // we search until the longest KEYWORD (procedure, len = 9)
-    // is properly validated 
-    while (tokenName.size() < 10 && isalnum(next_ch)) {
-        auto it = KEYWORDS.find(tokenName);
-
-        if (it != KEYWORDS.end()) {
-            string token = it->second;
-            return Token(tokenName, token);
-        }
-
+    
+    while (input.peek() != EOF && isalnum(next_ch)) {
         ch = static_cast <char>(input.get());
-        
-        next_ch = static_cast<char> (input.peek());
-
-        tokenName += ch;        
+        tokenName += ch;
     }
+    
+    string temp = tokenName;
+    transform(temp.begin(), temp.end(), temp.begin(), [](unsigned char c){return tolower(c);});
 
-    return Token(tokenName, "ident");
+    auto it = KEYWORDS.find(temp);
+
+    if (it != KEYWORDS.end() && !isalnum(next_ch)) {
+        string token = it->second;
+        return Token(token, tokenName); 
+    }    
+
+    return Token("ident", tokenName);
 }

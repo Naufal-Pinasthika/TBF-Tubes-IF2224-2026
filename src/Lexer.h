@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <vector>
 #include <cctype>
+#include <algorithm>
 
 using namespace std;
 
