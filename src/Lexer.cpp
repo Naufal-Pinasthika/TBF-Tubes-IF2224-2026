@@ -87,11 +87,16 @@ vector<Token> Lexer::runLexer() {
             Token result = scanString();
             tokens.push_back(result);
 
-        } else if (ch == ':' || ch == ';' || ch == '+' || ch == '<' || ch == '>' || ch == '*' || ch == '/' ||
-                   ch == '=' || ch == '-' || ch == '.' || ch == ',' || ch == '(' || ch == ')' || ch == '[' || ch == ']') {
+        }  else if (ch == '(') {
+            tokens.push_back(scanCommentParen()); 
+        }   else if (ch == ':' || ch == ';' || ch == '+' || ch == '<' || ch == '>' || ch == '*' || ch == '/' ||
+                   ch == '=' || ch == '-' || ch == '.' || ch == ',' || ch == ')' || ch == '[' || ch == ']') {
             Token result = scanSymbol();
             tokens.push_back(result);
-        } else {
+        } else if (ch == '{'){
+            tokens.push_back(scanCommentCurly());
+        }
+        else {
             // any symbol that are not recongnized as valid token will be pass as "unknown" token
             string unknownSymbol = string(1, ch);
             Token result = Token("unknown", unknownSymbol);
@@ -223,9 +228,33 @@ Token Lexer::scanIndentOrKeyword() {
 Token Lexer::scanString() {
     string tokenName = "";
     char ch = static_cast<char>(input.get());  // consume opening quote
-    
-    // Continue until closing quote or EOF
+    ch = static_cast<char>(input.get()); 
+
+    if(ch == '\''){
+        return Token("string", "\'\'");
+    }
+    tokenName += ch;
+    ch = static_cast<char>(input.get());
+    if(ch == '\''){
+        return Token("charcon", "\'" + tokenName + "\'") ;
+    }
+    tokenName += ch;
     while (input.peek() != EOF && input.peek() != '\'') {
+        ch = static_cast<char>(input.get());
+        tokenName += ch;
+    }
+
+    if (input.peek() == '\'') {
+        input.get();
+    }
+
+    return Token("string", tokenName);
+    // Continue until closing quote or EOF
+    /*bool isCharCon = false;
+    bool stringTime = false;
+    while (input.peek() != EOF && input.peek() != '\'') {
+        if(isCharCon == false && stringTime == false) isCharCon = true; 
+        if(isCharCon == true) stringTime = true;
         ch = static_cast<char>(input.get());
         tokenName += ch;
     }
@@ -235,5 +264,59 @@ Token Lexer::scanString() {
         input.get();
     }
     
-    return Token("string", tokenName);
+    if(stringTime) return Token("string", tokenName);
+    if(!stringTime) return Token("charcon", "\'" + tokenName + "\'");*/
+}
+
+Token Lexer::scanCommentCurly(){
+    string tokenName = "";
+    char ch = static_cast<char>(input.get());
+    while(input.peek() != EOF && input.peek() != '}'){
+        ch = static_cast<char>(input.get());
+        tokenName += ch;
+    }
+
+    if(input.peek() == '}'){
+        input.get();
+    }
+    return Token("comment", "{" + tokenName + "}");
+}
+
+
+
+Token Lexer::scanCommentParen(){
+    string tokenName = "";
+
+    // Consume '('
+    if (input.get() != '(') {
+        return Token("unknown", "(");
+    }
+
+    // Consume '*'
+    if (input.peek() != '*') {
+        return Token("lparent", "(");
+    }
+    input.get();
+
+    bool isClosed = false;
+
+    // Read until we find the closing delimiter "*)"
+    while (input.peek() != EOF) {
+        char ch = static_cast<char>(input.get());
+
+        if (ch == '*' && input.peek() == ')') {
+            input.get();  // consume ')'
+            isClosed = true;
+            break;
+        }
+
+        tokenName += ch;
+    }
+
+    // Unterminated comment: choose behavior based on your error policy
+    if (!isClosed) {
+        return Token("unknown", "(*" + tokenName + "*)");
+    }
+
+    return Token("comment", "(*" + tokenName + "*)");
 }

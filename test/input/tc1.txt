@@ -6,5 +6,5 @@ var
 begin
   a := 5;
   b := a + 10;
-  writeln('Result = ', b);
+  writeln('R', b); {i hate niggers} (*this guy is an asshole*)
 end.

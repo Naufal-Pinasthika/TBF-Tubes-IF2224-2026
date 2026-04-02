@@ -21,5 +21,6 @@ public:
     Token scanIndentOrKeyword();
     Token scanNumber();
     Token scanString();
-
+    Token scanCommentCurly();
+    Token scanCommentParen();
 };

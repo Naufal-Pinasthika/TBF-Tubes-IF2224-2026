@@ -14,14 +14,19 @@ string Token::getLexeme() const {
 
 string Token::toString() const {
     string result = "";
-    if (this->type == "intcon" || this->type == "realcon" || this->type == "charcon" || this->type == "string" || this->type == "ident" || this->type == "comment") {
+    if (this->type == "intcon" || this->type == "realcon" || this->type == "charcon" || this->type == "ident" || this->type == "string") {
         result += this->type;
         result += " (";
         result += this->lexeme;
         result += ")";
         return result;
     }
+    else if(this->type == "comment"){
+        result += this->lexeme;
+        return result;
+    }
     else {
-        return this->type;
+        result += this->type;
+        return result;
     }
 }
