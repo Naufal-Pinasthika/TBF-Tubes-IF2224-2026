@@ -6,7 +6,7 @@
 
 using namespace std;
 
-int main() {
+/*int main() {
     string path = "test/input/";
     string filename;
     
@@ -26,4 +26,26 @@ int main() {
     vector <Token> tokenize = lexer.runLexer();
 
     return 0;
+}*/
+
+int main(int argc,char* argv[]){
+    if(argc == 2){
+        string s(argv[1]);
+        string filepath = "test/input/" + s;
+
+        ifstream file(filepath);
+
+        if (!file.is_open()) {
+            cerr << "Invalid file" << endl;
+            return 1;
+        }
+
+        Lexer lexer(file);
+        vector <Token> tokenize = lexer.runLexer();
+        return 0;
+    }
+    else{
+        cout << "argc != 2";
+        return 0;
+    }
 }
