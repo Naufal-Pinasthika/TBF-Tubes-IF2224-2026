@@ -25,17 +25,14 @@ semicolon
 
 ident (writeln)
 lparent
-charcon ('R')
+charcon (R)
 comma
 ident (b)
 rparent
 semicolon
 
-{i wah}
-(*this guy*)
-string (w''what)
+i huyh
+this guy
 endsy
 period
-unknown ((*         hai what?
-
-wwwwwwwwww;;w;dadadwad*))
+unknown ('')

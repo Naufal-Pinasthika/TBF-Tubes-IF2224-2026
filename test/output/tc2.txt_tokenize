@@ -1,0 +1,40 @@
+programsy
+ident (Sky)
+semicolon
+
+varsy
+ident (s)
+comma
+ident (c)
+colon
+ident (string)
+semicolon
+
+beginsy
+ident (s)
+becomes
+string (green)
+semicolon
+
+ident (c)
+becomes
+string (blue)
+semicolon
+
+ifsy
+ident (s)
+eql
+ident (c)
+thensy
+{print when sky is blue}
+beginsy
+ident (writeln)
+lparent
+string (sky is blue)
+rparent
+semicolon
+
+endsy
+period
+endsy
+period

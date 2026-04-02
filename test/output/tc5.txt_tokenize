@@ -1,0 +1,77 @@
+programsy
+ident (Circle)
+semicolon
+
+varsy
+ident (Pi)
+colon
+ident (real)
+semicolon
+
+ident (r)
+comma
+ident (c)
+comma
+ident (s)
+colon
+ident (real)
+semicolon
+
+ident (identIniSangatPanjang24tetapiTetapValid)
+colon
+ident (integer)
+semicolon
+
+beginsy
+ident (Pi)
+becomes
+realcon (3.14)
+semicolon
+
+ident (r)
+becomes
+intcon (5)
+semicolon
+
+ident (c)
+becomes
+intcon (2)
+times
+ident (Pi)
+times
+ident (r)
+semicolon
+
+ident (s)
+becomes
+ident (Pi)
+times
+ident (r)
+times
+ident (r)
+semicolon
+
+ident (println)
+lparent
+string (Keliling: )
+comma
+ident (c)
+rparent
+semicolon
+
+ident (println)
+lparent
+string (Luas: )
+comma
+ident (s)
+rparent
+semicolon
+
+ident (printLn)
+lparent
+ident (identIniSangatPanjang24tetapiTetapValid)
+rparent
+semicolon
+
+endsy
+period

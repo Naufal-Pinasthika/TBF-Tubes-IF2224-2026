@@ -6,9 +6,6 @@ var
 begin
   a := 5;
   b := a + 10;
-  writeln('R', b); {i wah} (*this guy*)
-  'w''what'
+  writeln('R', b); {i huyh} (*this guy*)
 end.
-(*         hai what?
-
-wwwwwwwwww;;w;dadadwad
+'''

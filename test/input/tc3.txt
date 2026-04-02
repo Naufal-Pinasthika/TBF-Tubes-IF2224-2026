@@ -1,0 +1,14 @@
+program Star;
+
+var
+    i, n: integer;
+
+begin
+    i := 1;
+    n := 5;
+    while i <= n do
+    begin
+        writeln('*');
+        i := i + 1;
+    end.
+end.

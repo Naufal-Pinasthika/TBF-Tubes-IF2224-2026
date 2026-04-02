@@ -1,0 +1,17 @@
+program Circle;
+
+var
+    Pi: real;
+    r, c, s: real;
+    identIniSangatPanjang24tetapiTetapValid: integer;
+
+begin
+    Pi := 3.14;
+    r := 5;
+
+    c := 2 * Pi * r;
+    s := Pi * r * r;
+    println('Keliling: ', c);
+    println('Luas: ', s);
+    printLn(identIniSangatPanjang24tetapiTetapValid);
+end.

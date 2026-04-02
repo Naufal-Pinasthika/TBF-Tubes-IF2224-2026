@@ -227,50 +227,29 @@ Token Lexer::scanIndentOrKeyword() {
 
 Token Lexer::scanString() {
     string tokenName = "";
-    char ch = static_cast<char>(input.get());  // consume opening quote
-    ch = static_cast<char>(input.get()); 
+    input.get(); // consume opening '
 
-    if(ch == '\''){
-        return Token("string", "");
-    }
-    tokenName += ch;
-    ch = static_cast<char>(input.get());
-    if(ch == '\''){
-        if(input.peek() != '\'') return Token("charcon", "\'" + tokenName + "\'");
-        tokenName += '\'';
-        input.get();
-    }
-
-    tokenName += ch;
     while (input.peek() != EOF) {
-        ch = static_cast<char>(input.get());
+        char ch = static_cast<char>(input.get());
+
         if (ch == '\'') {
-            if(input.peek() != '\'') return Token("string", tokenName);
-            tokenName += '\'';
-            input.get();
+            if (input.peek() == '\'') {
+                input.get();
+                tokenName += '\'';
+            } 
+            else {
+                if (tokenName.length() == 1)
+                    return Token("charcon", tokenName);
+                else
+                    return Token("string", tokenName);
+            }
+        } 
+        else {
+            tokenName += ch;
         }
-        else tokenName += ch;
     }
 
-    return Token("unknown", "\'" + tokenName);
-    
-    // Continue until closing quote or EOF
-    /*bool isCharCon = false;
-    bool stringTime = false;
-    while (input.peek() != EOF && input.peek() != '\'') {
-        if(isCharCon == false && stringTime == false) isCharCon = true; 
-        if(isCharCon == true) stringTime = true;
-        ch = static_cast<char>(input.get());
-        tokenName += ch;
-    }
-    
-    // Consume closing quote if present
-    if (input.peek() == '\'') {
-        input.get();
-    }
-    
-    if(stringTime) return Token("string", tokenName);
-    if(!stringTime) return Token("charcon", "\'" + tokenName + "\'");*/
+    return Token("unknown", '\'' + tokenName);
 }
 
 Token Lexer::scanCommentCurly(){
@@ -283,7 +262,7 @@ Token Lexer::scanCommentCurly(){
 
     if(input.peek() == '}'){
         input.get();
-        return Token("comment", "{" + tokenName + "}");
+        return Token("comment", tokenName);
     }
     return Token("unknown", "{" + tokenName);
 }
@@ -320,8 +299,8 @@ Token Lexer::scanCommentParen(){
     }
 
     if (!isClosed) {
-        return Token("unknown", "(*" + tokenName + "*)");
+        return Token("unknown", tokenName);
     }
 
-    return Token("comment", "(*" + tokenName + "*)");
+    return Token("comment", tokenName);
 }

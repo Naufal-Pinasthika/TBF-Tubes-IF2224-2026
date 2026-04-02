@@ -1,0 +1,76 @@
+programsy
+ident (Math)
+semicolon
+
+varsy
+ident (a)
+comma
+ident (b)
+comma
+ident (c)
+colon
+ident (integer)
+semicolon
+
+beginsy
+ident (a)
+becomes
+intcon (76)
+semicolon
+
+ident (b)
+becomes
+intcon (67)
+semicolon
+
+ident (c)
+becomes
+lparent
+ident (a)
+eql
+ident (b)
+rparent
+times
+lparent
+lparent
+ident (a)
+rdiv
+ident (b)
+rparent
+imod
+lparent
+ident (a)
+idiv
+ident (b)
+rparent
+rparent
+plus
+lparent
+ident (a)
+neq
+ident (b)
+rparent
+times
+lparent
+lparent
+ident (a)
+plus
+ident (b)
+rparent
+idiv
+lparent
+ident (a)
+minus
+ident (b)
+rparent
+rparent
+semicolon
+
+ident (writeLn)
+lparent
+ident (c)
+rparent
+semicolon
+
+endsy
+period
