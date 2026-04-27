@@ -2,7 +2,7 @@
 
 #include <fstream>
 #include <string>
-#include "Token.h"
+#include "Token.hpp"
 #include <unordered_map>
 #include <vector>
 #include <cctype>

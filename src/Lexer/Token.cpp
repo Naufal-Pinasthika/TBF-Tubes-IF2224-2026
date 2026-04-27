@@ -1,4 +1,4 @@
-#include "Token.h"
+#include "Token.hpp"
 
 Token::Token(const string& type, const string& lexeme) : type(type), lexeme(lexeme) {
 

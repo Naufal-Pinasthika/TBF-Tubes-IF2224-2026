@@ -2,7 +2,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
-#include "Lexer.h"
+#include "Lexer/Lexer.hpp"
 
 using namespace std;
 

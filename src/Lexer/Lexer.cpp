@@ -1,4 +1,4 @@
-#include "Lexer.h"
+#include "Lexer.hpp"
 
 /* List of token special keyword*/
 static const unordered_map<string, string> KEYWORDS = {
