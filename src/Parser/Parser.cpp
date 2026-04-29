@@ -14,14 +14,21 @@ bool Parser::success(Node* parent) {
     return true;
 }
 
-bool Parser::failed(Node* parent) {
+bool Parser::fails(Node* parent) {
     delete curr;
     curr = parent;
     return false;
 }
 
-Node* Parser::backTrack(int save) {
+void Parser::backTrack(int save) {
     pos = save;
+}
+
+Node* Parser::insert(NodeType type) {
+    Node* parent = curr;
+    Node* node = new Node(type);
+    curr = node;
+    return parent;
 }
 
 bool Parser::match(string t) {
@@ -50,57 +57,48 @@ bool Parser::programProd() {
 
 // programsy + ident + semicolon
 bool Parser::programHeaderProd() {
-    Node* parent = curr;
+    Node* parent = insert(program_header);
     int save = pos;
-
-    Node* node = new Node(program_header);
-    curr = node;
 
     if(match("programsy") && match("ident") && match("semicolon")) return success(parent);
 
     backTrack(save);
-    return failed(parent);
+    return fails(parent);
 }
 
 bool Parser::declarationPartProd() {
-    Node* parent = curr;
+    Node* parent = insert(declaration_part);
     int save = pos;
 
-    Node* node = new Node(declaration_part);
-    curr = node;
-
-    while(constDeclarationProd());
-    while(typeDeclarationProd());
-    while(varDeclarationProd());
-    while(subprogramDeclarationProd());
+    while(constDeclarationProd()) int save = pos;
+    backTrack(save);
+    while(typeDeclarationProd()) int save = pos;
+    backTrack(save);
+    while(varDeclarationProd()) int save = pos;
+    backTrack(save);
+    while(subprogramDeclarationProd()) int save = pos;
+    backTrack(save);
 
     return success(parent);
 }
 
 bool Parser::constDeclarationProd() {
-    Node* parent = curr;
+    Node* parent = insert(const_declaration);
     int save = pos;
 
-    Node* node = new Node(const_declaration);
-    curr = node;
-
     if(match("constsy") && match("ident") && match("eql") && constantProd() && match("semicolon")) {
-        while(match("ident") && match("eql") && constantProd() && match("semicolon")) save = pos;
+        while(match("ident") && match("eql") && constantProd() && match("semicolon")) int save = pos;
         backTrack(save);
         return success(parent);
     }
 
     backTrack(save);
-    return failed(parent);
+    return fails(parent);
 }
 
-// charcon | string | [(plus | minus)? + (ident | intcon | realcon)]
 bool Parser::constantProd() {
-    Node* parent = curr;
+    Node* parent = insert(constant);
     int save = pos;
-
-    Node* node = new Node(constant);
-    curr = node;
 
     if(match("charcon")) return success(parent);
     backTrack(save);
@@ -109,34 +107,51 @@ bool Parser::constantProd() {
     if((match("plus") || match("minus") || true) && (match("ident") || match("intcon") || match("realcon"))) return success(parent);
 
     backTrack(save);
-    return failed(parent);
+    return fails(parent);
 }
 
-// typesy + (ident + eql + type + semicolon)+
 bool Parser::typeDeclarationProd() {
-    Node* parent = curr;
+    Node* parent = insert(type_declaration);
     int save = pos;
 
-    Node* node = new Node(type_declaration);
-    curr = node;
-
     if(match("typesy") && match("ident") && match("eql") && typeProd() && match("semicolon")) {
-        while(match("ident") && match("eql") && typeProd() && match("semicolon")) save = pos;
+        while(match("ident") && match("eql") && typeProd() && match("semicolon")) int save = pos;
         backTrack(save);
         return success(parent);
     }
 
     backTrack(save);
-    return failed(parent);
+    return fails(parent);
 }
 
 bool Parser::varDeclarationProd() {
-    Node* parent = curr;
+    Node* parent = insert(var_declaration);
     int save = pos;
 
-    Node* node = new Node(var_declaration);
-    curr = node;
+    if(match("varsy") && identifierListProd() && match("colon") && typeProd() && match("semicolon")) {
+        while(identifierListProd() && match("colon") && typeProd() && match("semicolon")) int save = pos;
+        backTrack(save);
+        return success(parent);
+    }
 
+    backTrack(save);
+    return fails(parent);
+}
 
+bool Parser::identifierListProd() {
+    Node* parent = insert(identifier_list);
+    int save = pos;
 
+    if(match("ident")) {
+        while(match("comma") && match("ident")) int save = pos;
+        backTrack(save);
+        return success(parent);
+    }
+
+    backTrack(save);
+    return fails(parent);
+}
+
+bool Parser::typeProd() {
+    
 }

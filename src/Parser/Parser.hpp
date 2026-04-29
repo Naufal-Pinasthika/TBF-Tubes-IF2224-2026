@@ -13,8 +13,9 @@ private:
     Token peek();
     Token pop();
     bool success(Node* parent);
-    bool failed(Node* parent);
-    Node* backTrack(int save);
+    bool fails(Node* parent);
+    void backTrack(int save);
+    Node* insert(NodeType type);
     bool match(string t);
 
     // Production function
