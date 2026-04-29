@@ -218,3 +218,204 @@ bool Parser::arrayTypeProd()
     backTrack(save);
     return fails(parent);
 }
+
+bool Parser::forStatementProd()
+{
+    Node *parent = insert(for_statement);
+    int save = pos;
+
+    if (match("forsy") && match("ident") && match("becomes") && expressionProd() && (match("tosy") || match("downtosy")) && expressionProd() && match("dosy") && statementProd()) {
+        return success(parent);
+    }
+
+    backTrack(save);
+    return fails(parent);
+}
+
+bool Parser::procedureFunctionCallProd() 
+{
+    Node *parent = insert(procedure_function_call);
+    int save = pos;
+
+    if (match("ident") && ((match("lparent") && parameterListProd() && match("rparent")) || true )) {
+        return success(parent);
+    }
+
+    backTrack(save);
+    return fails(parent);
+}
+
+bool Parser::parameterListProd() 
+{
+    Node *parent = insert(parameter_list);
+    int save = pos;
+
+    if (expressionProd())
+    {
+        int save = pos;
+        while (match("comma") && expressionProd())
+            int save = pos;
+        backTrack(save);
+        return success(parent);
+    }
+
+    backTrack(save);
+    return fails(parent);
+}
+
+bool Parser::expressionProd()
+{
+    Node *parent = insert(expression);
+    int save = pos;
+
+    if (simpleExpressionProd())
+    {
+        int save = pos;
+        if ((relationalOperatorProd() && simpleExpressionProd()) || true ) {
+            int save = pos;
+            backTrack(save);
+            return success(parent);
+        }
+        backTrack(save);
+    }
+
+    backTrack(save);
+    return fails(parent);
+}
+
+bool Parser::simpleExpressionProd() 
+{ 
+    Node *parent = insert(simple_expression);
+    int save = pos;
+
+    if ((match("plus") || match("minus")) || true) {
+        int save = pos;
+        if (termProd())
+        {
+            while (additiveOperatorProd() && termProd())
+                int save = pos;
+            backTrack(save);
+            return success(parent);
+        }
+        backTrack(save);
+    }
+
+    backTrack(save);
+    return fails(parent);
+}
+
+bool Parser::termProd() 
+{
+    Node *parent = insert(term);
+    int save = pos;
+
+    if (factorProd())
+    {
+        int save = pos;
+        while (multiplicativeOperatorProd() && factorProd())
+            int save = pos;
+        backTrack(save);
+        return success(parent);
+    }
+    backTrack(save);
+    return fails(parent);
+}
+
+bool Parser::factorProd()
+{
+    Node *parent = insert(factor);
+    int save = pos;
+
+    if (match("ident"))
+        return success(parent);
+    backTrack(save);
+    if (match("intcon"))
+        return success(parent);
+    backTrack(save);
+    if (match("charcon"))
+        return success(parent);
+    backTrack(save);
+    if (match("string"))
+        return success(parent);
+    backTrack(save); 
+
+    if (match("lparent") && expressionProd() && match("rparent"))
+        return success(parent);
+    backTrack(save);     
+    
+    if (match("notsy") && factorProd())
+        return success(parent);
+    backTrack(save);     
+    if (procedureFunctionCallProd()) 
+        return success(parent);
+    backTrack(save);         
+    return fails(parent);
+}
+
+bool Parser::relationalOperatorProd()
+{
+    Node *parent = insert(relational_operator);
+    int save = pos;
+
+    if (match("eql"))
+        return success(parent);
+    backTrack(save);
+    if (match("neql"))
+        return success(parent);
+    backTrack(save);
+    if (match("gtr"))
+        return success(parent);
+    backTrack(save);
+    if (match("geq"))
+        return success(parent);
+    backTrack(save);
+    if (match("lss"))
+        return success(parent);
+    backTrack(save);
+    if (match("leq"))
+        return success(parent);
+    backTrack(save);
+    return fails(parent);
+}
+
+bool Parser::additiveOperatorProd()
+{
+    Node *parent = insert(additive_operator);
+    int save = pos;
+
+    if (match("plus"))
+        return success(parent);
+    backTrack(save);
+    if (match("minus"))
+        return success(parent);
+    backTrack(save);
+    if (match("orsy"))
+        return success(parent);
+    backTrack(save);
+    return fails(parent);
+}
+
+bool Parser::multiplicativeOperatorProd() 
+{
+    Node *parent = insert(multiplicative_operator);
+    int save = pos;
+
+    if (match("times"))
+        return success(parent);
+    backTrack(save);
+    if (match("rdiv"))
+        return success(parent);
+    backTrack(save);
+    if (match("idiv"))
+        return success(parent);
+    backTrack(save);
+    if (match("imod"))
+        return success(parent);
+    backTrack(save);
+    if (match("andsy"))
+        return success(parent);
+    backTrack(save);
+    return fails(parent);
+}
+
+
