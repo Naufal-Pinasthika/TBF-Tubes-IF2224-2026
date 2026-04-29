@@ -1,21 +1,22 @@
 #pragma once
 #include "Node.hpp"
 
-class Parser {
+class Parser
+{
 private:
     vector<Token> tokens;
     int pos;
-    Node* root;
-    Node* curr;
+    Node *root;
+    Node *curr;
 
     // Main function
 
     Token peek();
     Token pop();
-    bool success(Node* parent);
-    bool fails(Node* parent);
+    bool success(Node *parent);
+    bool fails(Node *parent);
     void backTrack(int save);
-    Node* insert(NodeType type);
+    Node *insert(NodeType type);
     bool match(string t);
 
     // Production function
@@ -80,7 +81,7 @@ private:
     bool ifStatementProd();
     // casesy + expression + ofsy + case-block + endsy
     bool caseStatementProd();
-    // constant + (comma + constant)* + colon + statement + (semicolon + case-block?)* 
+    // constant + (comma + constant)* + colon + statement + (semicolon + case-block?)*
     bool caseBlockProd();
     // whilesy + expression + dosy + statement
     bool whileStatementProd();
@@ -107,15 +108,16 @@ private:
     // times | rdiv | idiv | imod | andsy
     bool multiplicativeOperatorProd();
 
-
-
 public:
-    Parser(vector<Token> tokens): tokens(tokens), pos(0) {}
+    Parser(vector<Token> tokens) : tokens(tokens), pos(0) {}
 
-    bool parse() {
+    bool parse()
+    {
         root = nullptr;
         bool result = programProd();
         root = curr;
         return result;
     }
+
+    Node *getRoot() { return root; }
 };

@@ -1,5 +1,6 @@
 #pragma once
 #include "../Lexer/Lexer.hpp"
+#include <iostream>
 
 const enum NodeType {
     program,
@@ -46,6 +47,50 @@ const enum NodeType {
     terminal
 };
 
+const std::string nodeTypeStr[] = {
+    "<program>",
+    "<program-header>",
+    "<declaration-part>",
+    "<const-declaration>",
+    "<constant>",
+    "<type-declaration>",
+    "<var-declaration>",
+    "<identifier-list>",
+    "<type>",
+    "<array-type>",
+    "<range>",
+    "<enumerated>",
+    "<record-type>",
+    "<field-list>",
+    "<field-part>",
+    "<subprogram-declaration>",
+    "<procedure-declaration>",
+    "<function-declaration>",
+    "block",
+    "<formal-parameter-list>",
+    "<parameter-group>",
+    "<compound-statement>",
+    "<statement-list>",
+    "<statement>",
+    "<assignment-statement>",
+    "<if-statement>",
+    "<case-statement>",
+    "<case-block>",
+    "<while-statement>",
+    "<repeat-statement>",
+    "<for-statement>",
+    "<procedure/function-call>",
+    "<parameter-list>",
+    "<expression>",
+    "<simple-expression>",
+    "<term>",
+    "<factor>",
+    "<relational-operator>",
+    "<additive-operator>",
+    "<multiplicative-operator>",
+    "<terminal>"
+};
+
 vector<Token> tokens;
 Token next;
 
@@ -62,4 +107,12 @@ public:
             delete child;
         }
     }
+    string toString() {
+        if(type == terminal) return token.toString();
+        else return nodeTypeStr[type];
+    }
+
+    void printTreeToFile(std::string fileName);
+    void printTree(std::ostream *stream, Node* root, int depth);
+    void printNode(std::ostream *stream, Node* node);
 };
