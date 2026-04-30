@@ -2,11 +2,10 @@
 #include "../Lexer/Lexer.hpp"
 #include <iostream>
 
-const enum NodeType {
+enum NodeType {
     program,
     program_header,
     declaration_part,
-    compound_statement,
     const_declaration,
     constant,
     type_declaration,
@@ -91,9 +90,6 @@ const std::string nodeTypeStr[] = {
     "<terminal>"
 };
 
-vector<Token> tokens;
-Token next;
-
 class Node {
 public:
     NodeType type;
@@ -113,6 +109,5 @@ public:
     }
 
     void printTreeToFile(std::string fileName);
-    void printTree(std::ostream *stream, Node* root, int depth);
-    void printNode(std::ostream *stream, Node* node);
+    void printTree(std::ostream *stream, int depth);
 };

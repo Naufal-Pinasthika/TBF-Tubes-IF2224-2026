@@ -104,8 +104,8 @@ bool Parser::constDeclarationProd()
 
     if (match("constsy") && match("ident") && match("eql") && constantProd() && match("semicolon"))
     {
-        while (match("ident") && match("eql") && constantProd() && match("semicolon"))
-            int save = pos;
+        do int save = pos;
+        while (match("ident") && match("eql") && constantProd() && match("semicolon"));
         backTrack(save);
         return success(parent);
     }
@@ -139,8 +139,8 @@ bool Parser::typeDeclarationProd()
 
     if (match("typesy") && match("ident") && match("eql") && typeProd() && match("semicolon"))
     {
-        while (match("ident") && match("eql") && typeProd() && match("semicolon"))
-            int save = pos;
+        do int save = pos;
+        while (match("ident") && match("eql") && typeProd() && match("semicolon"));
         backTrack(save);
         return success(parent);
     }
@@ -156,8 +156,8 @@ bool Parser::varDeclarationProd()
 
     if (match("varsy") && identifierListProd() && match("colon") && typeProd() && match("semicolon"))
     {
-        while (identifierListProd() && match("colon") && typeProd() && match("semicolon"))
-            int save = pos;
+        do int save = pos;
+        while (identifierListProd() && match("colon") && typeProd() && match("semicolon"));
         backTrack(save);
         return success(parent);
     }
@@ -173,8 +173,8 @@ bool Parser::identifierListProd()
 
     if (match("ident"))
     {
-        while (match("comma") && match("ident"))
-            int save = pos;
+        do int save = pos;
+        while (match("comma") && match("ident"));
         backTrack(save);
         return success(parent);
     }

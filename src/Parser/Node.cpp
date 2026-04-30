@@ -3,12 +3,12 @@
 void Node::printTreeToFile(std::string fileName) {
     ofstream file("test/Lexer" + fileName);
 
-    printTree(&file, this, 0);
+    printTree(&file, 0);
 
     file.close();
 }
 
-void Node::printTree(std::ostream* stream, Node* root, int depth) {
+void Node::printTree(std::ostream* stream, int depth) {
     for(int i = 0; i < depth; i++) {
         if(i+1 == depth) {
             *stream << "├── ";
@@ -24,6 +24,6 @@ void Node::printTree(std::ostream* stream, Node* root, int depth) {
     }
     *stream << toString();
     for(Node* child : children) {
-        printTree(stream, child, depth+1);
+        child->printTree(stream, depth+1);
     }
 }
