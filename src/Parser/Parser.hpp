@@ -47,9 +47,9 @@ private:
     bool typeProd();
     // arraysy + lbrack + (range | ident) + rbrack + ofsy + type
     bool arrayTypeProd();
-    // expression + period + period + expression
+    // constant + period + period + constant
     bool rangeProd();
-    // lparent + ident + (comma + ident)* + lparent
+    // lparent + ident + (comma + ident)* + rparent
     bool enumeratedProd();
     // recordsy + field-list + endsy
     bool recordTypeProd();
@@ -64,7 +64,7 @@ private:
     // functionsy + ident + (formal-parameter-list)? + colon + ident + semicolon+ block + semicolon
     bool functionDeclarationProd();
     // declaration-part + compound-statement
-    bool locProd();
+    bool blockProd();
     // lparent + parameter-group + (semicolon + parameter-group)* + rparent
     bool formalParameterListProd();
     // identifier-list + colon + (ident | array-type)

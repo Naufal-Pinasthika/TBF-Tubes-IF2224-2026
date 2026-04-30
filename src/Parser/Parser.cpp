@@ -104,7 +104,7 @@ bool Parser::constDeclarationProd()
 
     if (match("constsy") && match("ident") && match("eql") && constantProd() && match("semicolon"))
     {
-        do int save = pos;
+        do save = pos;
         while (match("ident") && match("eql") && constantProd() && match("semicolon"));
         backTrack(save);
         return success(parent);
@@ -215,6 +215,146 @@ bool Parser::arrayTypeProd()
     if (match("arraysy") && match("lbrack") && (match("ident") || rangeProd()) && match("rbrack") && match("ofsy") && typeProd())
         return success(parent);
 
+    backTrack(save);
+    return fails(parent);
+}
+
+// constant + period + period + constant
+bool Parser::rangeProd() {
+    Node *parent = insert(array_type);
+    int save = pos;
+
+    if (constantProd() && match("period") && match("period") && constantProd()) 
+        return success(parent);
+
+    backTrack(save);
+    return fails(parent);
+}
+// lparent + ident + (comma + ident)* + rparent
+bool Parser::enumeratedProd() {
+    Node *parent = insert(array_type);
+    int save = pos;
+
+    if (match("lparent") && match("ident")) {
+        int save2 = pos;
+        while (match("comma") && match("ident"))
+            save2 = pos;
+        backTrack(save2);
+        if (match("rparent")) return success(parent);
+    }
+    
+    backTrack(save);
+    return fails(parent);
+}
+// recordsy + field-list + endsy
+bool Parser::recordTypeProd() {
+    Node *parent = insert(array_type);
+    int save = pos;
+
+    if (match("recordsy") && fieldListProd() && match("endsy")) 
+        return success(parent);
+    
+    backTrack(save);
+    return fails(parent);
+}
+// field-part + (semicolon + field-part)*
+bool Parser::fieldListProd() {
+    Node *parent = insert(array_type);
+    int save = pos;
+
+    if (fieldPartProd()) {
+        int save2 = pos;
+        while (match("semicolon") && fieldPartProd())
+            save2 = pos;
+        backTrack(save2);
+        return success(parent);
+    }
+    
+    backTrack(save);
+    return fails(parent);
+}
+// identifier-list + colon + type
+bool Parser::fieldPartProd() {
+    Node *parent = insert(array_type);
+    int save = pos;
+
+    if (identifierListProd() && match("colon") && typeProd()) 
+        return success(parent);
+    
+    backTrack(save);
+    return fails(parent);
+}
+// procedure-declaration | function-declaration
+bool Parser::subprogramDeclarationProd() {
+    Node *parent = insert(array_type);
+    int save = pos;
+
+    if (procedureDeclarationProd() || functionDeclarationProd())
+        return success(parent);
+
+    backTrack(save);
+    return fails(parent);
+}
+// proceduresy + ident + (formal-parameter-list)? + semicolon + block + semicolon
+bool Parser::procedureDeclarationProd() {
+    Node *parent = insert(array_type);
+    int save = pos;
+
+    if (match("proceduresy") && match("ident")) {
+        int save2 = pos;
+        if (formalParameterListProd()) {
+            if (match("semicolon") && blockProd() && match("semicolon"))
+                return success(parent);
+        }
+        backTrack(save2);
+    }
+    
+    backTrack(save);
+    return fails(parent);
+}
+// functionsy + ident + (formal-parameter-list)? + colon + ident + semicolon+ block + semicolon
+bool Parser::functionDeclarationProd() {
+    Node *parent = insert(array_type);
+    int save = pos;
+
+    if (match("functionsy") && match("ident")) {
+        int save2 = pos;
+        if (formalParameterListProd()) {
+            if (match("colon") && match("ident") && match("semicolon") && blockProd() && match("semicolon"))
+                return success(parent);
+        }
+        backTrack(save2);
+    }
+    
+    backTrack(save);
+    return fails(parent);
+}
+// declaration-part + compound-statement
+bool Parser::blockProd() {
+    Node *parent = insert(array_type);
+    int save = pos;
+
+    if (declarationPartProd() && compoundStatementProd()) 
+        return success(parent);
+    
+    backTrack(save);
+    return fails(parent);
+}
+// lparent + parameter-group + (semicolon + parameter-group)* + rparent
+bool Parser::formalParameterListProd() {
+    Node *parent = insert(array_type);
+    int save = pos;
+
+    if (match("lparent") && parameterGroupProd()) {
+        int save2 = pos;
+        while (match("semicolon") && parameterGroupProd())
+            save2 = pos;
+        backTrack(save2);
+
+        if (match("rparent"))
+            return success(parent);
+    }
+    
     backTrack(save);
     return fails(parent);
 }
