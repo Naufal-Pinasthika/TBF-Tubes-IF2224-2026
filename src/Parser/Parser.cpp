@@ -410,6 +410,18 @@ bool Parser::statementProd(){
     return fails(parent);
 }
 
+bool Parser::assignmentStatementProd(){
+    Node *parent = insert(assignment_statement);
+    int save = pos;
+
+    if(variableProd() && match("becomes") && expressionProd()){
+        return success(parent);
+    }
+
+    backTrack(save);
+    return fails(parent);
+}
+
 bool Parser::ifStatementProd(){
     Node *parent = insert(if_statement);
     int save = pos;

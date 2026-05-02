@@ -75,6 +75,12 @@ private:
     bool statementListProd();
     // (assignment-statement | if-statement | case-statement | while-statement | repeat-statement | for-statement )? | procedure/function-call
     bool statementProd();
+    // ident | component-variable
+    bool variableProd();
+    //variable + (lbrack + index-list + rbrack) | dot + ident ) 
+    bool componentVariableProd();
+    //( intcon | charcon | ident ) + ( comma + index-list )*
+    bool indexListProd();
     // ident + becomes + expression
     bool assignmentStatementProd();
     // ifsy + expression + thensy + statement + (elsy + statement)?
