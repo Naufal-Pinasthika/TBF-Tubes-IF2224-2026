@@ -359,6 +359,142 @@ bool Parser::formalParameterListProd() {
     return fails(parent);
 }
 
+bool Parser::parameterGroupProd(){
+    Node *parent = insert(parameter_group);
+    int save = pos;
+
+    if(identifierListProd() && match("colon") && (match("ident") || arrayTypeProd())){
+        return success(parent);
+    }
+
+    backTrack(save);
+    return fails(parent);
+}
+
+bool Parser::compoundStatementProd(){
+    Node *parent = insert(compound_statement);
+    int save = pos;
+
+    if(match("beginsy") && statementListProd() && match("endsy")){
+        return success(parent);
+    }
+
+    backTrack(save);
+    return fails(parent);
+}
+
+bool Parser::statementListProd(){
+    Node *parent = insert(statement_list);
+    int save = pos;
+
+    if(statementProd()){
+        int save2 = pos;
+        while(match("semicolon") && statementProd()){
+            save2 = pos;
+        }
+        backTrack(save2);
+        return success(parent);
+    }
+    backTrack(save);
+    return false;
+}
+
+bool Parser::statementProd(){
+    Node *parent = insert(statement);
+    int save = pos;
+
+    if((assignmentStatementProd() || ifStatementProd() || caseStatementProd || whileStatementProd || repeatStatementProd || forStatementProd() || procedureFunctionCallProd()) || true){
+        return success(parent);
+    }
+    backTrack(save);
+    return fails(parent);
+}
+
+bool Parser::ifStatementProd(){
+    Node *parent = insert(if_statement);
+    int save = pos;
+
+    if(match("ifsy") && expressionProd() && match("thensy") && statementProd() && ((match("elsy") && statementProd()) || true)){
+        return success(parent);
+    }
+
+    backTrack(save);
+    return fails(parent);
+}
+
+bool Parser::caseStatementProd(){
+    Node *parent = insert(case_statement);
+    int save = pos;
+
+    if(match("casesy") && expressionProd() && match("ofsy") && caseBlockProd() && match("endsy")){
+        return success(parent);
+    }
+
+    backTrack(save);
+    return fails(parent);
+}
+
+bool Parser::caseBlockProd(){
+    Node *parent = insert(case_block);
+    int save = pos;
+
+    if (constantProd()) {
+        int save2 = pos;
+
+        while (match("comma") && constantProd()) {
+            save2 = pos;
+        }
+        backTrack(save2);
+
+        if (match("colon") && statementProd()) {
+            save2 = pos;
+
+            while (match("semicolon")) {
+                int afterSemicolon = pos;
+
+                if (caseBlockProd()) {
+                    save2 = pos;
+                    continue;
+                }
+
+                backTrack(afterSemicolon);
+                break;
+            }
+
+            backTrack(save2);
+            return success(parent);
+        }
+    }
+
+    backTrack(save);
+    return fails(parent);
+}
+
+bool Parser::whileStatementProd(){
+    Node *parent = insert(while_statement);
+    int save = pos;
+
+    if(match("whensy") && expressionProd() &&  match("dosy") && statementProd()){
+        return success(parent);
+    }
+
+    backTrack(save);
+    return fails(parent);
+}
+
+bool Parser::repeatStatementProd(){
+    Node *parent = insert(repeat_statement);
+    int save = pos;
+
+    if(match("repeatsy") && statementListProd() && match("untilsy") && expressionProd()){
+        return success(parent);
+    }
+
+    backTrack(save);
+    return fails(parent);
+}
+
+
 bool Parser::forStatementProd()
 {
     Node *parent = insert(for_statement);
