@@ -5,7 +5,9 @@ class Parser
 {
 private:
     vector<Token> tokens;
+    vector<string> expected;
     int pos;
+    int highestPos;
     Node *root;
     Node *curr;
 
@@ -73,7 +75,7 @@ private:
     bool compoundStatementProd();
     // statement (semicolon + statement)*
     bool statementListProd();
-    // (assignment-statement | if-statement | case-statement | while-statement | repeat-statement | for-statement )? | procedure/function-call
+    // (assignment-statement | if-statement | case-statement |while-statement |repeat-statement | for-statement | procedure/function-call)?
     bool statementProd();
     // ident | component-variable
     bool variableProd();
@@ -115,7 +117,7 @@ private:
     bool multiplicativeOperatorProd();
 
 public:
-    Parser(vector<Token> tokens) : tokens(tokens), pos(0) {}
+    Parser(vector<Token> tokens) : tokens(tokens), pos(0), highestPos(0) {}
 
     bool parse()
     {
@@ -125,5 +127,9 @@ public:
         return result;
     }
 
-    Node *getRoot() { return root; }
+    Node *getRoot() const { return root; }
+    vector<Token> getTokens() const { return tokens; }
+    vector<string> getExpected() const { return expected; }
+    int getPos() const { return pos; }
+    int getHighestPos() const { return highestPos; }
 };

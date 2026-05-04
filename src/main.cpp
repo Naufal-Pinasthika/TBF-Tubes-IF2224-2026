@@ -22,23 +22,37 @@ int main(int argc,char* argv[]){
         Lexer lexer(file);
         vector <Token> tokenize = lexer.runLexer();
 
-        // filepath = "test/output/" + s + "_tokenize";
-        // ofstream outputFile(filepath);
+        filepath = "test/Lexer/" + s + "_tokenize";
+        ofstream outputFile(filepath);
         
-        // for (auto token : tokenize) {
-        //     string out = token.toString();
+        for (auto token : tokenize) {
+            string out = token.toString();
 
-        //     outputFile << out << endl;
-        //     if (out == "semicolon") {
-        //         outputFile << "\n";
-        //     }
-        // }
+            outputFile << out << endl;
+            // if (out == "semicolon") {
+            //     outputFile << "\n";
+            // }
+        }
 
         Parser parser(tokenize);
-        parser.parse();
+
+        if(!parser.parse()) {
+            Token token = parser.getTokens().at(parser.getHighestPos());
+            vector<string> expected = parser.getExpected();
+            vector<int> pos = token.getPos();
+            cout << "Syntax error:" << pos[0] << ":" << pos[1] << ": unexpected token " + token.getType() + " (\"" + token.getLexeme() + "\"), expected ";
+            bool first = true;
+            for(string s : expected) {
+                if(!first) cout << "|";
+                cout << s;
+                first = false;
+            }
+            cout << "\n";
+            return 1;
+        }
 
         parser.getRoot()->printTreeToFile(s + "_parsed");
-        
+
         return 0;
     }
     else{

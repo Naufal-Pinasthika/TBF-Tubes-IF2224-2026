@@ -1,7 +1,11 @@
 #include "Token.hpp"
 
-Token::Token(const string& type, const string& lexeme) : type(type), lexeme(lexeme) {
+Token::Token(const string& type, const string& lexeme) : type(type), lexeme(lexeme), pos{0,0} {
 
+}
+
+Token::Token(const string& type, const string& lexeme, const int row, const int col) : type(type), lexeme(lexeme), pos{row,col} {
+    pos[1] = pos[1] - lexeme.size();
 }
 
 string Token::getType() const {
@@ -12,6 +16,10 @@ string Token::getLexeme() const {
     return lexeme;
 }
 
+vector<int> Token::getPos() const {
+    return pos;
+}
+
 string Token::toString() const {
     string result = "";
     if (this->type == "intcon" || this->type == "realcon" || this->type == "charcon" || this->type == "ident" || this->type == "string" || this->type == "unknown" || this->type == "comment") {
@@ -19,10 +27,11 @@ string Token::toString() const {
         result += " (";
         result += this->lexeme;
         result += ")";
-        return result;
     }
     else {
         result += this->type;
-        return result;
     }
+
+    // result += " [" + to_string(pos[0]) + "," + to_string(pos[1]) + "]";
+    return result;
 }

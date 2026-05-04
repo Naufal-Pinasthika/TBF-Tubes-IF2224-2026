@@ -12,6 +12,7 @@ Token Parser::pop()
 
 bool Parser::success(Node *parent)
 {
+    // cout << "success: " << curr->toString() << "\n";
     parent->children.push_back(curr);
     curr = parent;
     return true;
@@ -19,6 +20,7 @@ bool Parser::success(Node *parent)
 
 bool Parser::fails(Node *parent)
 {
+    // cout << "fails: " << curr->toString() << "\n"; 
     delete curr;
     curr = parent;
     return false;
@@ -26,7 +28,10 @@ bool Parser::fails(Node *parent)
 
 void Parser::backTrack(int save)
 {
+    // cout << "backtrack from " << pos << " to " << save << "\n";
+    if(highestPos < pos) highestPos = pos;
     pos = save;
+    
 }
 
 Node *Parser::insert(NodeType type)
@@ -44,7 +49,18 @@ bool Parser::match(string t)
         Node *node = new Node(tokens[pos]);
         pop();
         curr->children.push_back(node);
+        // cout << "matched: " << node->toString() << "\n";
         return true;
+    }
+
+
+    // cout << "failed match, want: " << t << " actual: " << peek().toString() << "\n";
+    if(pos > highestPos) {
+        expected.clear();
+        expected.push_back(t);
+    }
+    else if (pos == highestPos) {
+        expected.push_back(t);
     }
 
     return false;
@@ -82,16 +98,16 @@ bool Parser::declarationPartProd()
     int save = pos;
 
     while (constDeclarationProd())
-        int save = pos;
+        save = pos;
     backTrack(save);
     while (typeDeclarationProd())
-        int save = pos;
+        save = pos;
     backTrack(save);
     while (varDeclarationProd())
-        int save = pos;
+        save = pos;
     backTrack(save);
     while (subprogramDeclarationProd())
-        int save = pos;
+        save = pos;
     backTrack(save);
 
     return success(parent);
@@ -104,7 +120,8 @@ bool Parser::constDeclarationProd()
 
     if (match("constsy") && match("ident") && match("eql") && constantProd() && match("semicolon"))
     {
-        do save = pos;
+        do
+            save = pos;
         while (match("ident") && match("eql") && constantProd() && match("semicolon"));
         backTrack(save);
         return success(parent);
@@ -139,7 +156,8 @@ bool Parser::typeDeclarationProd()
 
     if (match("typesy") && match("ident") && match("eql") && typeProd() && match("semicolon"))
     {
-        do int save = pos;
+        do
+            save = pos;
         while (match("ident") && match("eql") && typeProd() && match("semicolon"));
         backTrack(save);
         return success(parent);
@@ -156,7 +174,8 @@ bool Parser::varDeclarationProd()
 
     if (match("varsy") && identifierListProd() && match("colon") && typeProd() && match("semicolon"))
     {
-        do int save = pos;
+        do
+            save = pos;
         while (identifierListProd() && match("colon") && typeProd() && match("semicolon"));
         backTrack(save);
         return success(parent);
@@ -173,7 +192,8 @@ bool Parser::identifierListProd()
 
     if (match("ident"))
     {
-        do int save = pos;
+        do
+            save = pos;
         while (match("comma") && match("ident"));
         backTrack(save);
         return success(parent);
@@ -220,72 +240,81 @@ bool Parser::arrayTypeProd()
 }
 
 // constant + period + period + constant
-bool Parser::rangeProd() {
+bool Parser::rangeProd()
+{
     Node *parent = insert(array_type);
     int save = pos;
 
-    if (constantProd() && match("period") && match("period") && constantProd()) 
+    if (constantProd() && match("period") && match("period") && constantProd())
         return success(parent);
 
     backTrack(save);
     return fails(parent);
 }
 // lparent + ident + (comma + ident)* + rparent
-bool Parser::enumeratedProd() {
+bool Parser::enumeratedProd()
+{
     Node *parent = insert(array_type);
     int save = pos;
 
-    if (match("lparent") && match("ident")) {
+    if (match("lparent") && match("ident"))
+    {
         int save2 = pos;
         while (match("comma") && match("ident"))
             save2 = pos;
         backTrack(save2);
-        if (match("rparent")) return success(parent);
+        if (match("rparent"))
+            return success(parent);
     }
-    
+
     backTrack(save);
     return fails(parent);
 }
 // recordsy + field-list + endsy
-bool Parser::recordTypeProd() {
+bool Parser::recordTypeProd()
+{
     Node *parent = insert(array_type);
     int save = pos;
 
-    if (match("recordsy") && fieldListProd() && match("endsy")) 
+    if (match("recordsy") && fieldListProd() && match("endsy"))
         return success(parent);
-    
+
     backTrack(save);
     return fails(parent);
 }
 // field-part + (semicolon + field-part)*
-bool Parser::fieldListProd() {
+bool Parser::fieldListProd()
+{
     Node *parent = insert(array_type);
     int save = pos;
 
-    if (fieldPartProd()) {
+    if (fieldPartProd())
+    {
         int save2 = pos;
         while (match("semicolon") && fieldPartProd())
             save2 = pos;
         backTrack(save2);
         return success(parent);
     }
-    
+
     backTrack(save);
     return fails(parent);
 }
 // identifier-list + colon + type
-bool Parser::fieldPartProd() {
+bool Parser::fieldPartProd()
+{
     Node *parent = insert(array_type);
     int save = pos;
 
-    if (identifierListProd() && match("colon") && typeProd()) 
+    if (identifierListProd() && match("colon") && typeProd())
         return success(parent);
-    
+
     backTrack(save);
     return fails(parent);
 }
 // procedure-declaration | function-declaration
-bool Parser::subprogramDeclarationProd() {
+bool Parser::subprogramDeclarationProd()
+{
     Node *parent = insert(array_type);
     int save = pos;
 
@@ -296,56 +325,65 @@ bool Parser::subprogramDeclarationProd() {
     return fails(parent);
 }
 // proceduresy + ident + (formal-parameter-list)? + semicolon + block + semicolon
-bool Parser::procedureDeclarationProd() {
+bool Parser::procedureDeclarationProd()
+{
     Node *parent = insert(array_type);
     int save = pos;
 
-    if (match("proceduresy") && match("ident")) {
+    if (match("proceduresy") && match("ident"))
+    {
         int save2 = pos;
-        if (formalParameterListProd()) {
+        if (formalParameterListProd())
+        {
             if (match("semicolon") && blockProd() && match("semicolon"))
                 return success(parent);
         }
         backTrack(save2);
     }
-    
+
     backTrack(save);
     return fails(parent);
 }
 // functionsy + ident + (formal-parameter-list)? + colon + ident + semicolon+ block + semicolon
-bool Parser::functionDeclarationProd() {
+bool Parser::functionDeclarationProd()
+{
     Node *parent = insert(array_type);
     int save = pos;
 
-    if (match("functionsy") && match("ident")) {
+    if (match("functionsy") && match("ident"))
+    {
         int save2 = pos;
-        if (formalParameterListProd()) {
+        if (formalParameterListProd())
+        {
             if (match("colon") && match("ident") && match("semicolon") && blockProd() && match("semicolon"))
                 return success(parent);
         }
         backTrack(save2);
     }
-    
+
     backTrack(save);
     return fails(parent);
 }
 // declaration-part + compound-statement
-bool Parser::blockProd() {
+bool Parser::blockProd()
+{
     Node *parent = insert(array_type);
     int save = pos;
 
-    if (declarationPartProd() && compoundStatementProd()) 
+    if (declarationPartProd() && compoundStatementProd())
         return success(parent);
-    
+
     backTrack(save);
     return fails(parent);
 }
 // lparent + parameter-group + (semicolon + parameter-group)* + rparent
-bool Parser::formalParameterListProd() {
+bool Parser::formalParameterListProd()
+{
     Node *parent = insert(array_type);
     int save = pos;
 
-    if (match("lparent") && parameterGroupProd()) {
+    if (match("lparent") && parameterGroupProd())
+    {
         int save2 = pos;
         while (match("semicolon") && parameterGroupProd())
             save2 = pos;
@@ -354,16 +392,18 @@ bool Parser::formalParameterListProd() {
         if (match("rparent"))
             return success(parent);
     }
-    
+
     backTrack(save);
     return fails(parent);
 }
 
-bool Parser::parameterGroupProd(){
+bool Parser::parameterGroupProd()
+{
     Node *parent = insert(parameter_group);
     int save = pos;
 
-    if(identifierListProd() && match("colon") && (match("ident") || arrayTypeProd())){
+    if (identifierListProd() && match("colon") && (match("ident") || arrayTypeProd()))
+    {
         return success(parent);
     }
 
@@ -371,11 +411,13 @@ bool Parser::parameterGroupProd(){
     return fails(parent);
 }
 
-bool Parser::compoundStatementProd(){
+bool Parser::compoundStatementProd()
+{
     Node *parent = insert(compound_statement);
     int save = pos;
 
-    if(match("beginsy") && statementListProd() && match("endsy")){
+    if (match("beginsy") && statementListProd() && match("endsy"))
+    {
         return success(parent);
     }
 
@@ -383,13 +425,16 @@ bool Parser::compoundStatementProd(){
     return fails(parent);
 }
 
-bool Parser::statementListProd(){
+bool Parser::statementListProd()
+{
     Node *parent = insert(statement_list);
     int save = pos;
 
-    if(statementProd()){
+    if (statementProd())
+    {
         int save2 = pos;
-        while(match("semicolon") && statementProd()){
+        while (match("semicolon") && statementProd())
+        {
             save2 = pos;
         }
         backTrack(save2);
@@ -399,22 +444,96 @@ bool Parser::statementListProd(){
     return false;
 }
 
-bool Parser::statementProd(){
+bool Parser::statementProd()
+{
     Node *parent = insert(statement);
     int save = pos;
 
-    if((assignmentStatementProd() || ifStatementProd() || caseStatementProd || whileStatementProd || repeatStatementProd || forStatementProd() || procedureFunctionCallProd()) || true){
+    if (assignmentStatementProd())
+        return success(parent);
+    backTrack(save);
+    if (ifStatementProd())
+        return success(parent);
+    backTrack(save);
+    if (caseStatementProd())
+        return success(parent);
+    backTrack(save);
+    if (whileStatementProd())
+        return success(parent);
+    backTrack(save);
+    if (repeatStatementProd())
+        return success(parent);
+    backTrack(save);
+    if (forStatementProd())
+        return success(parent);
+    backTrack(save);
+    if (procedureFunctionCallProd())
+        return success(parent);
+    backTrack(save);
+    if (true)
+        return success(parent);
+
+    backTrack(save);
+    return fails(parent);
+}
+
+bool Parser::variableProd()
+{
+    Node *parent = insert(variable);
+    int save = pos;
+
+    if (match("ident"))
+    {
         return success(parent);
     }
     backTrack(save);
     return fails(parent);
 }
 
-bool Parser::assignmentStatementProd(){
+bool Parser::componentVariableProd()
+{
+    Node *parent = insert(component_variable);
+    int save = pos;
+
+    if (variableProd())
+    {
+        save = pos;
+        if (match("lbrack") && indexListProd() && match("rbrack"))
+            return success(parent);
+        backTrack(save);
+        if (match("dot") && match("ident"))
+            return success(parent);
+        backTrack(save);
+    }
+    backTrack(save);
+    return fails(parent);
+}
+
+bool Parser::indexListProd()
+{
+    Node *parent = insert(index_list);
+    int save = pos;
+
+    if (match("intcon") || match("charcon") || match("ident"))
+    {
+        do save = pos;
+        while (match("comma") && indexListProd());
+        backTrack(save);
+
+        return success(parent);
+    }
+
+    backTrack(save);
+    return fails(parent);
+}
+
+bool Parser::assignmentStatementProd()
+{
     Node *parent = insert(assignment_statement);
     int save = pos;
 
-    if(variableProd() && match("becomes") && expressionProd()){
+    if (variableProd() && match("becomes") && expressionProd())
+    {
         return success(parent);
     }
 
@@ -422,11 +541,13 @@ bool Parser::assignmentStatementProd(){
     return fails(parent);
 }
 
-bool Parser::ifStatementProd(){
+bool Parser::ifStatementProd()
+{
     Node *parent = insert(if_statement);
     int save = pos;
 
-    if(match("ifsy") && expressionProd() && match("thensy") && statementProd() && ((match("elsy") && statementProd()) || true)){
+    if (match("ifsy") && expressionProd() && match("thensy") && statementProd() && ((match("elsy") && statementProd()) || true))
+    {
         return success(parent);
     }
 
@@ -434,11 +555,13 @@ bool Parser::ifStatementProd(){
     return fails(parent);
 }
 
-bool Parser::caseStatementProd(){
+bool Parser::caseStatementProd()
+{
     Node *parent = insert(case_statement);
     int save = pos;
 
-    if(match("casesy") && expressionProd() && match("ofsy") && caseBlockProd() && match("endsy")){
+    if (match("casesy") && expressionProd() && match("ofsy") && caseBlockProd() && match("endsy"))
+    {
         return success(parent);
     }
 
@@ -446,25 +569,31 @@ bool Parser::caseStatementProd(){
     return fails(parent);
 }
 
-bool Parser::caseBlockProd(){
+bool Parser::caseBlockProd()
+{
     Node *parent = insert(case_block);
     int save = pos;
 
-    if (constantProd()) {
+    if (constantProd())
+    {
         int save2 = pos;
 
-        while (match("comma") && constantProd()) {
+        while (match("comma") && constantProd())
+        {
             save2 = pos;
         }
         backTrack(save2);
 
-        if (match("colon") && statementProd()) {
+        if (match("colon") && statementProd())
+        {
             save2 = pos;
 
-            while (match("semicolon")) {
+            while (match("semicolon"))
+            {
                 int afterSemicolon = pos;
 
-                if (caseBlockProd()) {
+                if (caseBlockProd())
+                {
                     save2 = pos;
                     continue;
                 }
@@ -482,11 +611,13 @@ bool Parser::caseBlockProd(){
     return fails(parent);
 }
 
-bool Parser::whileStatementProd(){
+bool Parser::whileStatementProd()
+{
     Node *parent = insert(while_statement);
     int save = pos;
 
-    if(match("whensy") && expressionProd() &&  match("dosy") && statementProd()){
+    if (match("whensy") && expressionProd() && match("dosy") && statementProd())
+    {
         return success(parent);
     }
 
@@ -494,25 +625,27 @@ bool Parser::whileStatementProd(){
     return fails(parent);
 }
 
-bool Parser::repeatStatementProd(){
+bool Parser::repeatStatementProd()
+{
     Node *parent = insert(repeat_statement);
     int save = pos;
 
-    if(match("repeatsy") && statementListProd() && match("untilsy") && expressionProd()){
+    if (match("repeatsy") && statementListProd() && match("untilsy") && expressionProd())
+    {
         return success(parent);
     }
 
     backTrack(save);
     return fails(parent);
 }
-
 
 bool Parser::forStatementProd()
 {
     Node *parent = insert(for_statement);
     int save = pos;
 
-    if (match("forsy") && match("ident") && match("becomes") && expressionProd() && (match("tosy") || match("downtosy")) && expressionProd() && match("dosy") && statementProd()) {
+    if (match("forsy") && match("ident") && match("becomes") && expressionProd() && (match("tosy") || match("downtosy")) && expressionProd() && match("dosy") && statementProd())
+    {
         return success(parent);
     }
 
@@ -520,12 +653,13 @@ bool Parser::forStatementProd()
     return fails(parent);
 }
 
-bool Parser::procedureFunctionCallProd() 
+bool Parser::procedureFunctionCallProd()
 {
     Node *parent = insert(procedure_function_call);
     int save = pos;
 
-    if (match("ident") && ((match("lparent") && parameterListProd() && match("rparent")) || true )) {
+    if (match("ident") && ((match("lparent") && parameterListProd() && match("rparent"))))
+    {
         return success(parent);
     }
 
@@ -533,7 +667,7 @@ bool Parser::procedureFunctionCallProd()
     return fails(parent);
 }
 
-bool Parser::parameterListProd() 
+bool Parser::parameterListProd()
 {
     Node *parent = insert(parameter_list);
     int save = pos;
@@ -542,7 +676,7 @@ bool Parser::parameterListProd()
     {
         int save = pos;
         while (match("comma") && expressionProd())
-            int save = pos;
+            save = pos;
         backTrack(save);
         return success(parent);
     }
@@ -559,7 +693,8 @@ bool Parser::expressionProd()
     if (simpleExpressionProd())
     {
         int save = pos;
-        if ((relationalOperatorProd() && simpleExpressionProd()) || true ) {
+        if ((relationalOperatorProd() && simpleExpressionProd()) || true)
+        {
             int save = pos;
             backTrack(save);
             return success(parent);
@@ -571,17 +706,19 @@ bool Parser::expressionProd()
     return fails(parent);
 }
 
-bool Parser::simpleExpressionProd() 
-{ 
+bool Parser::simpleExpressionProd()
+{
     Node *parent = insert(simple_expression);
     int save = pos;
 
-    if ((match("plus") || match("minus")) || true) {
+    if ((match("plus") || match("minus")) || true)
+    {
         int save = pos;
         if (termProd())
         {
+            int save = pos;
             while (additiveOperatorProd() && termProd())
-                int save = pos;
+                save = pos;
             backTrack(save);
             return success(parent);
         }
@@ -592,7 +729,7 @@ bool Parser::simpleExpressionProd()
     return fails(parent);
 }
 
-bool Parser::termProd() 
+bool Parser::termProd()
 {
     Node *parent = insert(term);
     int save = pos;
@@ -601,7 +738,7 @@ bool Parser::termProd()
     {
         int save = pos;
         while (multiplicativeOperatorProd() && factorProd())
-            int save = pos;
+            save = pos;
         backTrack(save);
         return success(parent);
     }
@@ -614,29 +751,17 @@ bool Parser::factorProd()
     Node *parent = insert(factor);
     int save = pos;
 
-    if (match("ident"))
+    if (match("ident") || match("intcon") || match("charcon") || match("string") || (match("lparent") && expressionProd() && match("rparent")))
         return success(parent);
     backTrack(save);
-    if (match("intcon"))
+    if (match("notsy") && factorProd()) 
         return success(parent);
     backTrack(save);
-    if (match("charcon"))
+    if (procedureFunctionCallProd())
+        return success(parent);
+    if (variableProd())
         return success(parent);
     backTrack(save);
-    if (match("string"))
-        return success(parent);
-    backTrack(save); 
-
-    if (match("lparent") && expressionProd() && match("rparent"))
-        return success(parent);
-    backTrack(save);     
-    
-    if (match("notsy") && factorProd())
-        return success(parent);
-    backTrack(save);     
-    if (procedureFunctionCallProd()) 
-        return success(parent);
-    backTrack(save);         
     return fails(parent);
 }
 
@@ -683,7 +808,7 @@ bool Parser::additiveOperatorProd()
     return fails(parent);
 }
 
-bool Parser::multiplicativeOperatorProd() 
+bool Parser::multiplicativeOperatorProd()
 {
     Node *parent = insert(multiplicative_operator);
     int save = pos;
@@ -705,5 +830,3 @@ bool Parser::multiplicativeOperatorProd()
     backTrack(save);
     return fails(parent);
 }
-
-

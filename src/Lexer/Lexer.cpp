@@ -33,8 +33,7 @@ static const unordered_map<string, string> KEYWORDS = {
     {"mod", "imod"},
     {"and", "andsy"},
     {"or", "orsy"},
-    {"not", "notsy"}
-};
+    {"not", "notsy"}};
 
 static const unordered_map<string, string> SYMBOLS = {
     {"+", "plus"},
@@ -51,246 +50,299 @@ static const unordered_map<string, string> SYMBOLS = {
     {",", "comma"},
     {";", "semicolon"},
     {".", "period"},
-    {":", "colon"}
-};
+    {":", "colon"}};
 
+Lexer::Lexer(ifstream &input) : input(input), readRow(1), readCol(1) {}
 
-Lexer::Lexer(ifstream& input) : input(input) {}
+int Lexer::get()
+{
+    int c = input.get();
+    if (c == '\n')
+    {
+        readRow += 1;
+        readCol = 1;
+    }
+    else
+        readCol += 1;
+    return c;
+}
 
-vector<Token> Lexer::runLexer() {
-    vector <Token> tokens;
+int Lexer::peek() const
+{
+    return input.peek();
+}
 
-    while (input.peek() != EOF) {
+vector<Token> Lexer::runLexer()
+{
+    vector<Token> tokens;
+
+    while (peek() != EOF)
+    {
 
         // Ignore whitespace
-        while (input.peek() != EOF && isspace(input.peek())) {
-            input.get();
+        while (peek() != EOF && isspace(peek()))
+        {
+            get();
         }
 
         // Check for EOF after consuming whitespace
-        if (input.peek() == EOF) {
+        if (peek() == EOF)
+        {
             break;
         }
 
         // Grab char and check the current state its in
-        char ch = static_cast<char> (input.peek());
+        char ch = static_cast<char>(peek());
 
-        if (isalpha(ch)){
+        if (isalpha(ch))
+        {
             Token result = scanIndentOrKeyword();
             tokens.push_back(result);
-
-        } else if (isdigit(ch)){
+        }
+        else if (isdigit(ch))
+        {
             Token result = scanNumber();
             tokens.push_back(result);
-
-        } else if (ch == '\''){
+        }
+        else if (ch == '\'')
+        {
             Token result = scanString();
             tokens.push_back(result);
-
-        }  else if (ch == '(') {
-            tokens.push_back(scanCommentParen()); 
-        }   else if (ch == ':' || ch == ';' || ch == '+' || ch == '<' || ch == '>' || ch == '*' || ch == '/' ||
-                   ch == '=' || ch == '-' || ch == '.' || ch == ',' || ch == ')' || ch == '[' || ch == ']') {
+        }
+        else if (ch == '(')
+        {
+            tokens.push_back(scanCommentParen());
+        }
+        else if (ch == ':' || ch == ';' || ch == '+' || ch == '<' || ch == '>' || ch == '*' || ch == '/' ||
+                 ch == '=' || ch == '-' || ch == '.' || ch == ',' || ch == ')' || ch == '[' || ch == ']')
+        {
             Token result = scanSymbol();
             tokens.push_back(result);
-        } else if (ch == '{'){
+        }
+        else if (ch == '{')
+        {
             tokens.push_back(scanCommentCurly());
         }
-        else {
+        else
+        {
             // any symbol that are not recongnized as valid token will be pass as "unknown" token
             string unknownSymbol = string(1, ch);
-            Token result = Token("unknown", unknownSymbol);
+            Token result = Token("unknown", unknownSymbol, readRow, readCol);
             tokens.push_back(result);
         }
-        
     }
-
 
     return tokens;
 }
 
-Token Lexer::scanSymbol() {
-    char ch = static_cast <char>(input.get());
-    if (ch == '<') {
+Token Lexer::scanSymbol()
+{
+    char ch = static_cast<char>(get());
+    if (ch == '<')
+    {
 
-        if (input.peek() == '=') {
-            input.get();
-            return Token("leq", "<=");
+        if (peek() == '=')
+        {
+            get();
+            return Token("leq", "<=", readRow, readCol);
         }
 
-        if (input.peek() == '>') {
-            input.get();
-            return Token("neq", "<>");
+        if (peek() == '>')
+        {
+            get();
+            return Token("neq", "<>", readRow, readCol);
         }
 
-        return Token("lss", "<");
+        return Token("lss", "<", readRow, readCol);
+    }
+    else if (ch == '=')
+    {
 
-    } else if (ch == '=') {
-        
-        if (input.peek() == '=') {
-            input.get();
-            return Token("eql", "==");
-        }    
+        if (peek() == '=')
+        {
+            get();
+            return Token("eql", "==", readRow, readCol);
+        }
 
         // = is treated as unknown symbol
-        return Token("unknown", "=");        
+        return Token("unknown", "=", readRow, readCol);
+    }
+    else if (ch == '>')
+    {
 
-    } else if (ch == '>') {
-
-        if (input.peek() == '=') {
-            input.get();
-            return Token("geq", ">=");
-        }    
-        
-        return Token("gtr", ">");    
-        
-    } else if (ch == ':') {
-
-        if (input.peek() == '=') {
-            input.get();
-            return Token("becomes", ":=");
+        if (peek() == '=')
+        {
+            get();
+            return Token("geq", ">=", readRow, readCol);
         }
 
-        return Token("colon", ":");
-    } 
+        return Token("gtr", ">", readRow, readCol);
+    }
+    else if (ch == ':')
+    {
 
-    string symbol = string(1,ch);
+        if (peek() == '=')
+        {
+            get();
+            return Token("becomes", ":=", readRow, readCol);
+        }
+
+        return Token("colon", ":", readRow, readCol);
+    }
+
+    string symbol = string(1, ch);
     string tokenName = SYMBOLS.at(symbol);
-    return Token(tokenName, symbol);
+    return Token(tokenName, symbol, readRow, readCol);
 }
 
-Token Lexer::scanNumber() {
+Token Lexer::scanNumber()
+{
 
     string tokenName = "";
 
-    char ch = static_cast <char>(input.get());
-    
-    char next_ch = static_cast<char> (input.peek());
+    char ch = static_cast<char>(get());
+
+    char next_ch = static_cast<char>(peek());
 
     tokenName += ch;
 
-    while (isdigit(next_ch)) {
-        ch = static_cast <char>(input.get());
-        next_ch = static_cast<char> (input.peek());
+    while (isdigit(next_ch))
+    {
+        ch = static_cast<char>(get());
+        next_ch = static_cast<char>(peek());
         tokenName += ch;
     }
 
-    if (next_ch == '.') {        
-        ch = static_cast <char>(input.get());
-        next_ch = static_cast<char> (input.peek());
+    if (next_ch == '.')
+    {
+        ch = static_cast<char>(get());
+        next_ch = static_cast<char>(peek());
 
         tokenName += ch;
 
-        if (isdigit(next_ch)) {
-            while (isdigit(input.peek())){
-                ch = static_cast <char>(input.get());
-                next_ch = static_cast<char> (input.peek());
+        if (isdigit(next_ch))
+        {
+            while (isdigit(peek()))
+            {
+                ch = static_cast<char>(get());
+                next_ch = static_cast<char>(peek());
 
                 tokenName += ch;
             }
-            return Token("realcon", tokenName);
-            
+            return Token("realcon", tokenName, readRow, readCol);
         }
 
         input.unget();
         tokenName.pop_back();
+    }
 
-    } 
-
-    return Token("intcon", tokenName);
-    
+    return Token("intcon", tokenName, readRow, readCol);
 }
 
-Token Lexer::scanIndentOrKeyword() {
+Token Lexer::scanIndentOrKeyword()
+{
     string tokenName = "";
 
-    tokenName += static_cast<char>(input.get());
-    
-    while (input.peek() != EOF && isalnum(static_cast<unsigned char>(input.peek()))) {
-        tokenName += static_cast<char>(input.get());
+    tokenName += static_cast<char>(get());
 
+    while (peek() != EOF && isalnum(static_cast<unsigned char>(peek())))
+    {
+        tokenName += static_cast<char>(get());
     }
-    
+
     string temp = tokenName;
-    transform(temp.begin(), temp.end(), temp.begin(), [](unsigned char c){return tolower(c);});
+    transform(temp.begin(), temp.end(), temp.begin(), [](unsigned char c)
+              { return tolower(c); });
 
     auto it = KEYWORDS.find(temp);
 
-    if (it != KEYWORDS.end()) {
+    if (it != KEYWORDS.end())
+    {
         string token = it->second;
-        return Token(token, tokenName); 
-    }    
+        return Token(token, tokenName, readRow, readCol);
+    }
 
-    return Token("ident", tokenName);
-
+    return Token("ident", tokenName, readRow, readCol);
 }
 
-Token Lexer::scanString() {
+Token Lexer::scanString()
+{
     string tokenName = "";
-    input.get(); // consume opening '
+    get(); // consume opening '
 
-    while (input.peek() != EOF) {
-        char ch = static_cast<char>(input.get());
+    while (peek() != EOF)
+    {
+        char ch = static_cast<char>(get());
 
-        if (ch == '\'') {
-            if (input.peek() == '\'') {
-                input.get();
+        if (ch == '\'')
+        {
+            if (peek() == '\'')
+            {
+                get();
                 tokenName += '\'';
-            } 
-            else {
-                if (tokenName.length() == 1)
-                    return Token("charcon", tokenName);
-                else
-                    return Token("string", tokenName);
             }
-        } 
-        else {
+            else
+            {
+                if (tokenName.length() == 1)
+                    return Token("charcon", tokenName, readRow, readCol);
+                else
+                    return Token("string", tokenName, readRow, readCol);
+            }
+        }
+        else
+        {
             tokenName += ch;
         }
     }
 
-    return Token("unknown", '\'' + tokenName);
+    return Token("unknown", '\'' + tokenName, readRow, readCol);
 }
 
-Token Lexer::scanCommentCurly(){
+Token Lexer::scanCommentCurly()
+{
     string tokenName = "";
-    char ch = static_cast<char>(input.get());
-    while(input.peek() != EOF && input.peek() != '}'){
-        ch = static_cast<char>(input.get());
+    char ch = static_cast<char>(get());
+    while (peek() != EOF && peek() != '}')
+    {
+        ch = static_cast<char>(get());
         tokenName += ch;
     }
 
-    if(input.peek() == '}'){
-        input.get();
-        return Token("comment", tokenName);
+    if (peek() == '}')
+    {
+        get();
+        return Token("comment", tokenName, readRow, readCol);
     }
-    return Token("unknown", "{" + tokenName);
+    return Token("unknown", "{" + tokenName, readRow, readCol);
 }
 
-
-
-Token Lexer::scanCommentParen(){
+Token Lexer::scanCommentParen()
+{
     string tokenName = "";
 
     // Consume '('
-    if (input.get() != '(') {
-        return Token("unknown", "(");
+    if (get() != '(')
+    {
+        return Token("unknown", "(", readRow, readCol);
     }
 
     // Consume '*'
-    if (input.peek() != '*') {
-        return Token("lparent", "(");
+    if (peek() != '*')
+    {
+        return Token("lparent", "(", readRow, readCol);
     }
-    input.get();
+    get();
 
     bool isClosed = false;
 
     // Read until the closing delimiter "*)"
-    while (input.peek() != EOF) {
-        char ch = static_cast<char>(input.get());
+    while (peek() != EOF)
+    {
+        char ch = static_cast<char>(get());
 
-        if (ch == '*' && input.peek() == ')') {
-            input.get();  // consume ')'
+        if (ch == '*' && peek() == ')')
+        {
+            get(); // consume ')'
             isClosed = true;
             break;
         }
@@ -298,9 +350,10 @@ Token Lexer::scanCommentParen(){
         tokenName += ch;
     }
 
-    if (!isClosed) {
-        return Token("unknown", tokenName);
+    if (!isClosed)
+    {
+        return Token("unknown", tokenName, readRow, readCol);
     }
 
-    return Token("comment", tokenName);
+    return Token("comment", tokenName, readRow, readCol);
 }

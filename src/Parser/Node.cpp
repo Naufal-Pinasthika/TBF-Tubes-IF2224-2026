@@ -1,7 +1,7 @@
 #include "Node.hpp"
 
 void Node::printTreeToFile(std::string fileName) {
-    ofstream file("test/Lexer" + fileName);
+    ofstream file("test/Parser/" + fileName);
 
     printTree(&file, 0);
 
@@ -14,15 +14,11 @@ void Node::printTree(std::ostream* stream, int depth) {
             *stream << "├── ";
         }
         else {
-            if(i == 0) {
-                *stream << "│   ";
-            }
-            else {
-                *stream << "    ";
-            }
+            *stream << "│   ";
         }
     }
-    *stream << toString();
+    *stream << toString() << "\n";
+    // cout << toString();
     for(Node* child : children) {
         child->printTree(stream, depth+1);
     }

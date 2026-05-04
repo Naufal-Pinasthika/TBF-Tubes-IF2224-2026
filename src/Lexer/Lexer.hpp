@@ -13,9 +13,12 @@ using namespace std;
 class Lexer {
 private:
     ifstream& input;
-
+    int readRow;
+    int readCol;
 public:
     Lexer(ifstream& input);
+    int get();
+    int peek() const;
     vector<Token> runLexer();
     Token scanSymbol();
     Token scanIndentOrKeyword();
