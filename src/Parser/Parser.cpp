@@ -484,6 +484,9 @@ bool Parser::variableProd()
 
     if (match("ident"))
     {
+        int save = pos;
+        while(componentVariableProd()) save = pos;
+        backTrack(save);
         return success(parent);
     }
     backTrack(save);
@@ -495,17 +498,11 @@ bool Parser::componentVariableProd()
     Node *parent = insert(component_variable);
     int save = pos;
 
-    if (variableProd())
-    {
-        save = pos;
-        if (match("lbrack") && indexListProd() && match("rbrack"))
-            return success(parent);
-        backTrack(save);
-        if (match("dot") && match("ident"))
-            return success(parent);
-        backTrack(save);
-    }
+    if (match("lbrack") && indexListProd() && match("rbrack")) return success(parent);
     backTrack(save);
+    if (match("period") && match("ident")) return success(parent);
+    backTrack(save);
+
     return fails(parent);
 }
 

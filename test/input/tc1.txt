@@ -6,6 +6,5 @@ var
 begin
   a := 5;
   b := a + 10;
-  writeln('R', b); {i huyh} (*this guy*)
+  writeln('Result = ', b);
 end.
-'''
