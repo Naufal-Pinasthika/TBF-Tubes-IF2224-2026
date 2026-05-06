@@ -115,5 +115,5 @@ public:
     }
 
     void printTreeToFile(std::string fileName);
-    void printTree(std::ostream *stream, int depth);
+    void printTree(std::ostream *stream, int depth, bool isLast, vector<bool> isAboveLeaf);
 };

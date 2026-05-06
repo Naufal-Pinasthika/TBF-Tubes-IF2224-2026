@@ -86,7 +86,7 @@ private:
     bool indexListProd();
     // variable + becomes + expression
     bool assignmentStatementProd();
-    // ifsy + expression + thensy + statement + (elsy + statement)?
+    // ifsy + expression + thensy + statement + (elsesy + statement)?
     bool ifStatementProd();
     // casesy + expression + ofsy + case-block + endsy
     bool caseStatementProd();
@@ -98,7 +98,7 @@ private:
     bool repeatStatementProd();
     // forsy + ident + becomes + expression + ( tosy | downtosy) + expression + dosy + statement
     bool forStatementProd();
-    // ident + (lparent + parameter-list + rparent)?
+    // ident + (lparent + parameter-list? + rparent)
     bool procedureFunctionCallProd();
     // expression (comma + expression)*
     bool parameterListProd();
@@ -108,7 +108,7 @@ private:
     bool simpleExpressionProd();
     // factor (multiplicative-operator + factor)*
     bool termProd();
-    // ident | intcon | charcon | string | (lparent + expression + rparent) | (notsy + factor) | procedure/function-call | variable
+    // ident | intcon | realcon | charcon | string | (lparent + expression + rparent) | (notsy + factor) | procedure/function-call | variable
     bool factorProd();
     // eql | neq | gtr | geq | lss | leq
     bool relationalOperatorProd();

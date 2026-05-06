@@ -44,6 +44,8 @@ Node *Parser::insert(NodeType type)
 
 bool Parser::match(string t)
 {
+    while (peek().getType() == "comment")
+        pop();
     if (peek().getType() == t)
     {
         Node *node = new Node(tokens[pos]);
@@ -151,7 +153,10 @@ bool Parser::constantProd()
     if (match("string"))
         return success(parent);
     backTrack(save);
-    if ((match("plus") || match("minus") || true) && (match("ident") || match("intcon") || match("realcon")))
+    if (!(match("plus") || match("minus")))
+        backTrack(save);
+    save = pos;
+    if ((match("ident") || match("intcon") || match("realcon")))
         return success(parent);
 
     backTrack(save);
@@ -555,8 +560,11 @@ bool Parser::ifStatementProd()
     Node *parent = insert(if_statement);
     int save = pos;
 
-    if (match("ifsy") && expressionProd() && match("thensy") && statementProd() && ((match("elsy") && statementProd()) || true))
+    if (match("ifsy") && expressionProd() && match("thensy") && statementProd())
     {
+        int save = pos;
+        if (!(match("elsesy") && statementProd()))
+            backTrack(save);
         return success(parent);
     }
 
@@ -625,7 +633,7 @@ bool Parser::whileStatementProd()
     Node *parent = insert(while_statement);
     int save = pos;
 
-    if (match("whensy") && expressionProd() && match("dosy") && statementProd())
+    if (match("whilesy") && expressionProd() && match("dosy") && statementProd())
     {
         return success(parent);
     }
@@ -667,9 +675,14 @@ bool Parser::procedureFunctionCallProd()
     Node *parent = insert(procedure_function_call);
     int save = pos;
 
-    if (match("ident") && ((match("lparent") && parameterListProd() && match("rparent"))))
+    if (match("ident") && match("lparent"))
     {
-        return success(parent);
+        int save = pos;
+        if (!parameterListProd())
+            backTrack(save);
+        if (match("rparent"))
+            return success(parent);
+        backTrack(save);
     }
 
     backTrack(save);
@@ -702,13 +715,9 @@ bool Parser::expressionProd()
     if (simpleExpressionProd())
     {
         int save = pos;
-        if ((relationalOperatorProd() && simpleExpressionProd()) || true)
-        {
-            int save = pos;
+        if (!(relationalOperatorProd() && simpleExpressionProd()))
             backTrack(save);
-            return success(parent);
-        }
-        backTrack(save);
+        return success(parent);
     }
 
     backTrack(save);
@@ -720,19 +729,18 @@ bool Parser::simpleExpressionProd()
     Node *parent = insert(simple_expression);
     int save = pos;
 
-    if ((match("plus") || match("minus")) || true)
+    if (!(match("plus") || match("minus")))
+        backTrack(save);
+    save = pos;
+    if (termProd())
     {
         int save = pos;
-        if (termProd())
-        {
-            int save = pos;
-            while (additiveOperatorProd() && termProd())
-                save = pos;
-            backTrack(save);
-            return success(parent);
-        }
+        while (additiveOperatorProd() && termProd())
+            save = pos;
         backTrack(save);
+        return success(parent);
     }
+    backTrack(save);
 
     backTrack(save);
     return fails(parent);
@@ -760,15 +768,16 @@ bool Parser::factorProd()
     Node *parent = insert(factor);
     int save = pos;
 
-    if (match("ident") || match("intcon") || match("charcon") || match("string") || (match("lparent") && expressionProd() && match("rparent")))
+    if (match("intcon") || match("realcon") || match("charcon") || match("string") || (match("lparent") && expressionProd() && match("rparent")))
         return success(parent);
     backTrack(save);
-    if (match("notsy") && factorProd())
+    if ((match("notsy") && factorProd()))
         return success(parent);
     backTrack(save);
     if (procedureFunctionCallProd())
         return success(parent);
-    if (variableProd())
+    backTrack(save);
+    if (match("ident") || variableProd())
         return success(parent);
     backTrack(save);
     return fails(parent);
@@ -782,7 +791,7 @@ bool Parser::relationalOperatorProd()
     if (match("eql"))
         return success(parent);
     backTrack(save);
-    if (match("neql"))
+    if (match("neq"))
         return success(parent);
     backTrack(save);
     if (match("gtr"))

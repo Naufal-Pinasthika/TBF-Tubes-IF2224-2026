@@ -29,9 +29,9 @@ int main(int argc,char* argv[]){
             string out = token.toString();
 
             outputFile << out << endl;
-            // if (out == "semicolon") {
-            //     outputFile << "\n";
-            // }
+            if (out == "semicolon") {
+                outputFile << "\n";
+            }
         }
 
         Parser parser(tokenize);

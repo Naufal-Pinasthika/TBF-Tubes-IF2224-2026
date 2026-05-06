@@ -25,7 +25,9 @@ string Token::toString() const {
     if (this->type == "intcon" || this->type == "realcon" || this->type == "charcon" || this->type == "ident" || this->type == "string" || this->type == "unknown" || this->type == "comment") {
         result += this->type;
         result += " (";
+        if(this->type == "charcon" || this->type == "string") result += '\'';
         result += this->lexeme;
+        if(this->type == "charcon" || this->type == "string") result += '\'';
         result += ")";
     }
     else {

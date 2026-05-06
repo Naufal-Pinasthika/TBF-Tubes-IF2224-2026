@@ -3,23 +3,29 @@
 void Node::printTreeToFile(std::string fileName) {
     ofstream file("test/Parser/" + fileName);
 
-    printTree(&file, 0);
+    vector<bool> isAboveLeaf;
+    printTree(&file, 0, true, isAboveLeaf);
 
     file.close();
 }
 
-void Node::printTree(std::ostream* stream, int depth) {
+void Node::printTree(std::ostream* stream, int depth, bool isLast, vector<bool> isAboveLeaf) {
+    while (isAboveLeaf.size() < (size_t) depth) isAboveLeaf.push_back(isLast);
     for(int i = 0; i < depth; i++) {
         if(i+1 == depth) {
-            *stream << "├── ";
+            if(!isLast) *stream << "├── ";
+            else *stream << "└── ";
         }
         else {
-            *stream << "│   ";
+            if(!isAboveLeaf.at(i)) *stream << "│   ";
+            else *stream << "    ";
         }
     }
     *stream << toString() << "\n";
     // cout << toString();
-    for(Node* child : children) {
-        child->printTree(stream, depth+1);
+    for(size_t i = 0; i < children.size(); i++) {
+        if(i == children.size() - 1) isLast = true;
+        else isLast = false;
+        children.at(i)->printTree(stream, depth+1, isLast, isAboveLeaf);
     }
 }
