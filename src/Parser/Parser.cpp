@@ -777,7 +777,10 @@ bool Parser::factorProd()
     if (procedureFunctionCallProd())
         return success(parent);
     backTrack(save);
-    if (match("ident") || variableProd())
+    if (variableProd())
+        return success(parent);
+    backTrack(save);
+    if (match("ident"))
         return success(parent);
     backTrack(save);
     return fails(parent);
