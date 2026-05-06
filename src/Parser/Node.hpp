@@ -2,7 +2,8 @@
 #include "../Lexer/Lexer.hpp"
 #include <iostream>
 
-enum NodeType {
+enum NodeType
+{
     program,
     program_header,
     declaration_part,
@@ -93,25 +94,30 @@ const std::string nodeTypeStr[] = {
     "<relational-operator>",
     "<additive-operator>",
     "<multiplicative-operator>",
-    "<terminal>"
-};
+    "<terminal>"};
 
-class Node {
+class Node
+{
 public:
     NodeType type;
     Token token;
-    vector<Node*> children;
+    vector<Node *> children;
 
-    Node(NodeType type): type(type), token(Token("","")) {}
-    Node(Token token): type(terminal), token(token) {}
-    virtual ~Node() {
-        for(Node* child : children) {
+    Node(NodeType type) : type(type), token(Token("", "")) {}
+    Node(Token token) : type(terminal), token(token) {}
+    virtual ~Node()
+    {
+        for (Node *child : children)
+        {
             delete child;
         }
     }
-    string toString() {
-        if(type == terminal) return token.toString();
-        else return nodeTypeStr[type];
+    string toString()
+    {
+        if (type == terminal)
+            return token.toString();
+        else
+            return nodeTypeStr[type];
     }
 
     void printTreeToFile(std::string fileName);

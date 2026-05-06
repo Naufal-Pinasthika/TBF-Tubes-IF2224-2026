@@ -59,11 +59,11 @@ bool Parser::match(string t)
     if (pos > highestPos)
     {
         expected.clear();
-        expected.push_back(t);
+        expected.insert(t);
     }
     else if (pos == highestPos)
     {
-        expected.push_back(t);
+        expected.insert(t);
     }
 
     return false;
@@ -131,9 +131,9 @@ bool Parser::constDeclarationProd()
 
     if (match("constsy") && match("ident") && match("eql") && constantProd() && match("semicolon"))
     {
-        do
+        int save = pos;
+        while (match("ident") && match("eql") && constantProd() && match("semicolon"))
             save = pos;
-        while (match("ident") && match("eql") && constantProd() && match("semicolon"));
         backTrack(save);
         return success(parent);
     }
@@ -170,9 +170,10 @@ bool Parser::typeDeclarationProd()
 
     if (match("typesy") && match("ident") && match("eql") && typeProd() && match("semicolon"))
     {
-        do
+
+        int save = pos;
+        while (match("ident") && match("eql") && typeProd() && match("semicolon"))
             save = pos;
-        while (match("ident") && match("eql") && typeProd() && match("semicolon"));
         backTrack(save);
         return success(parent);
     }
@@ -188,9 +189,9 @@ bool Parser::varDeclarationProd()
 
     if (match("varsy") && identifierListProd() && match("colon") && typeProd() && match("semicolon"))
     {
-        do
+        int save = pos;
+        while (identifierListProd() && match("colon") && typeProd() && match("semicolon"))
             save = pos;
-        while (identifierListProd() && match("colon") && typeProd() && match("semicolon"));
         backTrack(save);
         return success(parent);
     }
@@ -206,9 +207,9 @@ bool Parser::identifierListProd()
 
     if (match("ident"))
     {
-        do
+        int save = pos;
+        while (match("comma") && match("ident"))
             save = pos;
-        while (match("comma") && match("ident"));
         backTrack(save);
         return success(parent);
     }
@@ -529,9 +530,9 @@ bool Parser::indexListProd()
 
     if (match("intcon") || match("charcon") || match("ident"))
     {
-        do
+        int save = pos;
+        while (match("comma") && indexListProd())
             save = pos;
-        while (match("comma") && indexListProd());
         backTrack(save);
 
         return success(parent);

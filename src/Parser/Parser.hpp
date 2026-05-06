@@ -1,11 +1,12 @@
 #pragma once
 #include "Node.hpp"
+#include <set>
 
 class Parser
 {
 private:
     vector<Token> tokens;
-    vector<string> expected;
+    set<string> expected;
     int pos;
     int highestPos;
     Node *root;
@@ -80,7 +81,7 @@ private:
     bool statementProd();
     // ident + (component-variable)*
     bool variableProd();
-    // (lbrack + index-list + rbrack) | (period + ident) 
+    // (lbrack + index-list + rbrack) | (period + ident)
     bool componentVariableProd();
     // (intcon | charcon | ident) + (comma + index-list)*
     bool indexListProd();
@@ -124,7 +125,7 @@ public:
 
     Node *getRoot() const { return root; }
     vector<Token> getTokens() const { return tokens; }
-    vector<string> getExpected() const { return expected; }
+    set<string> getExpected() const { return expected; }
     int getPos() const { return pos; }
     int getHighestPos() const { return highestPos; }
 };
