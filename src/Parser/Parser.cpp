@@ -332,7 +332,10 @@ bool Parser::subprogramDeclarationProd()
     Node *parent = insert(array_type);
     int save = pos;
 
-    if (procedureDeclarationProd() || functionDeclarationProd())
+    if (procedureDeclarationProd())
+        return success(parent);
+    backTrack(save);
+    if (functionDeclarationProd())
         return success(parent);
 
     backTrack(save);
