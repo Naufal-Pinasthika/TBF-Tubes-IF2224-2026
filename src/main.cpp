@@ -9,6 +9,9 @@
 using namespace std;
 
 int main(int argc, char* argv[]) {
+    std::filesystem::create_directories("test/Lexer");
+    std::filesystem::create_directories("test/Parser");
+
     string mode = "P"; // default parser
     string s;
 
@@ -36,38 +39,48 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    string filepath = "test/input/" + s;
-    ifstream file(filepath);
+    bool isTokenFile = s.size() >= 9 && s.substr(s.size() - 9) == "_tokenize";
+    vector<Token> tokens;    
+    if (isTokenFile){
+        if (mode == "L") {
+            cerr << "Cannot lexer a tokenized file\n";
+            return 1;
+        }
 
-    if (!file.is_open()) {
-        cerr << "Invalid file" << endl;
-        return 1;
+        string filepath = "test/Lexer/" + s;
+        tokens = Lexer::readTokensFromFile(filepath);
+    } else {
+        string filepath = "test/input/" + s;
+        ifstream file(filepath);
+    
+        if (!file.is_open()) {
+            cerr << "Invalid file" << endl;
+            return 1;
+        }
+    
+        Lexer lexer(file);
+        tokens = lexer.runLexer();
+    
+        filepath = "test/Lexer/" + s + "_tokenize";
+        ofstream outputFile(filepath);
+    
+        if (!outputFile.is_open()) {
+            cerr << "Failed to open lexer output file" << endl;
+            return 1;
+        }
+    
+        for (const auto& token : tokens) {
+            outputFile << token.toString() << endl;
+        }
+        outputFile.close();
+    
+        if (mode == "L") {
+            return 0;
+        }
+
     }
 
-    std::filesystem::create_directories("test/Lexer");
-    std::filesystem::create_directories("test/Parser");
-
-    Lexer lexer(file);
-    vector<Token> tokenize = lexer.runLexer();
-
-    filepath = "test/Lexer/" + s + "_tokenize";
-    ofstream outputFile(filepath);
-
-    if (!outputFile.is_open()) {
-        cerr << "Failed to open lexer output file" << endl;
-        return 1;
-    }
-
-    for (const auto& token : tokenize) {
-        outputFile << token.toString() << endl;
-    }
-    outputFile.close();
-
-    if (mode == "L") {
-        return 0;
-    }
-
-    Parser parser(tokenize);
+    Parser parser(tokens);
 
     if (!parser.parse()) {
         Token token = parser.getTokens().at(parser.getHighestPos());
@@ -84,6 +97,11 @@ int main(int argc, char* argv[]) {
         }
         cout << "\n";
         return 1;
+    }
+
+    string outputName = s;
+    if (isTokenFile) {
+        outputName = s.substr(0, s.size() - 9); 
     }
 
     parser.getRoot()->printTreeToFile(s + "_parsed");

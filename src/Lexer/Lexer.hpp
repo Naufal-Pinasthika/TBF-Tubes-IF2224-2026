@@ -26,4 +26,5 @@ public:
     Token scanString();
     Token scanCommentCurly();
     Token scanCommentParen();
+    static vector<Token> readTokensFromFile(const string& filepath);
 };

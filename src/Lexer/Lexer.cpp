@@ -357,3 +357,34 @@ Token Lexer::scanCommentParen()
 
     return Token("comment", tokenName, readRow, readCol);
 }
+
+// cases when reading form tokenize file immediately
+vector<Token> Lexer::readTokensFromFile(const string& filepath) {
+    ifstream file(filepath);
+    vector<Token> tokens;
+    string line;
+
+    while (getline(file, line)) {
+        if (line.empty()) continue;
+
+        size_t pos = line.find(" (");
+
+        if (pos == string::npos) {
+            tokens.push_back(Token(line, line));
+        } else {
+            string type = line.substr(0, pos);
+            // remove " (" and ")"
+            string lexeme = line.substr(pos + 2, line.size() - pos - 3); 
+            if ((type == "charcon" || type == "string") &&
+                lexeme.size() >= 2 &&
+                lexeme.front() == '\'' &&
+                lexeme.back() == '\'') {
+                lexeme = lexeme.substr(1, lexeme.size() - 2);
+            }
+
+            tokens.push_back(Token(type, lexeme));
+        }
+    }
+
+    return tokens;
+}
