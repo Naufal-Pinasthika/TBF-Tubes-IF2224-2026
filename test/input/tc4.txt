@@ -1,12 +1,30 @@
-program Math;
+program OddvsEven;
 
 var
-    a, b, c: integer;
+  i, limit, level: Integer;
+  choices: Char;
 
 begin
-    a := 76;
-    b := 67;
+  limit := 5;
+  
+  for i := 1 to limit do
+    if (i mod 2 == 0) then
+      writeln('Genap')
+    else
+      writeln('Ganjil');
 
-    c := (a == b) * ((a / b) MOD (a div b)) + (a <> b) * ((a + b) div (a - b));
-    writeLn(c);
+  while i < 10 do 
+    i := i + 1;
+
+  repeat
+    limit := limit - 1;
+  until limit == 0;
+
+  case choices of
+    'A': level := 100;
+    'B': level := 50;
+    'C': level := 10
+  end;
+
+  ;
 end.

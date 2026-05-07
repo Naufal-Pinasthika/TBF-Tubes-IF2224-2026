@@ -1,13 +1,10 @@
-program Sky;
-
+program ControlFlow;
 var
-    s, c: string;
-
+    i: integer;
 begin
-    s := 'green';
-    c := 'blue';
-    if s == c then {print when sky is blue}
-    begin
-        writeln('sky is blue');
-    end.
+    i := 10;
+    while i > 0  do
+        if i mod 5 == 0 then
+            writeln(i);
+        i := i - 1;
 end.

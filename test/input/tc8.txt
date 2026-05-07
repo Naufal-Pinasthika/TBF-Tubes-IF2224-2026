@@ -1,0 +1,13 @@
+program Sky;
+
+var
+    s, c: string;
+
+begin
+    s := 'green';
+    c := 'blue';
+    if s == c then {print when sky is blue}
+    begin
+        writeln('sky is blue');
+    end.
+end.

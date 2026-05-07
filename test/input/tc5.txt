@@ -1,17 +1,30 @@
-program Circle;
+program Testing;
 
 var
-    Pi: real;
-    r, c, s: real;
-    identIniSangatPanjang24tetapiTetapValid: integer;
+    hasil, i, temp, trial, a, b, c: Integer;
+    valid: Boolean;
 
+procedure calculate(a, b: integer);
+var
+    temp, i, batas: Integer;
 begin
-    Pi := 3.14;
-    r := 5;
+    temp := a mod b;
+    batas := 20;
+    for i := temp to batas do
+        if(i mod a+b == 0) then
+            a := a + B;
+    writeln(a)
+end;
 
-    c := 2 * Pi * r;
-    s := Pi * r * r;
-    println('Keliling: ', c);
-    println('Luas: ', s);
-    printLn(identIniSangatPanjang24tetapiTetapValid);
+begin 
+    for i := 0 to trial do
+        calculate(hasil, temp);
+    a := 10;
+    b := 3;
+  
+    c := a div b + a mod b * 5 - (a + 2) * (b - 1);  
+    valid := (a > b) AND (c <> 0) OR NOT (a <= 5);
+  
+    if valid then
+        c := c * 1;
 end.

@@ -1,0 +1,12 @@
+program Math;
+
+var
+    a, b, c: integer;
+
+begin
+    a := 76;
+    b := 67;
+
+    c := (a == b) * ((a / b) MOD (a div b)) + (a <> b) * ((a + b) div (a - b));
+    writeLn(c);
+end.

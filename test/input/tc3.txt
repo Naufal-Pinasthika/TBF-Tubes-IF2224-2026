@@ -1,14 +1,20 @@
-program Star;
+program testingagain;
+
+const
+  PI == 3.14;
+  NumOfiterator == 100;
+  Pesan == 'Selamat Datang';
+  BeeMovieScript == 'According to all all law';
 
 var
-    i, n: integer;
+  diameter, r: Real;
+  hate: Boolean;
 
 begin
-    i := 1;
-    n := 5;
-    while i <= n do
-    begin
-        writeln('*');
-        i := i + 1;
-    end.
+  r := 12.7;
+  area := PI * (r*r);
+  hate := False;
+  writeln(BeeMovieScript);
+  writeln('Area of circle: ');
+  writeln(area)
 end.
