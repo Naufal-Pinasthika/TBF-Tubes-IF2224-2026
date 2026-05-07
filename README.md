@@ -16,7 +16,7 @@ Arion merupakan bahasan pemrograman baru yang sedang dikembangkan. Program ini a
 
 Keempat komponen tersebut dijadikan satu menjadi interpreter utuh yang dapat menjalankan _source code_ berbahasa pemrograman Arion.
 
-Pada rilis ini, _Syntax Analysis_ telah terimplementasi dengan acuan desain _parse tree_ dalam pembacaan _source code_ yang mengubah token-token yang sudah dibuat oleh _Lexical Analysis_ menjadi sebuah representasi _parse tree_ yang akan diproses lebih lanjut oleh komponen _interpreter_ selanjutnya.
+Pada rilis ini, _Syntax Analysis_ telah diimplementasikan dengan acuan desain _parse tree_ serta penerapan algoritma _recrusive descent_. Proses sekarang akan membaca _source code_ yang mengubah token-token yang sudah dibuat oleh _Lexical Analysis_ menjadi sebuah representasi _parse tree_ yang akan diproses lebih lanjut oleh komponen _interpreter_ selanjutnya.
 
 ## _Requirements_
 1. G++ Compiler
@@ -25,8 +25,14 @@ Pada rilis ini, _Syntax Analysis_ telah terimplementasi dengan acuan desain _par
 4. Environment Linux/Unix/MacOS/WSL
 
 ## Cara Instalasi Program
-1. Clone repository ini ke komputer dengan perintah `git clone [ini linknya apa]`
-2. Masuk ke direktori hasil clone dengan perintah `cd [nama folder hasil clone]`
+1. Clone repository ini ke komputer dengan perintah
+```sh
+git clone https://github.com/Naufal-Pinasthika/TBF-Tubes-IF2224-2026.git
+```
+3. Masuk ke direktori hasil clone dengan perintah
+```sh
+cd TBF-Tubes-IF2224-2026
+```
 
 ## Cara Penggunaan Program
 1. Jalankan perintah 'make clean', lalu 'make' untuk mengkompilasi program.
