@@ -10,7 +10,7 @@ Oleh (NIM):
 ## Deskripsi
 Arion merupakan bahasan pemrograman baru yang sedang dikembangkan. Program ini adalah interpreter dari bahasa pemrograman Arion tersebut yang dapat melakukan
 - _Lexical Analysis_, (v)
-- _Syntax Analysis_,
+- _Syntax Analysis_, (v)
 - _Semantic Analysis_, dan
 - _Intermediate Code Generation_.
 
@@ -29,7 +29,7 @@ Pada rilis ini, _Syntax Analysis_ telah diimplementasikan dengan acuan desain _p
 ```sh
 git clone https://github.com/Naufal-Pinasthika/TBF-Tubes-IF2224-2026.git
 ```
-3. Masuk ke direktori hasil clone dengan perintah
+2. Masuk ke direktori hasil clone dengan perintah
 ```sh
 cd TBF-Tubes-IF2224-2026
 ```
@@ -44,7 +44,7 @@ cd TBF-Tubes-IF2224-2026
 4. Program akan menampilkan hasil _Parse Tree_ (atau _Lexical Analysis_,tergantung pada flag yang dideklarasikan) dari file yang dipilih, berupa representasi parse tree grammer yang terbentuk dari _source code_ yang dibaca.
 
 
-## Pembagian Tugas
+## Pembagian Tugas~
 ### _Syntax Analysis_
 Nama | NIM | Workload | Presentase
 --- | --- | --- | ---
