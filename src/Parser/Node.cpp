@@ -32,7 +32,6 @@ void Node::printTree(std::ostream *stream, int depth, bool isLast, vector<bool> 
         }
     }
     *stream << toString() << "\n";
-    // cout << toString();
     for (size_t i = 0; i < children.size(); i++)
     {
         if (i == children.size() - 1)

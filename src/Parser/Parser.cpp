@@ -632,7 +632,7 @@ bool Parser::whileStatementProd()
     Node *parent = insert(while_statement);
     int save = pos;
 
-    if (match("whilesy") && expressionProd() && match("dosy") && statementProd())
+    if (match("whilesy") && expressionProd() && match("dosy") && compoundStatementProd())
     {
         return success(parent);
     }
@@ -660,7 +660,7 @@ bool Parser::forStatementProd()
     Node *parent = insert(for_statement);
     int save = pos;
 
-    if (match("forsy") && match("ident") && match("becomes") && expressionProd() && (match("tosy") || match("downtosy")) && expressionProd() && match("dosy") && statementProd())
+    if (match("forsy") && match("ident") && match("becomes") && expressionProd() && (match("tosy") || match("downtosy")) && expressionProd() && match("dosy") && compoundStatementProd())
     {
         return success(parent);
     }

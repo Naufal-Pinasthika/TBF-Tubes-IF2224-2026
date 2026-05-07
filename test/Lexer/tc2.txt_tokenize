@@ -16,6 +16,7 @@ ident (i)
 gtr
 intcon (0)
 dosy
+beginsy
 ifsy
 ident (i)
 imod
@@ -34,5 +35,6 @@ ident (i)
 minus
 intcon (1)
 semicolon
+endsy
 endsy
 period
