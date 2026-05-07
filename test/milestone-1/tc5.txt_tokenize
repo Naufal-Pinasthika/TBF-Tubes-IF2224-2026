@@ -1,0 +1,170 @@
+programsy
+ident (Testing)
+semicolon
+varsy
+ident (hasil)
+comma
+ident (i)
+comma
+ident (temp)
+comma
+ident (trial)
+comma
+ident (a)
+comma
+ident (b)
+comma
+ident (c)
+colon
+ident (Integer)
+semicolon
+ident (valid)
+colon
+ident (Boolean)
+semicolon
+proceduresy
+ident (calculate)
+lparent
+ident (a)
+comma
+ident (b)
+colon
+ident (integer)
+rparent
+semicolon
+varsy
+ident (temp)
+comma
+ident (i)
+comma
+ident (batas)
+colon
+ident (Integer)
+semicolon
+beginsy
+ident (temp)
+becomes
+ident (a)
+imod
+ident (b)
+semicolon
+ident (batas)
+becomes
+intcon (20)
+semicolon
+forsy
+ident (i)
+becomes
+ident (temp)
+tosy
+ident (batas)
+dosy
+beginsy
+ifsy
+lparent
+ident (i)
+imod
+ident (a)
+plus
+ident (b)
+eql
+intcon (0)
+rparent
+thensy
+ident (a)
+becomes
+ident (a)
+plus
+ident (B)
+semicolon
+endsy
+semicolon
+ident (writeln)
+lparent
+ident (a)
+rparent
+semicolon
+endsy
+semicolon
+beginsy
+forsy
+ident (i)
+becomes
+intcon (0)
+tosy
+ident (trial)
+dosy
+beginsy
+ident (calculate)
+lparent
+ident (hasil)
+comma
+ident (temp)
+rparent
+semicolon
+endsy
+semicolon
+ident (a)
+becomes
+intcon (10)
+semicolon
+ident (b)
+becomes
+intcon (3)
+semicolon
+ident (c)
+becomes
+ident (a)
+idiv
+ident (b)
+plus
+ident (a)
+imod
+ident (b)
+times
+intcon (5)
+minus
+lparent
+ident (a)
+plus
+intcon (2)
+rparent
+times
+lparent
+ident (b)
+minus
+intcon (1)
+rparent
+semicolon
+ident (valid)
+becomes
+lparent
+ident (a)
+gtr
+ident (b)
+rparent
+andsy
+lparent
+ident (c)
+neq
+intcon (0)
+rparent
+orsy
+notsy
+lparent
+ident (a)
+leq
+intcon (5)
+rparent
+semicolon
+ifsy
+ident (valid)
+thensy
+ident (c)
+becomes
+ident (c)
+times
+intcon (1)
+semicolon
+endsy
+period

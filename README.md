@@ -52,7 +52,7 @@ cd TBF-Tubes-IF2224-2026
 ### _Syntax Analysis_
 Nama | NIM | Workload | Presentase
 --- | --- | --- | ---
-Faiq Azzam Nafidz | 13524003 | Membuat struktur kelas terkait parser, membuat desain awal parser, membuat fungsi produksi 1–10 + 25–27, membuat fungsi pencetak parse tree, membuat mekanisme error handling, membuat laporan (perancangan & implementasi, kesimpulan dan saran). | 35% | 
+Faiq Azzam Nafidz | 13524003 | Membuat struktur kelas terkait parser, membuat desain awal parser, membuat fungsi produksi 1–10 + 25–27, membuat fungsi pencetak parse tree, membuat mekanisme error handling, membuat laporan (perancangan & implementasi). | 35% | 
 Anindya Naufal Pinasthika | 13524013 | Membuat fungsi produksi 34–43, membuat fitur pemilihan proses program (antara lexer atau parser), memodifikasi README.md, membuat laporan (teori singkat). | 25% |
 Mahmudia Kimdaro Amin | 13524083 | Membuat fungsi produksi 21–24 + 28–33, melakukan pengujian program, membuat laporan (pengujian). | 20% | 
 Jingglang Galih Rinenggan | 13524095 | Membuat fungsi produksi 11–20, membuat laporan (kesimpulan dan saran). | 20% | 
