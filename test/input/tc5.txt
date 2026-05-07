@@ -11,14 +11,18 @@ begin
     temp := a mod b;
     batas := 20;
     for i := temp to batas do
+    begin
         if(i mod a+b == 0) then
             a := a + B;
-    writeln(a)
+    end;
+    writeln(a);
 end;
 
 begin 
     for i := 0 to trial do
+    begin
         calculate(hasil, temp);
+    end;
     a := 10;
     b := 3;
   

@@ -59,6 +59,7 @@ ident (temp)
 tosy
 ident (batas)
 dosy
+beginsy
 ifsy
 lparent
 ident (i)
@@ -76,10 +77,13 @@ ident (a)
 plus
 ident (B)
 semicolon
+endsy
+semicolon
 ident (writeln)
 lparent
 ident (a)
 rparent
+semicolon
 endsy
 semicolon
 beginsy
@@ -90,12 +94,15 @@ intcon (0)
 tosy
 ident (trial)
 dosy
+beginsy
 ident (calculate)
 lparent
 ident (hasil)
 comma
 ident (temp)
 rparent
+semicolon
+endsy
 semicolon
 ident (a)
 becomes
