@@ -16,7 +16,7 @@ Arion merupakan bahasan pemrograman baru yang sedang dikembangkan. Program ini a
 
 Keempat komponen tersebut dijadikan satu menjadi interpreter utuh yang dapat menjalankan _source code_ berbahasa pemrograman Arion.
 
-Pada rilis ini, _Lexical Analysis_ telah terimplementasi dengan acuan desain _deterministic finite automata_ dalam pembacaan _source code_ yang diubah menjadi token-token yang dapat digunakan oleh komponen _interpreter_ selanjutnya.
+Pada rilis ini, _Syntax Analysis_ telah terimplementasi dengan acuan desain _parse tree_ dalam pembacaan _source code_ yang mengubah token-token yang sudah dibuat oleh _Lexical Analysis_ menjadi sebuah representasi _parse tree_ yang akan diproses lebih lanjut oleh komponen _interpreter_ selanjutnya.
 
 ## _Requirements_
 1. G++ Compiler
@@ -30,12 +30,16 @@ Pada rilis ini, _Lexical Analysis_ telah terimplementasi dengan acuan desain _de
 
 ## Cara Penggunaan Program
 1. Jalankan perintah 'make clean', lalu 'make' untuk mengkompilasi program.
-2. Jalankan program dengan 'make run', saat ini program hanya menerima input yang ada di 'test/input'. Pilih salah satu nama file dari yang diberikan untuk dijalankan.
-3. Program akan menampilkan hasil _lexical analysis_ dari file yang dipilih, berupa token-token yang terbentuk dari _source code_ yang dibaca.
+2. Jalankan program dengan 'make', program akan dikompilasi dan akan disimpan dalam bin/program.exe
+3. Jalankan bin/program.exe dengan menerima input yang ada di 'test/input' (pilih salah satu nama file dari yang diberikan untuk dijalankan) dengan format:
+```sh
+./bin/program.exe [FLAGS] [NAMA_FILE]
+```
+4. Program akan menampilkan hasil _Parse Tree_ (atau _Lexical Analysis_,tergantung pada flag yang dideklarasikan) dari file yang dipilih, berupa representasi parse tree grammer yang terbentuk dari _source code_ yang dibaca.
 
 
 ## Pembagian Tugas
-### _Lexical Analysis_
+### _Syntax Analysis_
 Nama | NIM | Workload | Presentase
 --- | --- | --- | ---
 Faiq Azzam Nafidz | 13524003 |  | 
