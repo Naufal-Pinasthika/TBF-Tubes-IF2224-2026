@@ -12,7 +12,6 @@ Token Parser::pop()
 
 bool Parser::success(Node *parent)
 {
-    // cout << "success: " << curr->toString() << "\n";
     parent->children.push_back(curr);
     curr = parent;
     return true;
@@ -20,7 +19,6 @@ bool Parser::success(Node *parent)
 
 bool Parser::fails(Node *parent)
 {
-    // cout << "fails: " << curr->toString() << "\n";
     delete curr;
     curr = parent;
     return false;
@@ -28,7 +26,6 @@ bool Parser::fails(Node *parent)
 
 void Parser::backTrack(int save)
 {
-    // cout << "backtrack from " << pos << " to " << save << "\n";
     if (highestPos < pos)
         highestPos = pos;
     pos = save;
@@ -51,11 +48,9 @@ bool Parser::match(string t)
         Node *node = new Node(tokens[pos]);
         pop();
         curr->children.push_back(node);
-        // cout << "matched: " << node->toString() << "\n";
         return true;
     }
 
-    // cout << "failed match, want: " << t << " actual: " << peek().toString() << "\n";
     if (pos > highestPos)
     {
         expected.clear();
