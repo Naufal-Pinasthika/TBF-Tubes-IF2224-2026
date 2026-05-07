@@ -2,7 +2,7 @@
 
 void Node::printTreeToFile(std::string fileName)
 {
-    ofstream file("test/Parser/" + fileName);
+    ofstream file("test/milestone-2/" + fileName);
 
     vector<bool> isAboveLeaf;
     printTree(&file, 0, true, isAboveLeaf);

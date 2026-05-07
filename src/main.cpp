@@ -10,8 +10,8 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-    std::filesystem::create_directories("test/Lexer");
-    std::filesystem::create_directories("test/Parser");
+    std::filesystem::create_directories("test/milestone-1");
+    std::filesystem::create_directories("test/milestone-2");
 
     string mode = "P"; // default parser
     string s;
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
             return 1;
         }
 
-        string filepath = "test/Lexer/" + s;
+        string filepath = "test/" + s;
         tokens = Lexer::readTokensFromFile(filepath);
     }
     else
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
         Lexer lexer(file);
         tokens = lexer.runLexer();
 
-        filepath = "test/Lexer/" + s + "_tokenize";
+        filepath = "test/milestone-1/" + s + "_tokenize";
         ofstream outputFile(filepath);
 
         if (!outputFile.is_open())
