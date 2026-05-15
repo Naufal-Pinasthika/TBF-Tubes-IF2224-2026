@@ -3,6 +3,8 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <algorithm>
+#include <cctype>
 
 using namespace std;
 
@@ -116,6 +118,10 @@ public:
         tab.push_back({"VAR",       0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
         tab.push_back({"WHILE",     0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});  
 
+        // init predefined identifier thats not reserved keyword
+        tab.push_back({"TRUE",      0, ObjClass::Constant, TypeClass::Boolean, 0, 1, 0, 1});
+        tab.push_back({"FALSE",     0, ObjClass::Constant, TypeClass::Boolean, 0, 1, 0, 0});
+
         btab.push_back({0, 0, 0, 0, 0});
         currentLevel = 0;
         currentBlock = 0;
@@ -128,6 +134,7 @@ public:
     int insertTab(const string& name, ObjClass obj, TypeClass type, int ref, int nrm, int adr);
     int lookupCurrentBlock(const string& name);
     int lookup(const string& name);
+    string toUpper(const string& name);
     TabEntry* getTab(int idx);
     AtabEntry* getAtab(int idx);
     BtabEntry* getBtab(int idx);
