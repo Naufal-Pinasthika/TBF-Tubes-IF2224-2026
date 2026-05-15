@@ -31,6 +31,7 @@ enum class TypeClass
     Enumerated  = 9
 };
 
+// tab: identifier table
 struct TabEntry
 {
     string identifiers;    
@@ -43,6 +44,7 @@ struct TabEntry
     int adr;
 };
 
+// atab: array table
 struct AtabEntry
 {
     int arrays;
@@ -55,6 +57,7 @@ struct AtabEntry
     int size;
 };
 
+// btab: block table (procedure/func/records)
 struct BtabEntry
 {
     int blocks;
@@ -76,10 +79,42 @@ private:
 public:
     SymbolTable()
     {
-        // push until 33 entry
-        for (int i = 0; i < 33; i++) {
-            tab.push_back({"", 0, ObjClass::None, TypeClass::None, 0, 0, 0, 0});
-        }
+        // init tab for reserved keywords
+        tab.push_back({"NULL",      0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
+        tab.push_back({"AND",       0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
+        tab.push_back({"ARRAY",     0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
+        tab.push_back({"BEGIN",     0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});                
+        tab.push_back({"CASE",      0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
+        tab.push_back({"CONST",     0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
+        tab.push_back({"DIV",       0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
+        tab.push_back({"DOWNTO",    0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
+        tab.push_back({"DO",        0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
+        tab.push_back({"ELSE",      0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
+        tab.push_back({"END",       0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
+        tab.push_back({"FOR",       0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
+        tab.push_back({"FUNCTION",  0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
+        tab.push_back({"IF",        0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
+        tab.push_back({"MOD",       0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
+        tab.push_back({"NOT",       0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});                
+        tab.push_back({"OF",        0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
+        tab.push_back({"OR",        0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
+        tab.push_back({"PROCEDURE", 0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
+        tab.push_back({"PROGRAM",   0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
+        tab.push_back({"RECORD",    0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
+        tab.push_back({"REPEAT",    0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
+
+        tab.push_back({"INTEGER",   0, ObjClass::Type, TypeClass::Integer, 0, 1, 0, 0});
+        tab.push_back({"REAL",      0, ObjClass::Type, TypeClass::Real,    0, 1, 0, 0});
+        tab.push_back({"BOOLEAN",   0, ObjClass::Type, TypeClass::Boolean, 0, 1, 0, 0});
+        tab.push_back({"CHAR",      0, ObjClass::Type, TypeClass::Char,    0, 1, 0, 0});
+        tab.push_back({"STRING",    0, ObjClass::Type, TypeClass::String,  0, 1, 0, 0});
+
+        tab.push_back({"THEN",      0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
+        tab.push_back({"TO",        0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});        
+        tab.push_back({"TYPE",      0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
+        tab.push_back({"UNTIL",     0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
+        tab.push_back({"VAR",       0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
+        tab.push_back({"WHILE",     0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});  
 
         btab.push_back({0, 0, 0, 0, 0});
         currentLevel = 0;
