@@ -1,11 +1,19 @@
 #include "SymbolTable.hpp"
 
 int SymbolTable::enterBlock() {
-
+    currentLevel++;
+    btab.push_back({0, 0, 0, 0});
+    display.push_back(btab.size() - 1);
+    return btab.size() - 1;
 }
+
 int SymbolTable::exitBlock() {
-
+    if (!display.empty()){
+        display.pop_back();
+    }
+    currentLevel--;
 }
+
 int SymbolTable::insertTab(const string& name, ObjClass obj, TypeClass type, int ref, int nrm, int adr) {
     int currBlockIdx = display[currentLevel];
     int lastInBlock = btab[currBlockIdx].last;
@@ -32,8 +40,20 @@ int SymbolTable::insertTab(const string& name, ObjClass obj, TypeClass type, int
     return newIdx;
 }
 
-int SymbolTable::lookupCurrentBlock(const string& name) {
+int SymbolTable::lookupCurrentBlock(const string& name, int blockIdx) {
+    if (blockIdx < 0 || blockIdx >= static_cast<int>(btab.size())){
+        return 0;
+    }
 
+    int curr = btab[blockIdx].last;
+    while (curr > 0 && curr < static_cast<int>(tab.size())){
+        if (tab[curr].identifiers == name){
+            return curr;
+        }
+        curr = tab[curr].link;
+    }
+    return 0;
+    
 }
 
 int SymbolTable::lookup(const string& name) {

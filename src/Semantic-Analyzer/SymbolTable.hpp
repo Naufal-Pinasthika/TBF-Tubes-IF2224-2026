@@ -132,7 +132,7 @@ public:
     int enterBlock();
     int exitBlock();
     int insertTab(const string& name, ObjClass obj, TypeClass type, int ref, int nrm, int adr);
-    int lookupCurrentBlock(const string& name);
+    int lookupCurrentBlock(const string& name, int blockIdx);
     int lookup(const string& name);
     string toUpper(const string& name);
     TabEntry* getTab(int idx);
