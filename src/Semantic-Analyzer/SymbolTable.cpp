@@ -7,11 +7,32 @@ int SymbolTable::enterBlock() {
     return btab.size() - 1;
 }
 
-int SymbolTable::exitBlock() {
+void SymbolTable::exitBlock() {
+    if (currentLevel == 0){
+        return;
+    }
+
     if (!display.empty()){
         display.pop_back();
     }
     currentLevel--;
+}
+
+int SymbolTable::insertAtab(int xtype, int etype, int eref, int low, int high, int elsz) {
+    int size = (high - low + 1) * elsz;
+
+    atab.push_back({
+        static_cast<int>(atab.size()) + 1,
+        xtype,
+        etype,
+        eref,
+        low,
+        high,
+        elsz,
+        size
+    });
+
+    return atab.size(); 
 }
 
 int SymbolTable::insertTab(const string& name, ObjClass obj, TypeClass type, int ref, int nrm, int adr) {
@@ -24,17 +45,22 @@ int SymbolTable::insertTab(const string& name, ObjClass obj, TypeClass type, int
         obj, 
         type, 
         ref, 
-        1, 
+        nrm, 
         currentLevel, 
-        btab[currBlockIdx].vsze, 
+        adr 
     };
+
+    // edge case: redeclaration variables
+    if (lookupCurrentBlock(name, currBlockIdx) != 0){
+        return 0;
+    }
 
     tab.push_back(newEntry);
     int newIdx = tab.size() - 1;
 
     btab[currBlockIdx].last = newIdx;
 
-    if (obj == ObjClass::Program) {
+    if (obj == ObjClass::Variable) {
         btab[currBlockIdx].vsze += 1;
     }
     return newIdx;
@@ -58,8 +84,6 @@ int SymbolTable::lookupCurrentBlock(const string& name, int blockIdx) {
 
 int SymbolTable::lookup(const string& name) {
     int currBlockIdx, lastInBlock;
-
-    string upperName = toUpper(name);
  
     for (int lev = currentLevel; lev >= 0; --lev) {
         currBlockIdx = display[lev];
@@ -67,7 +91,7 @@ int SymbolTable::lookup(const string& name) {
 
         while (lastInBlock > 0 && lastInBlock < static_cast<int>(tab.size())){
 
-            if (tab[lastInBlock].identifiers == upperName) return lastInBlock;
+            if (tab[lastInBlock].identifiers == name) return lastInBlock;
 
 
             lastInBlock = tab[lastInBlock].link;

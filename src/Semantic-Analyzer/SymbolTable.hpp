@@ -127,10 +127,20 @@ public:
         currentBlock = 0;
 
         display.push_back(0);
+
+        int last = 0;
+        for (int i = 0; i < static_cast<int>(tab.size()); i++){
+            if (tab[i].obj == ObjClass::Type || tab[i].obj == ObjClass::Constant){
+                tab[i].link = last;
+                last = i;
+            }
+        }
+        btab[0].last = last;
     }
 
     int enterBlock();
-    int exitBlock();
+    void exitBlock();
+    int insertAtab(int xtype, int etype, int eref, int low, int high, int elsz);
     int insertTab(const string& name, ObjClass obj, TypeClass type, int ref, int nrm, int adr);
     int lookupCurrentBlock(const string& name, int blockIdx);
     int lookup(const string& name);
