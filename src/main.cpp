@@ -5,6 +5,8 @@
 #include <filesystem>
 #include "Lexer/Lexer.hpp"
 #include "Parser/Parser.hpp"
+#include "Semantic-Analyzer/ASTBuilder.hpp"
+#include "Semantic-Analyzer/Semantic.hpp"
 
 using namespace std;
 
@@ -12,6 +14,7 @@ int main(int argc, char *argv[])
 {
     std::filesystem::create_directories("test/milestone-1");
     std::filesystem::create_directories("test/milestone-2");
+    std::filesystem::create_directories("test/milestone-3");
 
     string mode = "P"; // default parser
     string s;
@@ -123,5 +126,37 @@ int main(int argc, char *argv[])
     }
 
     parser.getRoot()->printTreeToFile(s + "_parsed");
+
+
+    ASTBuilder astBuilder;
+    ProgramNode* ast = astBuilder.build(parser.getRoot());
+
+    if (astBuilder.hasErrors())
+    {
+        for (const string& error : astBuilder.getErrors())
+            cout << error << endl;
+
+        delete ast;
+        return 1;
+    }
+
+    Semantic semantic;
+    semantic.analyze(ast);
+
+    if (semantic.hasErrors())
+    {
+        for (const string& error : semantic.getErrors())
+            cout << error << endl;
+
+        delete ast;
+        return 1;
+    }
+
+    ofstream astOutput("test/milestone-3/" + outputName + "_ast");
+    streambuf* oldCout = cout.rdbuf(astOutput.rdbuf());
+    ast->print();
+    cout.rdbuf(oldCout);
+
+    delete ast;
     return 0;
 }
