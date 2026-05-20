@@ -269,6 +269,22 @@ void RangeTypeNode::print(int indent) const
     }
 }
 
+EnumeratedTypeNode::EnumeratedTypeNode(vector<string> values)
+    : values(values)
+{
+    evalType = TypeClass::Enumerated;
+}
+
+void EnumeratedTypeNode::print(int indent) const
+{
+    printIndent(indent);
+    cout << "EnumeratedType(values: ";
+    printStringList(values);
+    cout << ")";
+    printDecorations(*this);
+    cout << "\n";
+}
+
 ArrayTypeNode::ArrayTypeNode(TypeNode* indexType, TypeNode* elementType)
     : indexType(indexType), elementType(elementType)
 {
@@ -715,6 +731,84 @@ void RepeatNode::print(int indent) const
         printIndent(indent + 1);
         cout << "Until:\n";
         condition->print(indent + 2);
+    }
+}
+
+CaseBranch::CaseBranch(vector<ExpressionNode*> labels, StatementNode* statement)
+    : labels(labels), statement(statement) {}
+
+CaseBranch::~CaseBranch()
+{
+    for (ExpressionNode* label : labels)
+    {
+        delete label;
+    }
+    delete statement;
+}
+
+void CaseBranch::print(int indent) const
+{
+    printIndent(indent);
+    cout << "CaseBranch\n";
+
+    if (!labels.empty())
+    {
+        printIndent(indent + 1);
+        cout << "Labels:\n";
+        for (ExpressionNode* label : labels)
+        {
+            if (label != nullptr)
+            {
+                label->print(indent + 2);
+            }
+        }
+    }
+
+    if (statement != nullptr)
+    {
+        printIndent(indent + 1);
+        cout << "Statement:\n";
+        statement->print(indent + 2);
+    }
+}
+
+CaseNode::CaseNode(ExpressionNode* expression, vector<CaseBranch*> branches)
+    : expression(expression), branches(branches) {}
+
+CaseNode::~CaseNode()
+{
+    delete expression;
+    for (CaseBranch* branch : branches)
+    {
+        delete branch;
+    }
+}
+
+void CaseNode::print(int indent) const
+{
+    printIndent(indent);
+    cout << "Case";
+    printDecorations(*this);
+    cout << "\n";
+
+    if (expression != nullptr)
+    {
+        printIndent(indent + 1);
+        cout << "Expression:\n";
+        expression->print(indent + 2);
+    }
+
+    if (!branches.empty())
+    {
+        printIndent(indent + 1);
+        cout << "Branches:\n";
+        for (CaseBranch* branch : branches)
+        {
+            if (branch != nullptr)
+            {
+                branch->print(indent + 2);
+            }
+        }
     }
 }
 

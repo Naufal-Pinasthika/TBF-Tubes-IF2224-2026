@@ -87,6 +87,14 @@ public:
     void print(int indent = 0) const override;
 };
 
+class EnumeratedTypeNode : public TypeNode {
+public:
+    vector<string> values;
+
+    EnumeratedTypeNode(vector<string> values);
+    void print(int indent = 0) const override;
+};
+
 class ArrayTypeNode : public TypeNode {
 public:
     TypeNode* indexType = nullptr;
@@ -224,6 +232,26 @@ public:
 
     RepeatNode(vector<StatementNode*> statements, ExpressionNode* condition);
     ~RepeatNode();
+    void print(int indent = 0) const override;
+};
+
+class CaseBranch {
+public:
+    vector<ExpressionNode*> labels;
+    StatementNode* statement = nullptr;
+
+    CaseBranch(vector<ExpressionNode*> labels, StatementNode* statement);
+    ~CaseBranch();
+    void print(int indent = 0) const;
+};
+
+class CaseNode : public StatementNode {
+public:
+    ExpressionNode* expression = nullptr;
+    vector<CaseBranch*> branches;
+
+    CaseNode(ExpressionNode* expression, vector<CaseBranch*> branches);
+    ~CaseNode();
     void print(int indent = 0) const override;
 };
 
