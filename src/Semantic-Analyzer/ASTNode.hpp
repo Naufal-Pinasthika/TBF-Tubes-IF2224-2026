@@ -43,6 +43,7 @@ public:
 class VarDeclNode : public DeclarationNode {
 public:
     vector<string> names;
+    vector<int> tabIndices;
     TypeNode* type = nullptr;
     bool isParameter = false;
     bool isVarParameter = false;

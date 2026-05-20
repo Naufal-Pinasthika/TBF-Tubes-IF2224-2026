@@ -1,9 +1,25 @@
 #include "SymbolTable.hpp"
 
+#include <iomanip>
+
+static string objClassToString(ObjClass obj) {
+    switch (obj) {
+        case ObjClass::Program: return "program";
+        case ObjClass::Constant: return "constant";
+        case ObjClass::Variable: return "variable";
+        case ObjClass::Type: return "type";
+        case ObjClass::Procedure: return "procedure";
+        case ObjClass::Function: return "function";
+        case ObjClass::None:
+        default: return "none";
+    }
+}
+
 int SymbolTable::enterBlock() {
     currentLevel++;
-    btab.push_back({0, 0, 0, 0, 0});
+    btab.push_back({static_cast<int>(btab.size()), 0, 0, 0, 0});
     display.push_back(btab.size() - 1);
+    currentBlock = display.back();
     return btab.size() - 1;
 }
 
@@ -16,6 +32,7 @@ void SymbolTable::exitBlock() {
         display.pop_back();
     }
     currentLevel--;
+    currentBlock = display.empty() ? 0 : display.back();
 }
 
 int SymbolTable::insertAtab(int xtype, int etype, int eref, int low, int high, int elsz) {
@@ -99,6 +116,86 @@ int SymbolTable::lookup(const string& name) {
         
     }
     return 0;
+}
+
+void SymbolTable::print(ostream& out) const {
+    out << "tab (hanya sebagian yang relevan):\n";
+    out << left
+        << setw(5) << "idx"
+        << setw(14) << "id"
+        << setw(12) << "obj"
+        << setw(7) << "type"
+        << setw(6) << "ref"
+        << setw(6) << "nrm"
+        << setw(6) << "lev"
+        << setw(6) << "adr"
+        << "link\n";
+    out << "-------------------------------------------------------------\n";
+    out << "...  reserved words / keyword entries omitted\n";
+
+    for (size_t i = 0; i < tab.size(); ++i) {
+        const TabEntry& entry = tab[i];
+        if (entry.obj == ObjClass::None) {
+            continue;
+        }
+
+        out << left
+            << setw(5) << i
+            << setw(14) << entry.identifiers
+            << setw(12) << objClassToString(entry.obj)
+            << setw(7) << static_cast<int>(entry.type)
+            << setw(6) << entry.ref
+            << setw(6) << entry.nrm
+            << setw(6) << entry.lev
+            << setw(6) << entry.adr
+            << entry.link << "\n";
+    }
+
+    out << "\nbtab:\n";
+    out << left
+        << setw(5) << "idx"
+        << setw(7) << "last"
+        << setw(7) << "lpar"
+        << setw(7) << "psze"
+        << "vsze\n";
+    out << "-----------------------------\n";
+    for (size_t i = 0; i < btab.size(); ++i) {
+        const BtabEntry& entry = btab[i];
+        out << left
+            << setw(5) << i
+            << setw(7) << entry.last
+            << setw(7) << entry.lpar
+            << setw(7) << entry.psze
+            << entry.vsze << "\n";
+    }
+
+    out << "\natab:\n";
+    if (atab.empty()) {
+        out << "(kosong karena tidak ada array)\n";
+        return;
+    }
+
+    out << left
+        << setw(5) << "idx"
+        << setw(7) << "xtyp"
+        << setw(7) << "etyp"
+        << setw(7) << "eref"
+        << setw(7) << "low"
+        << setw(7) << "high"
+        << setw(7) << "elsz"
+        << "size\n";
+    out << "------------------------------------------------\n";
+    for (const AtabEntry& entry : atab) {
+        out << left
+            << setw(5) << entry.arrays
+            << setw(7) << entry.xtype
+            << setw(7) << entry.etype
+            << setw(7) << entry.eref
+            << setw(7) << entry.low
+            << setw(7) << entry.high
+            << setw(7) << entry.elsz
+            << entry.size << "\n";
+    }
 }
 
 // helper func

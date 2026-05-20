@@ -51,7 +51,14 @@ void Semantic::analyze(ProgramNode* root) {
     decorate(root, idx);
 
     for (DeclarationNode* decl : root->declarations) analyzeDeclaration(decl);
+
+    int blockIdx = symbolTable.enterBlock();
+    if (root->body != nullptr) {
+        root->body->btabIndex = blockIdx;
+        root->body->level = root->level + 1;
+    }
     analyzeStatement(root->body);
+    symbolTable.exitBlock();
 }
 
 void Semantic::analyzeDeclaration(DeclarationNode* node) {
@@ -68,10 +75,12 @@ void Semantic::analyzeVarDecl(VarDeclNode* node) {
     int ref = 0;
     TypeClass type = resolveType(node->type, ref);
     node->evalType = type;
+    node->tabIndices.clear();
 
     for (const string& name : node->names) {
         int nrm = node->isVarParameter ? 0 : 1;
         int idx = symbolTable.insertTab(name, ObjClass::Variable, type, ref, nrm, 0);
+        node->tabIndices.push_back(idx);
 
         if (idx == 0) {
             addError("redeclaration of variable: " + name);
@@ -125,6 +134,10 @@ void Semantic::analyzeProcedureDecl(ProcedureDeclNode* node) {
     }
 
     for (DeclarationNode* decl : node->declarations) analyzeDeclaration(decl);
+    if (node->body != nullptr) {
+        node->body->btabIndex = blockIdx;
+        node->body->level = node->level + 1;
+    }
     analyzeStatement(node->body);
 
     symbolTable.exitBlock();
@@ -150,6 +163,10 @@ void Semantic::analyzeFunctionDecl(FunctionDeclNode* node) {
     }
 
     for (DeclarationNode* decl : node->declarations) analyzeDeclaration(decl);
+    if (node->body != nullptr) {
+        node->body->btabIndex = blockIdx;
+        node->body->level = node->level + 1;
+    }
     analyzeStatement(node->body);
 
     symbolTable.exitBlock();

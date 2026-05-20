@@ -125,7 +125,6 @@ public:
         tab.push_back({"WRITELN",   0, ObjClass::Procedure,     TypeClass::None,    0, 1, 0, 0});
         tab.push_back({"READ",      0, ObjClass::Procedure,     TypeClass::None,    0, 1, 0, 0});
         tab.push_back({"READLN",    0, ObjClass::Procedure,     TypeClass::None,    0, 1, 0, 0});
-        
 
         btab.push_back({0, 0, 0, 0, 0});
         currentLevel = 0;
@@ -135,14 +134,12 @@ public:
 
         int last = 0;
         for (int i = 0; i < static_cast<int>(tab.size()); i++){
-            if 
-            (
+            if (
                 tab[i].obj == ObjClass::Type || 
                 tab[i].obj == ObjClass::Constant || 
                 tab[i].obj == ObjClass::Procedure ||
                 tab[i].obj == ObjClass::Function
             ) {
-
                 tab[i].link = last;
                 last = i;
             }
@@ -156,10 +153,10 @@ public:
     int insertTab(const string& name, ObjClass obj, TypeClass type, int ref, int nrm, int adr);
     int lookupCurrentBlock(const string& name, int blockIdx);
     int lookup(const string& name);
+    void print(ostream& out) const;
     string toUpper(const string& name);
     TabEntry* getTab(int idx);
     AtabEntry* getAtab(int idx);
     BtabEntry* getBtab(int idx);
 
 };
-

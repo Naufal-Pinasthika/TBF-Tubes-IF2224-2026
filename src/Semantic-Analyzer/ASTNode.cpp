@@ -1,10 +1,13 @@
 #include "ASTNode.hpp"
 
+#include <algorithm>
+#include <cctype>
+
 static void printIndent(int indent)
 {
     for (int i = 0; i < indent; i++)
     {
-        cout << "  ";
+        cout << "    ";
     }
 }
 
@@ -36,79 +39,179 @@ static string typeClassToString(TypeClass type)
     }
 }
 
-static void printDecorations(const ASTNode& node)
+static void addPart(vector<string>& parts, const string& part)
 {
-    bool hasDecoration = node.evalType != TypeClass::None ||
-                         node.tabIndex != -1 ||
-                         node.btabIndex != -1 ||
-                         node.atabIndex != -1 ||
-                         node.level != -1 ||
-                         node.line != 0 ||
-                         node.column != 0;
+    parts.push_back(part);
+}
 
-    if (!hasDecoration)
+static string joinParts(const vector<string>& parts)
+{
+    string result;
+    for (size_t i = 0; i < parts.size(); ++i)
+    {
+        if (i > 0)
+        {
+            result += ", ";
+        }
+        result += parts[i];
+    }
+    return result;
+}
+
+static string annotationFromValues(TypeClass evalType, int tabIndex, int btabIndex, int atabIndex, int level, bool includeType, bool forceVoid)
+{
+    vector<string> parts;
+
+    if (forceVoid)
+    {
+        addPart(parts, "type:void");
+    }
+    if (tabIndex != -1)
+    {
+        addPart(parts, "tab_index:" + to_string(tabIndex));
+    }
+    if (includeType && evalType != TypeClass::None)
+    {
+        addPart(parts, "type:" + typeClassToString(evalType));
+    }
+    if (btabIndex != -1)
+    {
+        addPart(parts, "block_index:" + to_string(btabIndex));
+    }
+    if (atabIndex != -1)
+    {
+        addPart(parts, "array_index:" + to_string(atabIndex));
+    }
+    if (level != -1)
+    {
+        addPart(parts, "lev:" + to_string(level));
+    }
+
+    if (parts.empty())
+    {
+        return "";
+    }
+    return " -> " + joinParts(parts);
+}
+
+static string annotation(const ASTNode& node, bool includeType = true, bool forceVoid = false)
+{
+    return annotationFromValues(node.evalType, node.tabIndex, node.btabIndex, node.atabIndex, node.level, includeType, forceVoid);
+}
+
+static string upperString(string value)
+{
+    transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
+        return static_cast<char>(toupper(ch));
+    });
+    return value;
+}
+
+static bool isPredefinedProcedure(const string& name)
+{
+    string upper = upperString(name);
+    return upper == "WRITE" || upper == "WRITELN" || upper == "READ" || upper == "READLN";
+}
+
+static string expressionSummary(const ExpressionNode* node)
+{
+    if (node == nullptr)
+    {
+        return "<empty>";
+    }
+    if (auto var = dynamic_cast<const VarNode*>(node))
+    {
+        return "'" + var->name + "'";
+    }
+    if (auto number = dynamic_cast<const NumberNode*>(node))
+    {
+        return number->value;
+    }
+    if (auto str = dynamic_cast<const StringNode*>(node))
+    {
+        return "'" + str->value + "'";
+    }
+    if (auto chr = dynamic_cast<const CharNode*>(node))
+    {
+        return "'" + chr->value + "'";
+    }
+    if (auto boolean = dynamic_cast<const BoolNode*>(node))
+    {
+        return boolean->value ? "true" : "false";
+    }
+    if (auto bin = dynamic_cast<const BinOpNode*>(node))
+    {
+        return expressionSummary(bin->left) + " " + bin->op + " " + expressionSummary(bin->right);
+    }
+    if (auto unary = dynamic_cast<const UnaryOpNode*>(node))
+    {
+        return unary->op + " " + expressionSummary(unary->operand);
+    }
+    if (auto access = dynamic_cast<const ArrayAccessNode*>(node))
+    {
+        return expressionSummary(access->array) + "[" + expressionSummary(access->index) + "]";
+    }
+    if (auto access = dynamic_cast<const RecordAccessNode*>(node))
+    {
+        return expressionSummary(access->record) + "." + access->field;
+    }
+    if (auto call = dynamic_cast<const FunctionCallNode*>(node))
+    {
+        return call->name + "(...)";
+    }
+    return "<expr>";
+}
+
+static void printExpressionWithRole(const string& role, const ExpressionNode* node, int indent)
+{
+    if (node == nullptr)
     {
         return;
     }
 
-    bool first = true;
-    cout << " [";
+    printIndent(indent);
+    cout << role << " ";
 
-    if (node.evalType != TypeClass::None)
+    if (auto bin = dynamic_cast<const BinOpNode*>(node))
     {
-        cout << "type: " << typeClassToString(node.evalType);
-        first = false;
-    }
-    if (node.tabIndex != -1)
-    {
-        if (!first)
-            cout << ", ";
-        cout << "tab_index: " << node.tabIndex;
-        first = false;
-    }
-    if (node.btabIndex != -1)
-    {
-        if (!first)
-            cout << ", ";
-        cout << "btab_index: " << node.btabIndex;
-        first = false;
-    }
-    if (node.atabIndex != -1)
-    {
-        if (!first)
-            cout << ", ";
-        cout << "atab_index: " << node.atabIndex;
-        first = false;
-    }
-    if (node.level != -1)
-    {
-        if (!first)
-            cout << ", ";
-        cout << "level: " << node.level;
-        first = false;
-    }
-    if (node.line != 0 || node.column != 0)
-    {
-        if (!first)
-            cout << ", ";
-        cout << "pos: " << node.line << ":" << node.column;
+        cout << "BinOp '" << bin->op << "'" << annotation(*bin) << "\n";
+        if (bin->left != nullptr)
+        {
+            bin->left->print(indent + 1);
+        }
+        if (bin->right != nullptr)
+        {
+            bin->right->print(indent + 1);
+        }
+        return;
     }
 
-    cout << "]";
+    if (auto unary = dynamic_cast<const UnaryOpNode*>(node))
+    {
+        cout << "UnaryOp '" << unary->op << "'" << annotation(*unary) << "\n";
+        if (unary->operand != nullptr)
+        {
+            unary->operand->print(indent + 1);
+        }
+        return;
+    }
+
+    cout << expressionSummary(node) << annotation(*node) << "\n";
 }
 
-static void printStringList(const vector<string>& values)
+static string varDeclAnnotation(const VarDeclNode& node, size_t index)
 {
-    cout << "[";
-    for (size_t i = 0; i < values.size(); i++)
+    int tabIndex = -1;
+    if (index < node.tabIndices.size())
     {
-        if (i > 0)
-        {
-            cout << ", ";
-        }
-        cout << "'" << values[i] << "'";
+        tabIndex = node.tabIndices[index];
     }
-    cout << "]";
+    else if (node.tabIndex != -1 && node.names.size() > 0)
+    {
+        tabIndex = node.tabIndex - static_cast<int>(node.names.size()) + static_cast<int>(index) + 1;
+    }
+
+    return annotationFromValues(node.evalType, tabIndex, node.btabIndex, node.atabIndex, node.level, true, false);
 }
 
 ProgramNode::ProgramNode(string name) : name(name) {}
@@ -125,14 +228,12 @@ ProgramNode::~ProgramNode()
 void ProgramNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "ProgramNode(name: '" << name << "')";
-    printDecorations(*this);
-    cout << "\n";
+    cout << "ProgramNode(name: '" << name << "')" << annotation(*this, false) << "\n";
 
     if (!declarations.empty())
     {
         printIndent(indent + 1);
-        cout << "Declarations:\n";
+        cout << "Declarations\n";
         for (DeclarationNode* declaration : declarations)
         {
             if (declaration != nullptr)
@@ -144,9 +245,7 @@ void ProgramNode::print(int indent) const
 
     if (body != nullptr)
     {
-        printIndent(indent + 1);
-        cout << "Body:\n";
-        body->print(indent + 2);
+        body->print(indent + 1);
     }
 }
 
@@ -160,26 +259,19 @@ VarDeclNode::~VarDeclNode()
 
 void VarDeclNode::print(int indent) const
 {
-    printIndent(indent);
-    cout << "VarDecl(names: ";
-    printStringList(names);
-    if (isParameter)
+    for (size_t i = 0; i < names.size(); ++i)
     {
-        cout << ", parameter";
-        if (isVarParameter)
+        printIndent(indent);
+        cout << "VarDecl('" << names[i] << "')" << varDeclAnnotation(*this, i);
+        if (isParameter)
         {
-            cout << ", var";
+            cout << ", parameter";
+            if (isVarParameter)
+            {
+                cout << ", var";
+            }
         }
-    }
-    cout << ")";
-    printDecorations(*this);
-    cout << "\n";
-
-    if (type != nullptr)
-    {
-        printIndent(indent + 1);
-        cout << "Type:\n";
-        type->print(indent + 2);
+        cout << "\n";
     }
 }
 
@@ -194,16 +286,7 @@ ConstDeclNode::~ConstDeclNode()
 void ConstDeclNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "ConstDecl(name: '" << name << "')";
-    printDecorations(*this);
-    cout << "\n";
-
-    if (value != nullptr)
-    {
-        printIndent(indent + 1);
-        cout << "Value:\n";
-        value->print(indent + 2);
-    }
+    cout << "ConstDecl('" << name << "' = " << expressionSummary(value) << ")" << annotation(*this) << "\n";
 }
 
 TypeDeclNode::TypeDeclNode(string name, TypeNode* type)
@@ -217,15 +300,10 @@ TypeDeclNode::~TypeDeclNode()
 void TypeDeclNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "TypeDecl(name: '" << name << "')";
-    printDecorations(*this);
-    cout << "\n";
-
+    cout << "TypeDecl('" << name << "')" << annotation(*this) << "\n";
     if (type != nullptr)
     {
-        printIndent(indent + 1);
-        cout << "Type:\n";
-        type->print(indent + 2);
+        type->print(indent + 1);
     }
 }
 
@@ -234,9 +312,7 @@ NamedTypeNode::NamedTypeNode(string name) : name(name) {}
 void NamedTypeNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "NamedType(name: '" << name << "')";
-    printDecorations(*this);
-    cout << "\n";
+    cout << "NamedType('" << name << "')" << annotation(*this) << "\n";
 }
 
 RangeTypeNode::RangeTypeNode(ExpressionNode* low, ExpressionNode* high)
@@ -251,22 +327,7 @@ RangeTypeNode::~RangeTypeNode()
 void RangeTypeNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "RangeType";
-    printDecorations(*this);
-    cout << "\n";
-
-    if (low != nullptr)
-    {
-        printIndent(indent + 1);
-        cout << "Low:\n";
-        low->print(indent + 2);
-    }
-    if (high != nullptr)
-    {
-        printIndent(indent + 1);
-        cout << "High:\n";
-        high->print(indent + 2);
-    }
+    cout << "RangeType(" << expressionSummary(low) << ".." << expressionSummary(high) << ")" << annotation(*this) << "\n";
 }
 
 EnumeratedTypeNode::EnumeratedTypeNode(vector<string> values)
@@ -278,11 +339,16 @@ EnumeratedTypeNode::EnumeratedTypeNode(vector<string> values)
 void EnumeratedTypeNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "EnumeratedType(values: ";
-    printStringList(values);
-    cout << ")";
-    printDecorations(*this);
-    cout << "\n";
+    cout << "EnumeratedType(";
+    for (size_t i = 0; i < values.size(); ++i)
+    {
+        if (i > 0)
+        {
+            cout << ", ";
+        }
+        cout << values[i];
+    }
+    cout << ")" << annotation(*this) << "\n";
 }
 
 ArrayTypeNode::ArrayTypeNode(TypeNode* indexType, TypeNode* elementType)
@@ -300,20 +366,17 @@ ArrayTypeNode::~ArrayTypeNode()
 void ArrayTypeNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "ArrayType";
-    printDecorations(*this);
-    cout << "\n";
-
+    cout << "ArrayType" << annotation(*this) << "\n";
     if (indexType != nullptr)
     {
         printIndent(indent + 1);
-        cout << "IndexType:\n";
+        cout << "IndexType\n";
         indexType->print(indent + 2);
     }
     if (elementType != nullptr)
     {
         printIndent(indent + 1);
-        cout << "ElementType:\n";
+        cout << "ElementType\n";
         elementType->print(indent + 2);
     }
 }
@@ -329,20 +392,12 @@ RecordTypeNode::~RecordTypeNode()
 void RecordTypeNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "RecordType";
-    printDecorations(*this);
-    cout << "\n";
-
-    if (!fields.empty())
+    cout << "RecordType" << annotation(*this) << "\n";
+    for (VarDeclNode* field : fields)
     {
-        printIndent(indent + 1);
-        cout << "Fields:\n";
-        for (VarDeclNode* field : fields)
+        if (field != nullptr)
         {
-            if (field != nullptr)
-            {
-                field->print(indent + 2);
-            }
+            field->print(indent + 1);
         }
     }
 }
@@ -365,14 +420,12 @@ ProcedureDeclNode::~ProcedureDeclNode()
 void ProcedureDeclNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "ProcedureDecl(name: '" << name << "')";
-    printDecorations(*this);
-    cout << "\n";
+    cout << "ProcedureDecl('" << name << "')" << annotation(*this, false) << "\n";
 
     if (!parameters.empty())
     {
         printIndent(indent + 1);
-        cout << "Parameters:\n";
+        cout << "Parameters\n";
         for (VarDeclNode* parameter : parameters)
         {
             if (parameter != nullptr)
@@ -384,7 +437,7 @@ void ProcedureDeclNode::print(int indent) const
     if (!declarations.empty())
     {
         printIndent(indent + 1);
-        cout << "Declarations:\n";
+        cout << "Declarations\n";
         for (DeclarationNode* declaration : declarations)
         {
             if (declaration != nullptr)
@@ -395,9 +448,7 @@ void ProcedureDeclNode::print(int indent) const
     }
     if (body != nullptr)
     {
-        printIndent(indent + 1);
-        cout << "Body:\n";
-        body->print(indent + 2);
+        body->print(indent + 1);
     }
 }
 
@@ -421,20 +472,18 @@ FunctionDeclNode::~FunctionDeclNode()
 void FunctionDeclNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "FunctionDecl(name: '" << name << "')";
-    printDecorations(*this);
-    cout << "\n";
+    cout << "FunctionDecl('" << name << "')" << annotation(*this) << "\n";
 
     if (returnType != nullptr)
     {
         printIndent(indent + 1);
-        cout << "ReturnType:\n";
+        cout << "ReturnType\n";
         returnType->print(indent + 2);
     }
     if (!parameters.empty())
     {
         printIndent(indent + 1);
-        cout << "Parameters:\n";
+        cout << "Parameters\n";
         for (VarDeclNode* parameter : parameters)
         {
             if (parameter != nullptr)
@@ -446,7 +495,7 @@ void FunctionDeclNode::print(int indent) const
     if (!declarations.empty())
     {
         printIndent(indent + 1);
-        cout << "Declarations:\n";
+        cout << "Declarations\n";
         for (DeclarationNode* declaration : declarations)
         {
             if (declaration != nullptr)
@@ -457,9 +506,7 @@ void FunctionDeclNode::print(int indent) const
     }
     if (body != nullptr)
     {
-        printIndent(indent + 1);
-        cout << "Body:\n";
-        body->print(indent + 2);
+        body->print(indent + 1);
     }
 }
 
@@ -474,9 +521,7 @@ CompoundNode::~CompoundNode()
 void CompoundNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "CompoundStatement";
-    printDecorations(*this);
-    cout << "\n";
+    cout << "Block" << annotation(*this, false) << "\n";
 
     if (statements.empty())
     {
@@ -506,21 +551,15 @@ AssignNode::~AssignNode()
 void AssignNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "Assign";
-    printDecorations(*this);
-    cout << "\n";
+    cout << "Assign(" << expressionSummary(target) << " := " << expressionSummary(value) << ")" << annotation(*this, false, true) << "\n";
 
     if (target != nullptr)
     {
-        printIndent(indent + 1);
-        cout << "Target:\n";
-        target->print(indent + 2);
+        printExpressionWithRole("target", target, indent + 1);
     }
     if (value != nullptr)
     {
-        printIndent(indent + 1);
-        cout << "Value:\n";
-        value->print(indent + 2);
+        printExpressionWithRole("value", value, indent + 1);
     }
 }
 
@@ -536,21 +575,15 @@ BinOpNode::~BinOpNode()
 void BinOpNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "BinOp(op: '" << op << "')";
-    printDecorations(*this);
-    cout << "\n";
+    cout << "BinOp '" << op << "'" << annotation(*this) << "\n";
 
     if (left != nullptr)
     {
-        printIndent(indent + 1);
-        cout << "Left:\n";
-        left->print(indent + 2);
+        left->print(indent + 1);
     }
     if (right != nullptr)
     {
-        printIndent(indent + 1);
-        cout << "Right:\n";
-        right->print(indent + 2);
+        right->print(indent + 1);
     }
 }
 
@@ -559,9 +592,7 @@ VarNode::VarNode(string name) : name(name) {}
 void VarNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "Var(name: '" << name << "')";
-    printDecorations(*this);
-    cout << "\n";
+    cout << "'" << name << "'" << annotation(*this) << "\n";
 }
 
 NumberNode::NumberNode(string value, bool isReal)
@@ -573,9 +604,7 @@ NumberNode::NumberNode(string value, bool isReal)
 void NumberNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "Number(" << (isReal ? "real" : "int") << ": " << value << ")";
-    printDecorations(*this);
-    cout << "\n";
+    cout << value << annotation(*this) << "\n";
 }
 
 StringNode::StringNode(string value) : value(value)
@@ -586,9 +615,7 @@ StringNode::StringNode(string value) : value(value)
 void StringNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "String(value: '" << value << "')";
-    printDecorations(*this);
-    cout << "\n";
+    cout << "'" << value << "'" << annotation(*this) << "\n";
 }
 
 IfNode::IfNode(ExpressionNode* condition, StatementNode* thenBranch, StatementNode* elseBranch)
@@ -604,26 +631,21 @@ IfNode::~IfNode()
 void IfNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "If";
-    printDecorations(*this);
-    cout << "\n";
-
+    cout << "If" << annotation(*this, false, true) << "\n";
     if (condition != nullptr)
     {
-        printIndent(indent + 1);
-        cout << "Condition:\n";
-        condition->print(indent + 2);
+        printExpressionWithRole("condition", condition, indent + 1);
     }
     if (thenBranch != nullptr)
     {
         printIndent(indent + 1);
-        cout << "Then:\n";
+        cout << "then\n";
         thenBranch->print(indent + 2);
     }
     if (elseBranch != nullptr)
     {
         printIndent(indent + 1);
-        cout << "Else:\n";
+        cout << "else\n";
         elseBranch->print(indent + 2);
     }
 }
@@ -640,21 +662,14 @@ WhileNode::~WhileNode()
 void WhileNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "While";
-    printDecorations(*this);
-    cout << "\n";
-
+    cout << "While" << annotation(*this, false, true) << "\n";
     if (condition != nullptr)
     {
-        printIndent(indent + 1);
-        cout << "Condition:\n";
-        condition->print(indent + 2);
+        printExpressionWithRole("condition", condition, indent + 1);
     }
     if (body != nullptr)
     {
-        printIndent(indent + 1);
-        cout << "Body:\n";
-        body->print(indent + 2);
+        body->print(indent + 1);
     }
 }
 
@@ -671,27 +686,18 @@ ForNode::~ForNode()
 void ForNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "For(variable: '" << variable << "', direction: " << (isDownto ? "downto" : "to") << ")";
-    printDecorations(*this);
-    cout << "\n";
-
+    cout << "For('" << variable << "', " << (isDownto ? "downto" : "to") << ")" << annotation(*this, false, true) << "\n";
     if (start != nullptr)
     {
-        printIndent(indent + 1);
-        cout << "Start:\n";
-        start->print(indent + 2);
+        printExpressionWithRole("start", start, indent + 1);
     }
     if (stop != nullptr)
     {
-        printIndent(indent + 1);
-        cout << "Stop:\n";
-        stop->print(indent + 2);
+        printExpressionWithRole("stop", stop, indent + 1);
     }
     if (body != nullptr)
     {
-        printIndent(indent + 1);
-        cout << "Body:\n";
-        body->print(indent + 2);
+        body->print(indent + 1);
     }
 }
 
@@ -710,27 +716,17 @@ RepeatNode::~RepeatNode()
 void RepeatNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "Repeat";
-    printDecorations(*this);
-    cout << "\n";
-
-    if (!statements.empty())
+    cout << "Repeat" << annotation(*this, false, true) << "\n";
+    for (StatementNode* statement : statements)
     {
-        printIndent(indent + 1);
-        cout << "Body:\n";
-        for (StatementNode* statement : statements)
+        if (statement != nullptr)
         {
-            if (statement != nullptr)
-            {
-                statement->print(indent + 2);
-            }
+            statement->print(indent + 1);
         }
     }
     if (condition != nullptr)
     {
-        printIndent(indent + 1);
-        cout << "Until:\n";
-        condition->print(indent + 2);
+        printExpressionWithRole("until", condition, indent + 1);
     }
 }
 
@@ -749,26 +745,24 @@ CaseBranch::~CaseBranch()
 void CaseBranch::print(int indent) const
 {
     printIndent(indent);
-    cout << "CaseBranch\n";
-
+    cout << "CaseBranch";
     if (!labels.empty())
     {
-        printIndent(indent + 1);
-        cout << "Labels:\n";
-        for (ExpressionNode* label : labels)
+        cout << "(";
+        for (size_t i = 0; i < labels.size(); ++i)
         {
-            if (label != nullptr)
+            if (i > 0)
             {
-                label->print(indent + 2);
+                cout << ", ";
             }
+            cout << expressionSummary(labels[i]);
         }
+        cout << ")";
     }
-
+    cout << "\n";
     if (statement != nullptr)
     {
-        printIndent(indent + 1);
-        cout << "Statement:\n";
-        statement->print(indent + 2);
+        statement->print(indent + 1);
     }
 }
 
@@ -787,27 +781,16 @@ CaseNode::~CaseNode()
 void CaseNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "Case";
-    printDecorations(*this);
-    cout << "\n";
-
+    cout << "Case" << annotation(*this, false, true) << "\n";
     if (expression != nullptr)
     {
-        printIndent(indent + 1);
-        cout << "Expression:\n";
-        expression->print(indent + 2);
+        printExpressionWithRole("selector", expression, indent + 1);
     }
-
-    if (!branches.empty())
+    for (CaseBranch* branch : branches)
     {
-        printIndent(indent + 1);
-        cout << "Branches:\n";
-        for (CaseBranch* branch : branches)
+        if (branch != nullptr)
         {
-            if (branch != nullptr)
-            {
-                branch->print(indent + 2);
-            }
+            branch->print(indent + 1);
         }
     }
 }
@@ -826,20 +809,26 @@ CallNode::~CallNode()
 void CallNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "Call(name: '" << name << "')";
-    printDecorations(*this);
-    cout << "\n";
-
-    if (!arguments.empty())
+    cout << name << "(...)";
+    if (isPredefinedProcedure(name) && tabIndex != -1)
     {
-        printIndent(indent + 1);
-        cout << "Arguments:\n";
-        for (ExpressionNode* argument : arguments)
+        cout << " -> predefined, tab_index:" << tabIndex;
+        if (level != -1)
         {
-            if (argument != nullptr)
-            {
-                argument->print(indent + 2);
-            }
+            cout << ", lev:" << level;
+        }
+        cout << "\n";
+    }
+    else
+    {
+        cout << annotation(*this, false) << "\n";
+    }
+
+    for (ExpressionNode* argument : arguments)
+    {
+        if (argument != nullptr)
+        {
+            printExpressionWithRole("argument", argument, indent + 1);
         }
     }
 }
@@ -858,20 +847,12 @@ FunctionCallNode::~FunctionCallNode()
 void FunctionCallNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "FunctionCall(name: '" << name << "')";
-    printDecorations(*this);
-    cout << "\n";
-
-    if (!arguments.empty())
+    cout << name << "(...)" << annotation(*this) << "\n";
+    for (ExpressionNode* argument : arguments)
     {
-        printIndent(indent + 1);
-        cout << "Arguments:\n";
-        for (ExpressionNode* argument : arguments)
+        if (argument != nullptr)
         {
-            if (argument != nullptr)
-            {
-                argument->print(indent + 2);
-            }
+            printExpressionWithRole("argument", argument, indent + 1);
         }
     }
 }
@@ -887,15 +868,10 @@ UnaryOpNode::~UnaryOpNode()
 void UnaryOpNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "UnaryOp(op: '" << op << "')";
-    printDecorations(*this);
-    cout << "\n";
-
+    cout << "UnaryOp '" << op << "'" << annotation(*this) << "\n";
     if (operand != nullptr)
     {
-        printIndent(indent + 1);
-        cout << "Operand:\n";
-        operand->print(indent + 2);
+        operand->print(indent + 1);
     }
 }
 
@@ -907,9 +883,7 @@ CharNode::CharNode(string value) : value(value)
 void CharNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "Char(value: '" << value << "')";
-    printDecorations(*this);
-    cout << "\n";
+    cout << "'" << value << "'" << annotation(*this) << "\n";
 }
 
 BoolNode::BoolNode(bool value) : value(value)
@@ -920,9 +894,7 @@ BoolNode::BoolNode(bool value) : value(value)
 void BoolNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "Bool(value: " << (value ? "true" : "false") << ")";
-    printDecorations(*this);
-    cout << "\n";
+    cout << (value ? "true" : "false") << annotation(*this) << "\n";
 }
 
 ArrayAccessNode::ArrayAccessNode(ExpressionNode* array, ExpressionNode* index)
@@ -937,21 +909,14 @@ ArrayAccessNode::~ArrayAccessNode()
 void ArrayAccessNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "ArrayAccess";
-    printDecorations(*this);
-    cout << "\n";
-
+    cout << "ArrayAccess(" << expressionSummary(this) << ")" << annotation(*this) << "\n";
     if (array != nullptr)
     {
-        printIndent(indent + 1);
-        cout << "Array:\n";
-        array->print(indent + 2);
+        array->print(indent + 1);
     }
     if (index != nullptr)
     {
-        printIndent(indent + 1);
-        cout << "Index:\n";
-        index->print(indent + 2);
+        index->print(indent + 1);
     }
 }
 
@@ -966,14 +931,9 @@ RecordAccessNode::~RecordAccessNode()
 void RecordAccessNode::print(int indent) const
 {
     printIndent(indent);
-    cout << "RecordAccess(field: '" << field << "')";
-    printDecorations(*this);
-    cout << "\n";
-
+    cout << "RecordAccess(" << expressionSummary(this) << ")" << annotation(*this) << "\n";
     if (record != nullptr)
     {
-        printIndent(indent + 1);
-        cout << "Record:\n";
-        record->print(indent + 2);
+        record->print(indent + 1);
     }
 }
