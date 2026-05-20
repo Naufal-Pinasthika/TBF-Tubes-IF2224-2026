@@ -844,6 +844,38 @@ void CallNode::print(int indent) const
     }
 }
 
+FunctionCallNode::FunctionCallNode(string name, vector<ExpressionNode*> arguments)
+    : name(name), arguments(arguments) {}
+
+FunctionCallNode::~FunctionCallNode()
+{
+    for (ExpressionNode* argument : arguments)
+    {
+        delete argument;
+    }
+}
+
+void FunctionCallNode::print(int indent) const
+{
+    printIndent(indent);
+    cout << "FunctionCall(name: '" << name << "')";
+    printDecorations(*this);
+    cout << "\n";
+
+    if (!arguments.empty())
+    {
+        printIndent(indent + 1);
+        cout << "Arguments:\n";
+        for (ExpressionNode* argument : arguments)
+        {
+            if (argument != nullptr)
+            {
+                argument->print(indent + 2);
+            }
+        }
+    }
+}
+
 UnaryOpNode::UnaryOpNode(string op, ExpressionNode* operand)
     : op(op), operand(operand) {}
 

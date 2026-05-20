@@ -22,7 +22,7 @@ public:
     virtual void print(int indent = 0) const = 0;
 };
 
-// static node (the ones that will not be visit/analyze further)
+// base category node (the ones that will not be visit/analyze further)
 class ExpressionNode : public ASTNode {};
 class StatementNode : public ASTNode {};
 class DeclarationNode : public ASTNode {};
@@ -262,6 +262,16 @@ public:
 
     CallNode(string name, vector<ExpressionNode*> arguments);
     ~CallNode();
+    void print(int indent = 0) const override;
+};
+
+class FunctionCallNode : public ExpressionNode {
+public:
+    string name;
+    vector<ExpressionNode*> arguments;
+
+    FunctionCallNode(string name, vector<ExpressionNode*> arguments);
+    ~FunctionCallNode();
     void print(int indent = 0) const override;
 };
 
