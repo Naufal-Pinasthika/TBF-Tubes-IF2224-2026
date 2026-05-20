@@ -8,7 +8,8 @@
 
 using namespace std;
 
-class ASTBuilder {
+class ASTBuilder 
+{
 private:
     vector<string> errors;
 

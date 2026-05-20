@@ -8,7 +8,8 @@
 
 using namespace std;
 
-class ASTNode {
+class ASTNode 
+{
 public:
     TypeClass evalType = TypeClass::None;
     int tabIndex = -1;
