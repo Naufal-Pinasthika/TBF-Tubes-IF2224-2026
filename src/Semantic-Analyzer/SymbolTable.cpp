@@ -2,7 +2,7 @@
 
 int SymbolTable::enterBlock() {
     currentLevel++;
-    btab.push_back({0, 0, 0, 0});
+    btab.push_back({0, 0, 0, 0, 0});
     display.push_back(btab.size() - 1);
     return btab.size() - 1;
 }

@@ -119,8 +119,13 @@ public:
         tab.push_back({"WHILE",     0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});  
 
         // init predefined identifier thats not reserved keyword
-        tab.push_back({"TRUE",      0, ObjClass::Constant, TypeClass::Boolean, 0, 1, 0, 1});
-        tab.push_back({"FALSE",     0, ObjClass::Constant, TypeClass::Boolean, 0, 1, 0, 0});
+        tab.push_back({"TRUE",      0, ObjClass::Constant,      TypeClass::Boolean, 0, 1, 0, 1});
+        tab.push_back({"FALSE",     0, ObjClass::Constant,      TypeClass::Boolean, 0, 1, 0, 0});
+        tab.push_back({"WRITE",     0, ObjClass::Procedure,     TypeClass::None,    0, 1, 0, 0});
+        tab.push_back({"WRITELN",   0, ObjClass::Procedure,     TypeClass::None,    0, 1, 0, 0});
+        tab.push_back({"READ",      0, ObjClass::Procedure,     TypeClass::None,    0, 1, 0, 0});
+        tab.push_back({"READLN",    0, ObjClass::Procedure,     TypeClass::None,    0, 1, 0, 0});
+        
 
         btab.push_back({0, 0, 0, 0, 0});
         currentLevel = 0;
@@ -130,7 +135,14 @@ public:
 
         int last = 0;
         for (int i = 0; i < static_cast<int>(tab.size()); i++){
-            if (tab[i].obj == ObjClass::Type || tab[i].obj == ObjClass::Constant){
+            if 
+            (
+                tab[i].obj == ObjClass::Type || 
+                tab[i].obj == ObjClass::Constant || 
+                tab[i].obj == ObjClass::Procedure ||
+                tab[i].obj == ObjClass::Function
+            ) {
+
                 tab[i].link = last;
                 last = i;
             }
