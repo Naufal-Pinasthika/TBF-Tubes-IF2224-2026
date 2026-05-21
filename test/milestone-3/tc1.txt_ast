@@ -31,9 +31,6 @@ ProgramNode(name: 'Hello') -> tab_index:39, lev:0
     │   └── value BinOp '+' -> type:integer
     │       ├── 'a' -> tab_index:40, type:integer, lev:0
     │       └── 10 -> type:integer
-    ├── writeln(...) -> predefined, tab_index:36, lev:0
-    │   ├── argument 'Result = ' -> type:string
-    │   └── argument 'b' -> tab_index:41, type:integer, lev:0
-    └── Assign('c' := 'x') -> type:void
-        ├── target 'c'
-        └── value 'x'
+    └── writeln(...) -> predefined, tab_index:36, lev:0
+        ├── argument 'Result = ' -> type:string
+        └── argument 'b' -> tab_index:41, type:integer, lev:0

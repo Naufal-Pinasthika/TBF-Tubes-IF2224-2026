@@ -111,10 +111,10 @@ ProgramNode(name: 'Testing') -> tab_index:39, lev:0
     │           └── BinOp '-' -> type:integer
     │               ├── 'b' -> tab_index:45, type:integer, lev:0
     │               └── 1 -> type:integer
-    ├── Assign('valid' := 'a' > 'b' AND 'c' <> 0 OR not 'a' <= 5) -> type:void
+    ├── Assign('valid' := 'a' > 'b' and 'c' <> 0 or not 'a' <= 5) -> type:void
     │   ├── target 'valid' -> tab_index:47, type:boolean, lev:0
-    │   └── value BinOp 'OR' -> type:boolean
-    │       ├── BinOp 'AND' -> type:boolean
+    │   └── value BinOp 'or' -> type:boolean
+    │       ├── BinOp 'and' -> type:boolean
     │       │   ├── BinOp '>' -> type:boolean
     │       │   │   ├── 'a' -> tab_index:44, type:integer, lev:0
     │       │   │   └── 'b' -> tab_index:45, type:integer, lev:0

@@ -31,14 +31,14 @@ ProgramNode(name: 'Math') -> tab_index:39, lev:0
     ├── Assign('b' := 67) -> type:void
     │   ├── target 'b' -> tab_index:41, type:integer, lev:0
     │   └── value 67 -> type:integer
-    ├── Assign('c' := 'a' == 'b' * 'a' / 'b' MOD 'a' div 'b' + 'a' <> 'b' * 'a' + 'b' div 'a' - 'b') -> type:void
+    ├── Assign('c' := 'a' == 'b' * 'a' / 'b' mod 'a' div 'b' + 'a' <> 'b' * 'a' + 'b' div 'a' - 'b') -> type:void
     │   ├── target 'c' -> tab_index:42, type:integer, lev:0
     │   └── value BinOp '+' -> type:real
     │       ├── BinOp '*' -> type:real
     │       │   ├── BinOp '==' -> type:boolean
     │       │   │   ├── 'a' -> tab_index:40, type:integer, lev:0
     │       │   │   └── 'b' -> tab_index:41, type:integer, lev:0
-    │       │   └── BinOp 'MOD' -> type:real
+    │       │   └── BinOp 'mod' -> type:real
     │       │       ├── BinOp '/' -> type:real
     │       │       │   ├── 'a' -> tab_index:40, type:integer, lev:0
     │       │       │   └── 'b' -> tab_index:41, type:integer, lev:0

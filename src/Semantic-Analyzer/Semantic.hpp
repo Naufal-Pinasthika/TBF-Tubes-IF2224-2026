@@ -5,6 +5,7 @@
 
 #include <string>
 #include <vector>
+#include <cstdlib>
 
 using namespace std;
 
@@ -16,6 +17,7 @@ private:
 
     void addError(const string& message);
     int lookupName(const string& name);
+    bool isRelationalOp(const string& op) const;
     void decorate(ASTNode* node, int tabIndex);
 
     void analyzeDeclaration(DeclarationNode* node);
@@ -28,6 +30,13 @@ private:
     void analyzeTypeDecl(TypeDeclNode* node);
     void analyzeProcedureDecl(ProcedureDeclNode* node);
     void analyzeFunctionDecl(FunctionDeclNode* node);
+    void analyzeSubprogramBody(
+        ASTNode* owner,
+        int tabIndex,
+        const vector<VarDeclNode*>& parameters,
+        const vector<DeclarationNode*>& declarations,
+        StatementNode* body
+    );
 
     bool isNumeric(TypeClass type) const;
     bool isCompatible(TypeClass left, TypeClass right) const;
