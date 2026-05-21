@@ -12,8 +12,7 @@ ProgramNode::~ProgramNode()
 
 void ProgramNode::print(int indent) const { printAstNode(this, indent); }
 
-VarDeclNode::VarDeclNode(vector<string> names, TypeNode* type)
-    : names(names), type(type) {}
+VarDeclNode::VarDeclNode(vector<string> names, TypeNode* type) : names(names), type(type) {}
 
 VarDeclNode::~VarDeclNode()
 {
@@ -22,8 +21,7 @@ VarDeclNode::~VarDeclNode()
 
 void VarDeclNode::print(int indent) const { printAstNode(this, indent); }
 
-ConstDeclNode::ConstDeclNode(string name, ExpressionNode* value)
-    : name(name), value(value) {}
+ConstDeclNode::ConstDeclNode(string name, ExpressionNode* value) : name(name), value(value) {}
 
 ConstDeclNode::~ConstDeclNode()
 {
@@ -32,8 +30,7 @@ ConstDeclNode::~ConstDeclNode()
 
 void ConstDeclNode::print(int indent) const { printAstNode(this, indent); }
 
-TypeDeclNode::TypeDeclNode(string name, TypeNode* type)
-    : name(name), type(type) {}
+TypeDeclNode::TypeDeclNode(string name, TypeNode* type) : name(name), type(type) {}
 
 TypeDeclNode::~TypeDeclNode()
 {
@@ -46,8 +43,7 @@ NamedTypeNode::NamedTypeNode(string name) : name(name) {}
 
 void NamedTypeNode::print(int indent) const { printAstNode(this, indent); }
 
-RangeTypeNode::RangeTypeNode(ExpressionNode* low, ExpressionNode* high)
-    : low(low), high(high) {}
+RangeTypeNode::RangeTypeNode(ExpressionNode* low, ExpressionNode* high) : low(low), high(high) {}
 
 RangeTypeNode::~RangeTypeNode()
 {
@@ -57,8 +53,7 @@ RangeTypeNode::~RangeTypeNode()
 
 void RangeTypeNode::print(int indent) const { printAstNode(this, indent); }
 
-EnumeratedTypeNode::EnumeratedTypeNode(vector<string> values)
-    : values(values)
+EnumeratedTypeNode::EnumeratedTypeNode(vector<string> values) : values(values)
 {
     evalType = TypeClass::Enumerated;
 }
@@ -80,8 +75,7 @@ void ArrayTypeNode::print(int indent) const { printAstNode(this, indent); }
 
 RecordTypeNode::~RecordTypeNode()
 {
-    for (VarDeclNode* field : fields)
-    {
+    for (VarDeclNode* field : fields){
         delete field;
     }
 }
@@ -92,12 +86,10 @@ ProcedureDeclNode::ProcedureDeclNode(string name) : name(name) {}
 
 ProcedureDeclNode::~ProcedureDeclNode()
 {
-    for (VarDeclNode* parameter : parameters)
-    {
+    for (VarDeclNode* parameter : parameters){
         delete parameter;
     }
-    for (DeclarationNode* declaration : declarations)
-    {
+    for (DeclarationNode* declaration : declarations){
         delete declaration;
     }
     delete body;
@@ -140,8 +132,7 @@ AssignNode::~AssignNode()
 
 void AssignNode::print(int indent) const { printAstNode(this, indent); }
 
-BinOpNode::BinOpNode(string op, ExpressionNode* left, ExpressionNode* right)
-    : op(op), left(left), right(right) {}
+BinOpNode::BinOpNode(string op, ExpressionNode* left, ExpressionNode* right) : op(op), left(left), right(right) {}
 
 BinOpNode::~BinOpNode()
 {
