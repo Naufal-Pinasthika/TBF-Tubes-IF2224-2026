@@ -3,11 +3,68 @@
 #include <algorithm>
 #include <cctype>
 
-static void printIndent(int indent)
+static vector<bool>& treeLastByDepth()
 {
-    for (int i = 0; i < indent; i++)
+    static vector<bool> lastByDepth(1, true);
+    return lastByDepth;
+}
+
+static void markTreeDepth(int depth, bool isLast)
+{
+    vector<bool>& lastByDepth = treeLastByDepth();
+    if (lastByDepth.size() <= static_cast<size_t>(depth))
     {
-        cout << "    ";
+        lastByDepth.resize(depth + 1, true);
+    }
+    lastByDepth[depth] = isLast;
+}
+
+static bool isTreeDepthLast(int depth)
+{
+    vector<bool>& lastByDepth = treeLastByDepth();
+    if (lastByDepth.size() <= static_cast<size_t>(depth))
+    {
+        lastByDepth.resize(depth + 1, true);
+    }
+    return lastByDepth[depth];
+}
+
+template <typename T>
+static size_t countPresent(const vector<T*>& nodes)
+{
+    size_t count = 0;
+    for (const T* node : nodes)
+    {
+        if (node != nullptr)
+        {
+            ++count;
+        }
+    }
+    return count;
+}
+
+static void printTreePrefix(int indent)
+{
+    vector<bool>& lastByDepth = treeLastByDepth();
+    if (indent == 0)
+    {
+        lastByDepth.assign(1, true);
+    }
+    if (lastByDepth.size() <= static_cast<size_t>(indent))
+    {
+        lastByDepth.resize(indent + 1, true);
+    }
+
+    for (int depth = 1; depth <= indent; ++depth)
+    {
+        if (depth == indent)
+        {
+            cout << (lastByDepth[depth] ? "└── " : "├── ");
+        }
+        else
+        {
+            cout << (lastByDepth[depth] ? "    " : "│   ");
+        }
     }
 }
 
@@ -169,18 +226,22 @@ static void printExpressionWithRole(const string& role, const ExpressionNode* no
         return;
     }
 
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << role << " ";
 
     if (auto bin = dynamic_cast<const BinOpNode*>(node))
     {
         cout << "BinOp '" << bin->op << "'" << annotation(*bin) << "\n";
+        size_t childCount = (bin->left != nullptr ? 1 : 0) + (bin->right != nullptr ? 1 : 0);
+        size_t childIndex = 0;
         if (bin->left != nullptr)
         {
+            markTreeDepth(indent + 1, ++childIndex == childCount);
             bin->left->print(indent + 1);
         }
         if (bin->right != nullptr)
         {
+            markTreeDepth(indent + 1, ++childIndex == childCount);
             bin->right->print(indent + 1);
         }
         return;
@@ -191,6 +252,7 @@ static void printExpressionWithRole(const string& role, const ExpressionNode* no
         cout << "UnaryOp '" << unary->op << "'" << annotation(*unary) << "\n";
         if (unary->operand != nullptr)
         {
+            markTreeDepth(indent + 1, true);
             unary->operand->print(indent + 1);
         }
         return;
@@ -227,17 +289,25 @@ ProgramNode::~ProgramNode()
 
 void ProgramNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "ProgramNode(name: '" << name << "')" << annotation(*this, false) << "\n";
+
+    size_t childCount = (!declarations.empty() ? 1 : 0) + (body != nullptr ? 1 : 0);
+    size_t childIndex = 0;
 
     if (!declarations.empty())
     {
-        printIndent(indent + 1);
+        markTreeDepth(indent + 1, ++childIndex == childCount);
+        printTreePrefix(indent + 1);
         cout << "Declarations\n";
+
+        size_t declarationCount = countPresent(declarations);
+        size_t declarationIndex = 0;
         for (DeclarationNode* declaration : declarations)
         {
             if (declaration != nullptr)
             {
+                markTreeDepth(indent + 2, ++declarationIndex == declarationCount);
                 declaration->print(indent + 2);
             }
         }
@@ -245,6 +315,7 @@ void ProgramNode::print(int indent) const
 
     if (body != nullptr)
     {
+        markTreeDepth(indent + 1, ++childIndex == childCount);
         body->print(indent + 1);
     }
 }
@@ -259,9 +330,11 @@ VarDeclNode::~VarDeclNode()
 
 void VarDeclNode::print(int indent) const
 {
+    bool originalIsLast = isTreeDepthLast(indent);
     for (size_t i = 0; i < names.size(); ++i)
     {
-        printIndent(indent);
+        markTreeDepth(indent, i + 1 == names.size() && originalIsLast);
+        printTreePrefix(indent);
         cout << "VarDecl('" << names[i] << "')" << varDeclAnnotation(*this, i);
         if (isParameter)
         {
@@ -285,7 +358,7 @@ ConstDeclNode::~ConstDeclNode()
 
 void ConstDeclNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "ConstDecl('" << name << "' = " << expressionSummary(value) << ")" << annotation(*this) << "\n";
 }
 
@@ -299,10 +372,11 @@ TypeDeclNode::~TypeDeclNode()
 
 void TypeDeclNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "TypeDecl('" << name << "')" << annotation(*this) << "\n";
     if (type != nullptr)
     {
+        markTreeDepth(indent + 1, true);
         type->print(indent + 1);
     }
 }
@@ -311,7 +385,7 @@ NamedTypeNode::NamedTypeNode(string name) : name(name) {}
 
 void NamedTypeNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "NamedType('" << name << "')" << annotation(*this) << "\n";
 }
 
@@ -326,7 +400,7 @@ RangeTypeNode::~RangeTypeNode()
 
 void RangeTypeNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "RangeType(" << expressionSummary(low) << ".." << expressionSummary(high) << ")" << annotation(*this) << "\n";
 }
 
@@ -338,7 +412,7 @@ EnumeratedTypeNode::EnumeratedTypeNode(vector<string> values)
 
 void EnumeratedTypeNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "EnumeratedType(";
     for (size_t i = 0; i < values.size(); ++i)
     {
@@ -365,18 +439,26 @@ ArrayTypeNode::~ArrayTypeNode()
 
 void ArrayTypeNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "ArrayType" << annotation(*this) << "\n";
+
+    size_t childCount = (indexType != nullptr ? 1 : 0) + (elementType != nullptr ? 1 : 0);
+    size_t childIndex = 0;
+
     if (indexType != nullptr)
     {
-        printIndent(indent + 1);
+        markTreeDepth(indent + 1, ++childIndex == childCount);
+        printTreePrefix(indent + 1);
         cout << "IndexType\n";
+        markTreeDepth(indent + 2, true);
         indexType->print(indent + 2);
     }
     if (elementType != nullptr)
     {
-        printIndent(indent + 1);
+        markTreeDepth(indent + 1, ++childIndex == childCount);
+        printTreePrefix(indent + 1);
         cout << "ElementType\n";
+        markTreeDepth(indent + 2, true);
         elementType->print(indent + 2);
     }
 }
@@ -391,12 +473,16 @@ RecordTypeNode::~RecordTypeNode()
 
 void RecordTypeNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "RecordType" << annotation(*this) << "\n";
+
+    size_t fieldCount = countPresent(fields);
+    size_t fieldIndex = 0;
     for (VarDeclNode* field : fields)
     {
         if (field != nullptr)
         {
+            markTreeDepth(indent + 1, ++fieldIndex == fieldCount);
             field->print(indent + 1);
         }
     }
@@ -419,35 +505,49 @@ ProcedureDeclNode::~ProcedureDeclNode()
 
 void ProcedureDeclNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "ProcedureDecl('" << name << "')" << annotation(*this, false) << "\n";
+
+    size_t childCount = (!parameters.empty() ? 1 : 0) + (!declarations.empty() ? 1 : 0) + (body != nullptr ? 1 : 0);
+    size_t childIndex = 0;
 
     if (!parameters.empty())
     {
-        printIndent(indent + 1);
+        markTreeDepth(indent + 1, ++childIndex == childCount);
+        printTreePrefix(indent + 1);
         cout << "Parameters\n";
+
+        size_t parameterCount = countPresent(parameters);
+        size_t parameterIndex = 0;
         for (VarDeclNode* parameter : parameters)
         {
             if (parameter != nullptr)
             {
+                markTreeDepth(indent + 2, ++parameterIndex == parameterCount);
                 parameter->print(indent + 2);
             }
         }
     }
     if (!declarations.empty())
     {
-        printIndent(indent + 1);
+        markTreeDepth(indent + 1, ++childIndex == childCount);
+        printTreePrefix(indent + 1);
         cout << "Declarations\n";
+
+        size_t declarationCount = countPresent(declarations);
+        size_t declarationIndex = 0;
         for (DeclarationNode* declaration : declarations)
         {
             if (declaration != nullptr)
             {
+                markTreeDepth(indent + 2, ++declarationIndex == declarationCount);
                 declaration->print(indent + 2);
             }
         }
     }
     if (body != nullptr)
     {
+        markTreeDepth(indent + 1, ++childIndex == childCount);
         body->print(indent + 1);
     }
 }
@@ -471,41 +571,57 @@ FunctionDeclNode::~FunctionDeclNode()
 
 void FunctionDeclNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "FunctionDecl('" << name << "')" << annotation(*this) << "\n";
+
+    size_t childCount = (returnType != nullptr ? 1 : 0) + (!parameters.empty() ? 1 : 0) + (!declarations.empty() ? 1 : 0) + (body != nullptr ? 1 : 0);
+    size_t childIndex = 0;
 
     if (returnType != nullptr)
     {
-        printIndent(indent + 1);
+        markTreeDepth(indent + 1, ++childIndex == childCount);
+        printTreePrefix(indent + 1);
         cout << "ReturnType\n";
+        markTreeDepth(indent + 2, true);
         returnType->print(indent + 2);
     }
     if (!parameters.empty())
     {
-        printIndent(indent + 1);
+        markTreeDepth(indent + 1, ++childIndex == childCount);
+        printTreePrefix(indent + 1);
         cout << "Parameters\n";
+
+        size_t parameterCount = countPresent(parameters);
+        size_t parameterIndex = 0;
         for (VarDeclNode* parameter : parameters)
         {
             if (parameter != nullptr)
             {
+                markTreeDepth(indent + 2, ++parameterIndex == parameterCount);
                 parameter->print(indent + 2);
             }
         }
     }
     if (!declarations.empty())
     {
-        printIndent(indent + 1);
+        markTreeDepth(indent + 1, ++childIndex == childCount);
+        printTreePrefix(indent + 1);
         cout << "Declarations\n";
+
+        size_t declarationCount = countPresent(declarations);
+        size_t declarationIndex = 0;
         for (DeclarationNode* declaration : declarations)
         {
             if (declaration != nullptr)
             {
+                markTreeDepth(indent + 2, ++declarationIndex == declarationCount);
                 declaration->print(indent + 2);
             }
         }
     }
     if (body != nullptr)
     {
+        markTreeDepth(indent + 1, ++childIndex == childCount);
         body->print(indent + 1);
     }
 }
@@ -520,20 +636,24 @@ CompoundNode::~CompoundNode()
 
 void CompoundNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "Block" << annotation(*this, false) << "\n";
 
-    if (statements.empty())
+    size_t statementCount = countPresent(statements);
+    if (statementCount == 0)
     {
-        printIndent(indent + 1);
+        markTreeDepth(indent + 1, true);
+        printTreePrefix(indent + 1);
         cout << "(empty)\n";
         return;
     }
 
+    size_t statementIndex = 0;
     for (StatementNode* statement : statements)
     {
         if (statement != nullptr)
         {
+            markTreeDepth(indent + 1, ++statementIndex == statementCount);
             statement->print(indent + 1);
         }
     }
@@ -550,15 +670,20 @@ AssignNode::~AssignNode()
 
 void AssignNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "Assign(" << expressionSummary(target) << " := " << expressionSummary(value) << ")" << annotation(*this, false, true) << "\n";
+
+    size_t childCount = (target != nullptr ? 1 : 0) + (value != nullptr ? 1 : 0);
+    size_t childIndex = 0;
 
     if (target != nullptr)
     {
+        markTreeDepth(indent + 1, ++childIndex == childCount);
         printExpressionWithRole("target", target, indent + 1);
     }
     if (value != nullptr)
     {
+        markTreeDepth(indent + 1, ++childIndex == childCount);
         printExpressionWithRole("value", value, indent + 1);
     }
 }
@@ -574,15 +699,20 @@ BinOpNode::~BinOpNode()
 
 void BinOpNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "BinOp '" << op << "'" << annotation(*this) << "\n";
+
+    size_t childCount = (left != nullptr ? 1 : 0) + (right != nullptr ? 1 : 0);
+    size_t childIndex = 0;
 
     if (left != nullptr)
     {
+        markTreeDepth(indent + 1, ++childIndex == childCount);
         left->print(indent + 1);
     }
     if (right != nullptr)
     {
+        markTreeDepth(indent + 1, ++childIndex == childCount);
         right->print(indent + 1);
     }
 }
@@ -591,7 +721,7 @@ VarNode::VarNode(string name) : name(name) {}
 
 void VarNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "'" << name << "'" << annotation(*this) << "\n";
 }
 
@@ -603,7 +733,7 @@ NumberNode::NumberNode(string value, bool isReal)
 
 void NumberNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << value << annotation(*this) << "\n";
 }
 
@@ -614,7 +744,7 @@ StringNode::StringNode(string value) : value(value)
 
 void StringNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "'" << value << "'" << annotation(*this) << "\n";
 }
 
@@ -630,22 +760,31 @@ IfNode::~IfNode()
 
 void IfNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "If" << annotation(*this, false, true) << "\n";
+
+    size_t childCount = (condition != nullptr ? 1 : 0) + (thenBranch != nullptr ? 1 : 0) + (elseBranch != nullptr ? 1 : 0);
+    size_t childIndex = 0;
+
     if (condition != nullptr)
     {
+        markTreeDepth(indent + 1, ++childIndex == childCount);
         printExpressionWithRole("condition", condition, indent + 1);
     }
     if (thenBranch != nullptr)
     {
-        printIndent(indent + 1);
+        markTreeDepth(indent + 1, ++childIndex == childCount);
+        printTreePrefix(indent + 1);
         cout << "then\n";
+        markTreeDepth(indent + 2, true);
         thenBranch->print(indent + 2);
     }
     if (elseBranch != nullptr)
     {
-        printIndent(indent + 1);
+        markTreeDepth(indent + 1, ++childIndex == childCount);
+        printTreePrefix(indent + 1);
         cout << "else\n";
+        markTreeDepth(indent + 2, true);
         elseBranch->print(indent + 2);
     }
 }
@@ -661,14 +800,20 @@ WhileNode::~WhileNode()
 
 void WhileNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "While" << annotation(*this, false, true) << "\n";
+
+    size_t childCount = (condition != nullptr ? 1 : 0) + (body != nullptr ? 1 : 0);
+    size_t childIndex = 0;
+
     if (condition != nullptr)
     {
+        markTreeDepth(indent + 1, ++childIndex == childCount);
         printExpressionWithRole("condition", condition, indent + 1);
     }
     if (body != nullptr)
     {
+        markTreeDepth(indent + 1, ++childIndex == childCount);
         body->print(indent + 1);
     }
 }
@@ -685,18 +830,25 @@ ForNode::~ForNode()
 
 void ForNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "For('" << variable << "', " << (isDownto ? "downto" : "to") << ")" << annotation(*this, false, true) << "\n";
+
+    size_t childCount = (start != nullptr ? 1 : 0) + (stop != nullptr ? 1 : 0) + (body != nullptr ? 1 : 0);
+    size_t childIndex = 0;
+
     if (start != nullptr)
     {
+        markTreeDepth(indent + 1, ++childIndex == childCount);
         printExpressionWithRole("start", start, indent + 1);
     }
     if (stop != nullptr)
     {
+        markTreeDepth(indent + 1, ++childIndex == childCount);
         printExpressionWithRole("stop", stop, indent + 1);
     }
     if (body != nullptr)
     {
+        markTreeDepth(indent + 1, ++childIndex == childCount);
         body->print(indent + 1);
     }
 }
@@ -715,17 +867,23 @@ RepeatNode::~RepeatNode()
 
 void RepeatNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "Repeat" << annotation(*this, false, true) << "\n";
+
+    size_t childCount = countPresent(statements) + (condition != nullptr ? 1 : 0);
+    size_t childIndex = 0;
+
     for (StatementNode* statement : statements)
     {
         if (statement != nullptr)
         {
+            markTreeDepth(indent + 1, ++childIndex == childCount);
             statement->print(indent + 1);
         }
     }
     if (condition != nullptr)
     {
+        markTreeDepth(indent + 1, ++childIndex == childCount);
         printExpressionWithRole("until", condition, indent + 1);
     }
 }
@@ -744,7 +902,7 @@ CaseBranch::~CaseBranch()
 
 void CaseBranch::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "CaseBranch";
     if (!labels.empty())
     {
@@ -762,6 +920,7 @@ void CaseBranch::print(int indent) const
     cout << "\n";
     if (statement != nullptr)
     {
+        markTreeDepth(indent + 1, true);
         statement->print(indent + 1);
     }
 }
@@ -780,16 +939,22 @@ CaseNode::~CaseNode()
 
 void CaseNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "Case" << annotation(*this, false, true) << "\n";
+
+    size_t childCount = (expression != nullptr ? 1 : 0) + countPresent(branches);
+    size_t childIndex = 0;
+
     if (expression != nullptr)
     {
+        markTreeDepth(indent + 1, ++childIndex == childCount);
         printExpressionWithRole("selector", expression, indent + 1);
     }
     for (CaseBranch* branch : branches)
     {
         if (branch != nullptr)
         {
+            markTreeDepth(indent + 1, ++childIndex == childCount);
             branch->print(indent + 1);
         }
     }
@@ -808,7 +973,7 @@ CallNode::~CallNode()
 
 void CallNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << name << "(...)";
     if (isPredefinedProcedure(name) && tabIndex != -1)
     {
@@ -824,10 +989,13 @@ void CallNode::print(int indent) const
         cout << annotation(*this, false) << "\n";
     }
 
+    size_t argumentCount = countPresent(arguments);
+    size_t argumentIndex = 0;
     for (ExpressionNode* argument : arguments)
     {
         if (argument != nullptr)
         {
+            markTreeDepth(indent + 1, ++argumentIndex == argumentCount);
             printExpressionWithRole("argument", argument, indent + 1);
         }
     }
@@ -846,12 +1014,16 @@ FunctionCallNode::~FunctionCallNode()
 
 void FunctionCallNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << name << "(...)" << annotation(*this) << "\n";
+
+    size_t argumentCount = countPresent(arguments);
+    size_t argumentIndex = 0;
     for (ExpressionNode* argument : arguments)
     {
         if (argument != nullptr)
         {
+            markTreeDepth(indent + 1, ++argumentIndex == argumentCount);
             printExpressionWithRole("argument", argument, indent + 1);
         }
     }
@@ -867,10 +1039,11 @@ UnaryOpNode::~UnaryOpNode()
 
 void UnaryOpNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "UnaryOp '" << op << "'" << annotation(*this) << "\n";
     if (operand != nullptr)
     {
+        markTreeDepth(indent + 1, true);
         operand->print(indent + 1);
     }
 }
@@ -882,7 +1055,7 @@ CharNode::CharNode(string value) : value(value)
 
 void CharNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "'" << value << "'" << annotation(*this) << "\n";
 }
 
@@ -893,7 +1066,7 @@ BoolNode::BoolNode(bool value) : value(value)
 
 void BoolNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << (value ? "true" : "false") << annotation(*this) << "\n";
 }
 
@@ -908,14 +1081,20 @@ ArrayAccessNode::~ArrayAccessNode()
 
 void ArrayAccessNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "ArrayAccess(" << expressionSummary(this) << ")" << annotation(*this) << "\n";
+
+    size_t childCount = (array != nullptr ? 1 : 0) + (index != nullptr ? 1 : 0);
+    size_t childIndex = 0;
+
     if (array != nullptr)
     {
+        markTreeDepth(indent + 1, ++childIndex == childCount);
         array->print(indent + 1);
     }
     if (index != nullptr)
     {
+        markTreeDepth(indent + 1, ++childIndex == childCount);
         index->print(indent + 1);
     }
 }
@@ -930,10 +1109,11 @@ RecordAccessNode::~RecordAccessNode()
 
 void RecordAccessNode::print(int indent) const
 {
-    printIndent(indent);
+    printTreePrefix(indent);
     cout << "RecordAccess(" << expressionSummary(this) << ")" << annotation(*this) << "\n";
     if (record != nullptr)
     {
+        markTreeDepth(indent + 1, true);
         record->print(indent + 1);
     }
 }
