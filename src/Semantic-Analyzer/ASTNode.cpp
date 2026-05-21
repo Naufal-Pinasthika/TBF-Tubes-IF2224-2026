@@ -68,6 +68,26 @@ static void printTreePrefix(int indent)
     }
 }
 
+template <typename T>
+static void printNodeListSection(const string& label, const vector<T*>& nodes, int indent, size_t& childIndex,size_t childCount)
+{
+    markTreeDepth(indent + 1, ++childIndex == childCount);
+    printTreePrefix(indent + 1);
+    cout << label << "\n";
+
+    size_t nodeCount = countPresent(nodes);
+    size_t nodeIndex = 0;
+
+    for (T* node : nodes)
+    {
+        if (node != nullptr)
+        {
+            markTreeDepth(indent + 2, ++nodeIndex == nodeCount);
+            node->print(indent + 2);
+        }
+    }
+}
+
 static string typeClassToString(TypeClass type)
 {
     switch (type)
@@ -295,26 +315,11 @@ void ProgramNode::print(int indent) const
     size_t childCount = (!declarations.empty() ? 1 : 0) + (body != nullptr ? 1 : 0);
     size_t childIndex = 0;
 
-    if (!declarations.empty())
-    {
-        markTreeDepth(indent + 1, ++childIndex == childCount);
-        printTreePrefix(indent + 1);
-        cout << "Declarations\n";
-
-        size_t declarationCount = countPresent(declarations);
-        size_t declarationIndex = 0;
-        for (DeclarationNode* declaration : declarations)
-        {
-            if (declaration != nullptr)
-            {
-                markTreeDepth(indent + 2, ++declarationIndex == declarationCount);
-                declaration->print(indent + 2);
-            }
-        }
+    if (!declarations.empty()){
+        printNodeListSection("Declarations", declarations, indent, childIndex, childCount);
     }
 
-    if (body != nullptr)
-    {
+    if (body != nullptr){
         markTreeDepth(indent + 1, ++childIndex == childCount);
         body->print(indent + 1);
     }
@@ -511,42 +516,13 @@ void ProcedureDeclNode::print(int indent) const
     size_t childCount = (!parameters.empty() ? 1 : 0) + (!declarations.empty() ? 1 : 0) + (body != nullptr ? 1 : 0);
     size_t childIndex = 0;
 
-    if (!parameters.empty())
-    {
-        markTreeDepth(indent + 1, ++childIndex == childCount);
-        printTreePrefix(indent + 1);
-        cout << "Parameters\n";
-
-        size_t parameterCount = countPresent(parameters);
-        size_t parameterIndex = 0;
-        for (VarDeclNode* parameter : parameters)
-        {
-            if (parameter != nullptr)
-            {
-                markTreeDepth(indent + 2, ++parameterIndex == parameterCount);
-                parameter->print(indent + 2);
-            }
-        }
+    if (!parameters.empty()){
+        printNodeListSection("Parameters", parameters, indent, childIndex, childCount);
     }
-    if (!declarations.empty())
-    {
-        markTreeDepth(indent + 1, ++childIndex == childCount);
-        printTreePrefix(indent + 1);
-        cout << "Declarations\n";
-
-        size_t declarationCount = countPresent(declarations);
-        size_t declarationIndex = 0;
-        for (DeclarationNode* declaration : declarations)
-        {
-            if (declaration != nullptr)
-            {
-                markTreeDepth(indent + 2, ++declarationIndex == declarationCount);
-                declaration->print(indent + 2);
-            }
-        }
+    if (!declarations.empty()){
+        printNodeListSection("Declarations", declarations, indent, childIndex, childCount);
     }
-    if (body != nullptr)
-    {
+    if (body != nullptr){
         markTreeDepth(indent + 1, ++childIndex == childCount);
         body->print(indent + 1);
     }
@@ -585,39 +561,11 @@ void FunctionDeclNode::print(int indent) const
         markTreeDepth(indent + 2, true);
         returnType->print(indent + 2);
     }
-    if (!parameters.empty())
-    {
-        markTreeDepth(indent + 1, ++childIndex == childCount);
-        printTreePrefix(indent + 1);
-        cout << "Parameters\n";
-
-        size_t parameterCount = countPresent(parameters);
-        size_t parameterIndex = 0;
-        for (VarDeclNode* parameter : parameters)
-        {
-            if (parameter != nullptr)
-            {
-                markTreeDepth(indent + 2, ++parameterIndex == parameterCount);
-                parameter->print(indent + 2);
-            }
-        }
+    if (!parameters.empty()){
+        printNodeListSection("Parameters", parameters, indent, childIndex, childCount);
     }
-    if (!declarations.empty())
-    {
-        markTreeDepth(indent + 1, ++childIndex == childCount);
-        printTreePrefix(indent + 1);
-        cout << "Declarations\n";
-
-        size_t declarationCount = countPresent(declarations);
-        size_t declarationIndex = 0;
-        for (DeclarationNode* declaration : declarations)
-        {
-            if (declaration != nullptr)
-            {
-                markTreeDepth(indent + 2, ++declarationIndex == declarationCount);
-                declaration->print(indent + 2);
-            }
-        }
+    if (!declarations.empty()){
+        printNodeListSection("Declarations", declarations, indent, childIndex, childCount);
     }
     if (body != nullptr)
     {
