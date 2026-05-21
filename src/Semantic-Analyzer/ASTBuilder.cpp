@@ -43,43 +43,26 @@ static bool hasTokenRecursive(Node* node, const string& type)
 
 static string operatorFromToken(const string& type, const string& lexeme)
 {
-    if (!lexeme.empty())
-    {
-        return lexeme;
-    }
+    // Canonicalize by token type first.
+    // This keeps source mode and *_tokenize mode consistent.
+    if (type == "plus")  return "+";
+    if (type == "minus") return "-";
+    if (type == "times") return "*";
+    if (type == "rdiv")  return "/";
+    if (type == "idiv")  return "div";
+    if (type == "imod")  return "mod";
+    if (type == "andsy") return "and";
+    if (type == "orsy")  return "or";
+    if (type == "notsy") return "not";
 
-    if (type == "plus")
-        return "+";
-    if (type == "minus")
-        return "-";
-    if (type == "times")
-        return "*";
-    if (type == "rdiv")
-        return "/";
-    if (type == "idiv")
-        return "div";
-    if (type == "imod")
-        return "mod";
-    if (type == "andsy")
-        return "and";
-    if (type == "orsy")
-        return "or";
-    if (type == "notsy")
-        return "not";
-    if (type == "eql")
-        return "=";
-    if (type == "neq")
-        return "<>";
-    if (type == "gtr")
-        return ">";
-    if (type == "geq")
-        return ">=";
-    if (type == "lss")
-        return "<";
-    if (type == "leq")
-        return "<=";
+    if (type == "eql") return "==";
+    if (type == "neq") return "<>";
+    if (type == "gtr") return ">";
+    if (type == "geq") return ">=";
+    if (type == "lss") return "<";
+    if (type == "leq") return "<=";
 
-    return type;
+    return !lexeme.empty() ? lexeme : type;
 }
 
 //helper function

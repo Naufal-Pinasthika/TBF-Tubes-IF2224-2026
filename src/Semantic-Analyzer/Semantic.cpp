@@ -287,12 +287,11 @@ TypeClass Semantic::analyzeExpression(ExpressionNode* node) {
         TypeClass left = analyzeExpression(bin->left);
         TypeClass right = analyzeExpression(bin->right);
 
-        if (bin->op == "==" || bin->op == "<>" || bin->op == "<" ||
-            bin->op == ">" || bin->op == "<=" || bin->op == ">=") {
+        if (isRelationalOp(bin->op)) {
             if (!isCompatible(left, right)) addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " relational operand type mismatch");
             bin->evalType = TypeClass::Boolean;
         }
-        else if (bin->op == "AND" || bin->op == "OR") {
+        else if (bin->op == "and" || bin->op == "or") {
             if (left != TypeClass::Boolean || right != TypeClass::Boolean)
                 addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " logical operands must be boolean");
             bin->evalType = TypeClass::Boolean;
@@ -455,4 +454,9 @@ string Semantic::typeName(TypeClass type) const {
         case TypeClass::Enumerated: return "enumerated";
         default: return "none";
     }
+}
+
+static bool isRelationalOp(const string& op)
+{
+    return op == "==" || op == "<>" || op == "<" || op == ">" || op == "<=" || op == ">=";
 }
