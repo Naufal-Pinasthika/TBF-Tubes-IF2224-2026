@@ -7,5 +7,4 @@ begin
   a := 5;
   b := a + 10;
   writeln('Result = ', b);
-  c := x;
 end.
