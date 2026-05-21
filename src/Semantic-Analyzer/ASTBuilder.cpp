@@ -425,11 +425,11 @@ ExpressionNode* ASTBuilder::buildConstant(Node* node) {
             string name = lexeme(child);
             if (name == "true" || name == "TRUE") {
                 result = new BoolNode(true);
-            }
-            if (name == "false" || name == "FALSE") {
+            } else if (name == "false" || name == "FALSE") {
                 result = new BoolNode(false);
+            } else {
+                result = new VarNode(name);
             }
-            result = new VarNode(name);
         }
     }
 

@@ -16,6 +16,7 @@ private:
 
     void addError(const string& message);
     int lookupName(const string& name);
+    bool isRelationalOp(const string& op) const;
     void decorate(ASTNode* node, int tabIndex);
 
     void analyzeDeclaration(DeclarationNode* node);

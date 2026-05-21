@@ -24,6 +24,11 @@ int Semantic::lookupName(const string& name) {
     return idx;
 }
 
+bool Semantic::isRelationalOp(const string& op) const
+{
+    return op == "==" || op == "<>" || op == "<" || op == ">" || op == "<=" || op == ">=";
+}
+
 void Semantic::decorate(ASTNode* node, int tabIndex) {
     if (node == nullptr || tabIndex == 0) return;
 
@@ -291,7 +296,7 @@ TypeClass Semantic::analyzeExpression(ExpressionNode* node) {
             if (!isCompatible(left, right)) addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " relational operand type mismatch");
             bin->evalType = TypeClass::Boolean;
         }
-        else if (bin->op == "and" || bin->op == "or") {
+        else if (bin->op == "AND" || bin->op == "OR") {
             if (left != TypeClass::Boolean || right != TypeClass::Boolean)
                 addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " logical operands must be boolean");
             bin->evalType = TypeClass::Boolean;
@@ -454,9 +459,4 @@ string Semantic::typeName(TypeClass type) const {
         case TypeClass::Enumerated: return "enumerated";
         default: return "none";
     }
-}
-
-static bool isRelationalOp(const string& op)
-{
-    return op == "==" || op == "<>" || op == "<" || op == ">" || op == "<=" || op == ">=";
 }
