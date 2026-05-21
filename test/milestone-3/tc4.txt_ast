@@ -1,0 +1,81 @@
+Keluaran (output)
+
+tab (hanya sebagian yang relevan):
+idx  id            obj         type   ref   nrm   lev   adr   link
+-------------------------------------------------------------
+...  reserved words / keyword entries omitted
+39   OddvsEven     program     0      0     1     0     0     38
+40   i             variable    1      0     1     0     0     39
+41   limit         variable    1      0     1     0     0     40
+42   level         variable    1      0     1     0     0     41
+43   choices       variable    3      0     1     0     0     42
+
+btab:
+idx  last   lpar   psze   vsze
+-----------------------------
+0    43     0      0      4
+1    0      0      0      0
+
+atab:
+(kosong karena tidak ada array)
+
+Decorated AST (contoh anotasi minimal):
+ProgramNode(name: 'OddvsEven') -> tab_index:39, lev:0
+├── Declarations
+│   ├── VarDecl('i') -> tab_index:40, type:integer, lev:0
+│   ├── VarDecl('limit') -> tab_index:41, type:integer, lev:0
+│   ├── VarDecl('level') -> tab_index:42, type:integer, lev:0
+│   └── VarDecl('choices') -> tab_index:43, type:char, lev:0
+└── Block -> block_index:1, lev:1
+    ├── Assign('limit' := 5) -> type:void
+    │   ├── target 'limit' -> tab_index:41, type:integer, lev:0
+    │   └── value 5 -> type:integer
+    ├── For('i', to) -> type:void
+    │   ├── start 1 -> type:integer
+    │   ├── stop 'limit' -> tab_index:41, type:integer, lev:0
+    │   └── Block
+    │       └── If -> type:void
+    │           ├── condition BinOp '==' -> type:boolean
+    │           │   ├── BinOp 'mod' -> type:integer
+    │           │   │   ├── 'i' -> tab_index:40, type:integer, lev:0
+    │           │   │   └── 2 -> type:integer
+    │           │   └── 0 -> type:integer
+    │           ├── then
+    │           │   └── writeln(...) -> predefined, tab_index:36, lev:0
+    │           │       └── argument 'Genap' -> type:string
+    │           └── else
+    │               └── writeln(...) -> predefined, tab_index:36, lev:0
+    │                   └── argument 'Ganjil' -> type:string
+    ├── While -> type:void
+    │   ├── condition BinOp '<' -> type:boolean
+    │   │   ├── 'i' -> tab_index:40, type:integer, lev:0
+    │   │   └── 10 -> type:integer
+    │   └── Block
+    │       └── Assign('i' := 'i' + 1) -> type:void
+    │           ├── target 'i' -> tab_index:40, type:integer, lev:0
+    │           └── value BinOp '+' -> type:integer
+    │               ├── 'i' -> tab_index:40, type:integer, lev:0
+    │               └── 1 -> type:integer
+    ├── Repeat -> type:void
+    │   ├── Assign('limit' := 'limit' - 1) -> type:void
+    │   │   ├── target 'limit' -> tab_index:41, type:integer, lev:0
+    │   │   └── value BinOp '-' -> type:integer
+    │   │       ├── 'limit' -> tab_index:41, type:integer, lev:0
+    │   │       └── 1 -> type:integer
+    │   └── until BinOp '==' -> type:boolean
+    │       ├── 'limit' -> tab_index:41, type:integer, lev:0
+    │       └── 0 -> type:integer
+    └── Case -> type:void
+        ├── selector 'choices' -> tab_index:43, type:char, lev:0
+        ├── CaseBranch('A')
+        │   └── Assign('level' := 100) -> type:void
+        │       ├── target 'level' -> tab_index:42, type:integer, lev:0
+        │       └── value 100 -> type:integer
+        ├── CaseBranch('B')
+        │   └── Assign('level' := 50) -> type:void
+        │       ├── target 'level' -> tab_index:42, type:integer, lev:0
+        │       └── value 50 -> type:integer
+        └── CaseBranch('C')
+            └── Assign('level' := 10) -> type:void
+                ├── target 'level' -> tab_index:42, type:integer, lev:0
+                └── value 10 -> type:integer

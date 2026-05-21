@@ -89,8 +89,9 @@ int SymbolTable::lookupCurrentBlock(const string& name, int blockIdx) {
     }
 
     int curr = btab[blockIdx].last;
+    string nameUpper = toUpper(name);
     while (curr > 0 && curr < static_cast<int>(tab.size())){
-        if (tab[curr].identifiers == name){
+        if (toUpper(tab[curr].identifiers) == nameUpper){
             return curr;
         }
         curr = tab[curr].link;
@@ -102,13 +103,14 @@ int SymbolTable::lookupCurrentBlock(const string& name, int blockIdx) {
 int SymbolTable::lookup(const string& name) {
     int currBlockIdx, lastInBlock;
  
+    string nameUpper = toUpper(name);
     for (int lev = currentLevel; lev >= 0; --lev) {
         currBlockIdx = display[lev];
         lastInBlock = btab[currBlockIdx].last;
 
         while (lastInBlock > 0 && lastInBlock < static_cast<int>(tab.size())){
 
-            if (tab[lastInBlock].identifiers == name) return lastInBlock;
+            if (toUpper(tab[lastInBlock].identifiers) == nameUpper) return lastInBlock;
 
 
             lastInBlock = tab[lastInBlock].link;

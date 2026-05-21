@@ -1,0 +1,135 @@
+Keluaran (output)
+
+tab (hanya sebagian yang relevan):
+idx  id            obj         type   ref   nrm   lev   adr   link
+-------------------------------------------------------------
+...  reserved words / keyword entries omitted
+39   Testing       program     0      0     1     0     0     38
+40   hasil         variable    1      0     1     0     0     39
+41   i             variable    1      0     1     0     0     40
+42   temp          variable    1      0     1     0     0     41
+43   trial         variable    1      0     1     0     0     42
+44   a             variable    1      0     1     0     0     43
+45   b             variable    1      0     1     0     0     44
+46   c             variable    1      0     1     0     0     45
+47   valid         variable    4      0     1     0     0     46
+48   calculate     procedure   0      1     1     0     0     47
+49   a             variable    1      0     1     1     0     0
+50   b             variable    1      0     1     1     0     49
+51   temp          variable    1      0     1     1     0     50
+52   i             variable    1      0     1     1     0     51
+53   batas         variable    1      0     1     1     0     52
+
+btab:
+idx  last   lpar   psze   vsze
+-----------------------------
+0    48     0      0      8
+1    53     0      0      5
+2    0      0      0      0
+
+atab:
+(kosong karena tidak ada array)
+
+Decorated AST (contoh anotasi minimal):
+ProgramNode(name: 'Testing') -> tab_index:39, lev:0
+├── Declarations
+│   ├── VarDecl('hasil') -> tab_index:40, type:integer, lev:0
+│   ├── VarDecl('i') -> tab_index:41, type:integer, lev:0
+│   ├── VarDecl('temp') -> tab_index:42, type:integer, lev:0
+│   ├── VarDecl('trial') -> tab_index:43, type:integer, lev:0
+│   ├── VarDecl('a') -> tab_index:44, type:integer, lev:0
+│   ├── VarDecl('b') -> tab_index:45, type:integer, lev:0
+│   ├── VarDecl('c') -> tab_index:46, type:integer, lev:0
+│   ├── VarDecl('valid') -> tab_index:47, type:boolean, lev:0
+│   └── ProcedureDecl('calculate') -> tab_index:48, block_index:1, lev:0
+│       ├── Parameters
+│       │   ├── VarDecl('a') -> tab_index:49, type:integer, lev:1, parameter
+│       │   └── VarDecl('b') -> tab_index:50, type:integer, lev:1, parameter
+│       ├── Declarations
+│       │   ├── VarDecl('temp') -> tab_index:51, type:integer, lev:1
+│       │   ├── VarDecl('i') -> tab_index:52, type:integer, lev:1
+│       │   └── VarDecl('batas') -> tab_index:53, type:integer, lev:1
+│       └── Block -> block_index:1, lev:1
+│           ├── Assign('temp' := 'a' mod 'b') -> type:void
+│           │   ├── target 'temp' -> tab_index:51, type:integer, lev:1
+│           │   └── value BinOp 'mod' -> type:integer
+│           │       ├── 'a' -> tab_index:49, type:integer, lev:1
+│           │       └── 'b' -> tab_index:50, type:integer, lev:1
+│           ├── Assign('batas' := 20) -> type:void
+│           │   ├── target 'batas' -> tab_index:53, type:integer, lev:1
+│           │   └── value 20 -> type:integer
+│           ├── For('i', to) -> type:void
+│           │   ├── start 'temp' -> tab_index:51, type:integer, lev:1
+│           │   ├── stop 'batas' -> tab_index:53, type:integer, lev:1
+│           │   └── Block
+│           │       └── If -> type:void
+│           │           ├── condition BinOp '==' -> type:boolean
+│           │           │   ├── BinOp '+' -> type:integer
+│           │           │   │   ├── BinOp 'mod' -> type:integer
+│           │           │   │   │   ├── 'i' -> tab_index:52, type:integer, lev:1
+│           │           │   │   │   └── 'a' -> tab_index:49, type:integer, lev:1
+│           │           │   │   └── 'b' -> tab_index:50, type:integer, lev:1
+│           │           │   └── 0 -> type:integer
+│           │           └── then
+│           │               └── Assign('a' := 'a' + 'B') -> type:void
+│           │                   ├── target 'a' -> tab_index:49, type:integer, lev:1
+│           │                   └── value BinOp '+' -> type:integer
+│           │                       ├── 'a' -> tab_index:49, type:integer, lev:1
+│           │                       └── 'B' -> tab_index:50, type:integer, lev:1
+│           └── writeln(...) -> predefined, tab_index:36, lev:0
+│               └── argument 'a' -> tab_index:49, type:integer, lev:1
+└── Block -> block_index:2, lev:1
+    ├── For('i', to) -> type:void
+    │   ├── start 0 -> type:integer
+    │   ├── stop 'trial' -> tab_index:43, type:integer, lev:0
+    │   └── Block
+    │       └── calculate(...) -> tab_index:48, lev:0
+    │           ├── argument 'hasil' -> tab_index:40, type:integer, lev:0
+    │           └── argument 'temp' -> tab_index:42, type:integer, lev:0
+    ├── Assign('a' := 10) -> type:void
+    │   ├── target 'a' -> tab_index:44, type:integer, lev:0
+    │   └── value 10 -> type:integer
+    ├── Assign('b' := 3) -> type:void
+    │   ├── target 'b' -> tab_index:45, type:integer, lev:0
+    │   └── value 3 -> type:integer
+    ├── Assign('c' := 'a' div 'b' + 'a' mod 'b' * 5 - 'a' + 2 * 'b' - 1) -> type:void
+    │   ├── target 'c' -> tab_index:46, type:integer, lev:0
+    │   └── value BinOp '-' -> type:integer
+    │       ├── BinOp '+' -> type:integer
+    │       │   ├── BinOp 'div' -> type:integer
+    │       │   │   ├── 'a' -> tab_index:44, type:integer, lev:0
+    │       │   │   └── 'b' -> tab_index:45, type:integer, lev:0
+    │       │   └── BinOp '*' -> type:integer
+    │       │       ├── BinOp 'mod' -> type:integer
+    │       │       │   ├── 'a' -> tab_index:44, type:integer, lev:0
+    │       │       │   └── 'b' -> tab_index:45, type:integer, lev:0
+    │       │       └── 5 -> type:integer
+    │       └── BinOp '*' -> type:integer
+    │           ├── BinOp '+' -> type:integer
+    │           │   ├── 'a' -> tab_index:44, type:integer, lev:0
+    │           │   └── 2 -> type:integer
+    │           └── BinOp '-' -> type:integer
+    │               ├── 'b' -> tab_index:45, type:integer, lev:0
+    │               └── 1 -> type:integer
+    ├── Assign('valid' := 'a' > 'b' AND 'c' <> 0 OR not 'a' <= 5) -> type:void
+    │   ├── target 'valid' -> tab_index:47, type:boolean, lev:0
+    │   └── value BinOp 'OR' -> type:boolean
+    │       ├── BinOp 'AND' -> type:boolean
+    │       │   ├── BinOp '>' -> type:boolean
+    │       │   │   ├── 'a' -> tab_index:44, type:integer, lev:0
+    │       │   │   └── 'b' -> tab_index:45, type:integer, lev:0
+    │       │   └── BinOp '<>' -> type:boolean
+    │       │       ├── 'c' -> tab_index:46, type:integer, lev:0
+    │       │       └── 0 -> type:integer
+    │       └── UnaryOp 'not' -> type:boolean
+    │           └── BinOp '<=' -> type:boolean
+    │               ├── 'a' -> tab_index:44, type:integer, lev:0
+    │               └── 5 -> type:integer
+    └── If -> type:void
+        ├── condition 'valid' -> tab_index:47, type:boolean, lev:0
+        └── then
+            └── Assign('c' := 'c' * 1) -> type:void
+                ├── target 'c' -> tab_index:46, type:integer, lev:0
+                └── value BinOp '*' -> type:integer
+                    ├── 'c' -> tab_index:46, type:integer, lev:0
+                    └── 1 -> type:integer

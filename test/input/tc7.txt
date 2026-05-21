@@ -11,7 +11,7 @@ begin
 
     c := 2 * Pi * r;
     s := Pi * r * r;
-    println('Keliling: ', c);
-    println('Luas: ', s);
-    printLn(identIniSangatPanjang24tetapiTetapValid);
+    writeln('Keliling: ', c);
+    WRITELN('Luas: ', s);
+    WRiTeLn(identIniSangatPanjang24tetapiTetapValid);
 end.

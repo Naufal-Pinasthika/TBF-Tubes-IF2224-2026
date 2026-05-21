@@ -4,17 +4,6 @@ tab (hanya sebagian yang relevan):
 idx  id            obj         type   ref   nrm   lev   adr   link
 -------------------------------------------------------------
 ...  reserved words / keyword entries omitted
-22   INTEGER       type        1      0     1     0     0     0
-23   REAL          type        2      0     1     0     0     22
-24   BOOLEAN       type        4      0     1     0     0     23
-25   CHAR          type        3      0     1     0     0     24
-26   STRING        type        5      0     1     0     0     25
-33   TRUE          constant    4      0     1     0     1     26
-34   FALSE         constant    4      0     1     0     0     33
-35   WRITE         procedure   0      0     1     0     0     34
-36   WRITELN       procedure   0      0     1     0     0     35
-37   READ          procedure   0      0     1     0     0     36
-38   READLN        procedure   0      0     1     0     0     37
 39   Hello         program     0      0     1     0     0     38
 40   a             variable    1      0     1     0     0     39
 41   b             variable    1      0     1     0     0     40

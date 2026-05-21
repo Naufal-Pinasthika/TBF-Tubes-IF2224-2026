@@ -98,7 +98,7 @@
 │   │   ├── semicolon
 │   │   ├── <statement>
 │   │   │   └── <procedure/function-call>
-│   │   │       ├── ident (println)
+│   │   │       ├── ident (writeln)
 │   │   │       ├── lparent
 │   │   │       ├── <parameter-list>
 │   │   │       │   ├── <expression>
@@ -117,7 +117,7 @@
 │   │   ├── semicolon
 │   │   ├── <statement>
 │   │   │   └── <procedure/function-call>
-│   │   │       ├── ident (println)
+│   │   │       ├── ident (WRITELN)
 │   │   │       ├── lparent
 │   │   │       ├── <parameter-list>
 │   │   │       │   ├── <expression>
@@ -136,7 +136,7 @@
 │   │   ├── semicolon
 │   │   ├── <statement>
 │   │   │   └── <procedure/function-call>
-│   │   │       ├── ident (printLn)
+│   │   │       ├── ident (WRiTeLn)
 │   │   │       ├── lparent
 │   │   │       ├── <parameter-list>
 │   │   │       │   └── <expression>

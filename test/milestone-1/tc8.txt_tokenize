@@ -23,13 +23,10 @@ eql
 ident (c)
 thensy
 comment (print when sky is blue)
-beginsy
 ident (writeln)
 lparent
 string ('sky is blue')
 rparent
 semicolon
-endsy
-period
 endsy
 period

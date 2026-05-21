@@ -1,0 +1,59 @@
+Keluaran (output)
+
+tab (hanya sebagian yang relevan):
+idx  id            obj         type   ref   nrm   lev   adr   link
+-------------------------------------------------------------
+...  reserved words / keyword entries omitted
+39   Circle        program     0      0     1     0     0     38
+40   Pi            variable    2      0     1     0     0     39
+41   r             variable    2      0     1     0     0     40
+42   c             variable    2      0     1     0     0     41
+43   s             variable    2      0     1     0     0     42
+44   identIniSangatPanjang24tetapiTetapValidvariable    1      0     1     0     0     43
+
+btab:
+idx  last   lpar   psze   vsze
+-----------------------------
+0    44     0      0      5
+1    0      0      0      0
+
+atab:
+(kosong karena tidak ada array)
+
+Decorated AST (contoh anotasi minimal):
+ProgramNode(name: 'Circle') -> tab_index:39, lev:0
+├── Declarations
+│   ├── VarDecl('Pi') -> tab_index:40, type:real, lev:0
+│   ├── VarDecl('r') -> tab_index:41, type:real, lev:0
+│   ├── VarDecl('c') -> tab_index:42, type:real, lev:0
+│   ├── VarDecl('s') -> tab_index:43, type:real, lev:0
+│   └── VarDecl('identIniSangatPanjang24tetapiTetapValid') -> tab_index:44, type:integer, lev:0
+└── Block -> block_index:1, lev:1
+    ├── Assign('Pi' := 3.14) -> type:void
+    │   ├── target 'Pi' -> tab_index:40, type:real, lev:0
+    │   └── value 3.14 -> type:real
+    ├── Assign('r' := 5) -> type:void
+    │   ├── target 'r' -> tab_index:41, type:real, lev:0
+    │   └── value 5 -> type:integer
+    ├── Assign('c' := 2 * 'Pi' * 'r') -> type:void
+    │   ├── target 'c' -> tab_index:42, type:real, lev:0
+    │   └── value BinOp '*' -> type:real
+    │       ├── BinOp '*' -> type:real
+    │       │   ├── 2 -> type:integer
+    │       │   └── 'Pi' -> tab_index:40, type:real, lev:0
+    │       └── 'r' -> tab_index:41, type:real, lev:0
+    ├── Assign('s' := 'Pi' * 'r' * 'r') -> type:void
+    │   ├── target 's' -> tab_index:43, type:real, lev:0
+    │   └── value BinOp '*' -> type:real
+    │       ├── BinOp '*' -> type:real
+    │       │   ├── 'Pi' -> tab_index:40, type:real, lev:0
+    │       │   └── 'r' -> tab_index:41, type:real, lev:0
+    │       └── 'r' -> tab_index:41, type:real, lev:0
+    ├── writeln(...) -> predefined, tab_index:36, lev:0
+    │   ├── argument 'Keliling: ' -> type:string
+    │   └── argument 'c' -> tab_index:42, type:real, lev:0
+    ├── WRITELN(...) -> predefined, tab_index:36, lev:0
+    │   ├── argument 'Luas: ' -> type:string
+    │   └── argument 's' -> tab_index:43, type:real, lev:0
+    └── WRiTeLn(...) -> predefined, tab_index:36, lev:0
+        └── argument 'identIniSangatPanjang24tetapiTetapValid' -> tab_index:44, type:integer, lev:0

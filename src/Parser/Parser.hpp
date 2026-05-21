@@ -93,11 +93,11 @@ private:
     bool caseStatementProd();
     // constant + (comma + constant)* + colon + statement + (semicolon + case-block?)*
     bool caseBlockProd();
-    // whilesy + expression + dosy + statement
+    // whilesy + expression + dosy + compound-statement
     bool whileStatementProd();
     // repeatsy + statement-list + untilsy + expression
     bool repeatStatementProd();
-    // forsy + ident + becomes + expression + ( tosy | downtosy) + expression + dosy + statement
+    // forsy + ident + becomes + expression + (tosy | downtosy) + expression + dosy + compound-statement
     bool forStatementProd();
     // ident + (lparent + parameter-list? + rparent)
     bool procedureFunctionCallProd();

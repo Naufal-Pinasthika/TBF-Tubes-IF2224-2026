@@ -43,21 +43,21 @@ ident (r)
 times
 ident (r)
 semicolon
-ident (println)
+ident (writeln)
 lparent
 string ('Keliling: ')
 comma
 ident (c)
 rparent
 semicolon
-ident (println)
+ident (WRITELN)
 lparent
 string ('Luas: ')
 comma
 ident (s)
 rparent
 semicolon
-ident (printLn)
+ident (WRiTeLn)
 lparent
 ident (identIniSangatPanjang24tetapiTetapValid)
 rparent

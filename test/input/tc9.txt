@@ -10,5 +10,5 @@ begin
     begin
         writeln('*');
         i := i + 1;
-    end.
+    end;
 end.

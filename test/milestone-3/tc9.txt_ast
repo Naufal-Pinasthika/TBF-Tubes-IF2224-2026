@@ -1,0 +1,43 @@
+Keluaran (output)
+
+tab (hanya sebagian yang relevan):
+idx  id            obj         type   ref   nrm   lev   adr   link
+-------------------------------------------------------------
+...  reserved words / keyword entries omitted
+39   Star          program     0      0     1     0     0     38
+40   i             variable    1      0     1     0     0     39
+41   n             variable    1      0     1     0     0     40
+
+btab:
+idx  last   lpar   psze   vsze
+-----------------------------
+0    41     0      0      2
+1    0      0      0      0
+
+atab:
+(kosong karena tidak ada array)
+
+Decorated AST (contoh anotasi minimal):
+ProgramNode(name: 'Star') -> tab_index:39, lev:0
+├── Declarations
+│   ├── VarDecl('i') -> tab_index:40, type:integer, lev:0
+│   └── VarDecl('n') -> tab_index:41, type:integer, lev:0
+└── Block -> block_index:1, lev:1
+    ├── Assign('i' := 1) -> type:void
+    │   ├── target 'i' -> tab_index:40, type:integer, lev:0
+    │   └── value 1 -> type:integer
+    ├── Assign('n' := 5) -> type:void
+    │   ├── target 'n' -> tab_index:41, type:integer, lev:0
+    │   └── value 5 -> type:integer
+    └── While -> type:void
+        ├── condition BinOp '<=' -> type:boolean
+        │   ├── 'i' -> tab_index:40, type:integer, lev:0
+        │   └── 'n' -> tab_index:41, type:integer, lev:0
+        └── Block
+            ├── writeln(...) -> predefined, tab_index:36, lev:0
+            │   └── argument '*' -> type:char
+            └── Assign('i' := 'i' + 1) -> type:void
+                ├── target 'i' -> tab_index:40, type:integer, lev:0
+                └── value BinOp '+' -> type:integer
+                    ├── 'i' -> tab_index:40, type:integer, lev:0
+                    └── 1 -> type:integer

@@ -292,7 +292,7 @@ TypeClass Semantic::analyzeExpression(ExpressionNode* node) {
             if (!isCompatible(left, right)) addError("relational operand type mismatch");
             bin->evalType = TypeClass::Boolean;
         }
-        else if (bin->op == "and" || bin->op == "or") {
+        else if (bin->op == "AND" || bin->op == "OR") {
             if (left != TypeClass::Boolean || right != TypeClass::Boolean)
                 addError("logical operands must be boolean");
             bin->evalType = TypeClass::Boolean;

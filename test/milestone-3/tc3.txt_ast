@@ -24,31 +24,31 @@ atab:
 
 Decorated AST (contoh anotasi minimal):
 ProgramNode(name: 'testingagain') -> tab_index:39, lev:0
-    Declarations
-        ConstDecl('PI' = 3.14) -> tab_index:40, type:real, lev:0
-        ConstDecl('NumOfiterator' = 100) -> tab_index:41, type:integer, lev:0
-        ConstDecl('Pesan' = 'Selamat Datang') -> tab_index:42, type:string, lev:0
-        ConstDecl('BeeMovieScript' = 'According to all all law') -> tab_index:43, type:string, lev:0
-        VarDecl('area') -> tab_index:44, type:real, lev:0
-        VarDecl('r') -> tab_index:45, type:real, lev:0
-        VarDecl('hate') -> tab_index:46, type:boolean, lev:0
-    Block -> block_index:1, lev:1
-        Assign('r' := 12.7) -> type:void
-            target 'r' -> tab_index:45, type:real, lev:0
-            value 12.7 -> type:real
-        Assign('area' := 'PI' * 'r' * 'r') -> type:void
-            target 'area' -> tab_index:44, type:real, lev:0
-            value BinOp '*' -> type:real
-                'PI' -> tab_index:40, type:real, lev:0
-                BinOp '*' -> type:real
-                    'r' -> tab_index:45, type:real, lev:0
-                    'r' -> tab_index:45, type:real, lev:0
-        Assign('hate' := 'False') -> type:void
-            target 'hate' -> tab_index:46, type:boolean, lev:0
-            value 'False' -> tab_index:34, type:boolean, lev:0
-        writeln(...) -> predefined, tab_index:36, lev:0
-            argument 'BeeMovieScript' -> tab_index:43, type:string, lev:0
-        writeln(...) -> predefined, tab_index:36, lev:0
-            argument 'Area of circle: ' -> type:string
-        writeln(...) -> predefined, tab_index:36, lev:0
-            argument 'area' -> tab_index:44, type:real, lev:0
+├── Declarations
+│   ├── ConstDecl('PI' = 3.14) -> tab_index:40, type:real, lev:0
+│   ├── ConstDecl('NumOfiterator' = 100) -> tab_index:41, type:integer, lev:0
+│   ├── ConstDecl('Pesan' = 'Selamat Datang') -> tab_index:42, type:string, lev:0
+│   ├── ConstDecl('BeeMovieScript' = 'According to all all law') -> tab_index:43, type:string, lev:0
+│   ├── VarDecl('area') -> tab_index:44, type:real, lev:0
+│   ├── VarDecl('r') -> tab_index:45, type:real, lev:0
+│   └── VarDecl('hate') -> tab_index:46, type:boolean, lev:0
+└── Block -> block_index:1, lev:1
+    ├── Assign('r' := 12.7) -> type:void
+    │   ├── target 'r' -> tab_index:45, type:real, lev:0
+    │   └── value 12.7 -> type:real
+    ├── Assign('area' := 'PI' * 'r' * 'r') -> type:void
+    │   ├── target 'area' -> tab_index:44, type:real, lev:0
+    │   └── value BinOp '*' -> type:real
+    │       ├── 'PI' -> tab_index:40, type:real, lev:0
+    │       └── BinOp '*' -> type:real
+    │           ├── 'r' -> tab_index:45, type:real, lev:0
+    │           └── 'r' -> tab_index:45, type:real, lev:0
+    ├── Assign('hate' := 'False') -> type:void
+    │   ├── target 'hate' -> tab_index:46, type:boolean, lev:0
+    │   └── value 'False' -> tab_index:34, type:boolean, lev:0
+    ├── writeln(...) -> predefined, tab_index:36, lev:0
+    │   └── argument 'BeeMovieScript' -> tab_index:43, type:string, lev:0
+    ├── writeln(...) -> predefined, tab_index:36, lev:0
+    │   └── argument 'Area of circle: ' -> type:string
+    └── writeln(...) -> predefined, tab_index:36, lev:0
+        └── argument 'area' -> tab_index:44, type:real, lev:0

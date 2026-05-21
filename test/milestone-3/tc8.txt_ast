@@ -1,0 +1,38 @@
+Keluaran (output)
+
+tab (hanya sebagian yang relevan):
+idx  id            obj         type   ref   nrm   lev   adr   link
+-------------------------------------------------------------
+...  reserved words / keyword entries omitted
+39   Sky           program     0      0     1     0     0     38
+40   s             variable    5      0     1     0     0     39
+41   c             variable    5      0     1     0     0     40
+
+btab:
+idx  last   lpar   psze   vsze
+-----------------------------
+0    41     0      0      2
+1    0      0      0      0
+
+atab:
+(kosong karena tidak ada array)
+
+Decorated AST (contoh anotasi minimal):
+ProgramNode(name: 'Sky') -> tab_index:39, lev:0
+├── Declarations
+│   ├── VarDecl('s') -> tab_index:40, type:string, lev:0
+│   └── VarDecl('c') -> tab_index:41, type:string, lev:0
+└── Block -> block_index:1, lev:1
+    ├── Assign('s' := 'green') -> type:void
+    │   ├── target 's' -> tab_index:40, type:string, lev:0
+    │   └── value 'green' -> type:string
+    ├── Assign('c' := 'blue') -> type:void
+    │   ├── target 'c' -> tab_index:41, type:string, lev:0
+    │   └── value 'blue' -> type:string
+    └── If -> type:void
+        ├── condition BinOp '==' -> type:boolean
+        │   ├── 's' -> tab_index:40, type:string, lev:0
+        │   └── 'c' -> tab_index:41, type:string, lev:0
+        └── then
+            └── writeln(...) -> predefined, tab_index:36, lev:0
+                └── argument 'sky is blue' -> type:string
