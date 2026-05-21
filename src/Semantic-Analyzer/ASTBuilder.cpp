@@ -13,18 +13,6 @@ static bool hasToken(Node* node, const string& type)
     return false;
 }
 
-static bool hasTokenRecursive(Node* node, const string& type)
-{
-    if (node == nullptr) return false;
-    if (node->type == terminal && node->token.getType() == type) return true;
-
-    for (Node* child : node->children){
-        if (hasTokenRecursive(child, type)) return true;
-    }
-
-    return false;
-}
-
 static string operatorFromToken(const string& type, const string& lexeme)
 {
     if (type == "plus")  return "+";
@@ -182,9 +170,7 @@ vector<DeclarationNode*> ASTBuilder::buildDeclarationPart(Node* node) {
             declarations = buildTypeDeclaration(child);
         } else if (child->type == var_declaration) {
             declarations = buildVarDeclaration(child);
-        } else if (child->type == subprogram_declaration ||
-                   hasTokenRecursive(child, "proceduresy") ||
-                   hasTokenRecursive(child, "functionsy")) {
+        } else if (child->type == subprogram_declaration) {
             DeclarationNode* declaration = buildSubprogramDeclaration(child);
             if (declaration != nullptr) {
                 result.push_back(declaration);
@@ -248,19 +234,18 @@ vector<DeclarationNode*> ASTBuilder::buildVarDeclaration(Node* node) {
 DeclarationNode* ASTBuilder::buildSubprogramDeclaration(Node* node) {
     if (node == nullptr) return nullptr;
 
-    if (hasToken(node, "proceduresy")) {
+    if (node->type == procedure_declaration) {
         return buildProcedureDeclaration(node);
     }
-    if (hasToken(node, "functionsy")) {
+    if (node->type == function_declaration) {
         return buildFunctionDeclaration(node);
     }
 
-    for (Node* child : node->children) {
-        if (child != nullptr && child->type != terminal &&
-            (hasTokenRecursive(child, "proceduresy") || hasTokenRecursive(child, "functionsy"))) {
-            return buildSubprogramDeclaration(child);
-        }
-    }
+    Node* procedureNode = findChild(node, procedure_declaration);
+    if (procedureNode != nullptr) return buildProcedureDeclaration(procedureNode);
+
+    Node* functionNode = findChild(node, function_declaration);
+    if (functionNode != nullptr) return buildFunctionDeclaration(functionNode);
 
     addError("failed to build subprogram declaration");
     return nullptr;
@@ -268,22 +253,8 @@ DeclarationNode* ASTBuilder::buildSubprogramDeclaration(Node* node) {
 
 ProcedureDeclNode* ASTBuilder::buildProcedureDeclaration(Node* node) {
     ProcedureDeclNode* procedure = new ProcedureDeclNode(getFirstIdent(node));
-    Node* parameterNode = nullptr;
-    Node* blockNode = nullptr;
-
-    for (Node* child : node->children){
-        if (child == nullptr || child->type == terminal) continue;
-
-        if (parameterNode == nullptr &&
-            (child->type == formal_parameter_list || hasToken(child, "lparent"))) {
-            parameterNode = child;
-        } else if (blockNode == nullptr &&
-                   (child->type == block ||
-                    (findChild(child, declaration_part) != nullptr &&
-                     findChild(child, compound_statement) != nullptr))) {
-            blockNode = child;
-        }
-    }
+    Node* parameterNode = findChild(node, formal_parameter_list);
+    Node* blockNode = findChild(node, block);
 
     if (parameterNode != nullptr) procedure->parameters = buildFormalParameterList(parameterNode);
 
@@ -298,35 +269,23 @@ ProcedureDeclNode* ASTBuilder::buildProcedureDeclaration(Node* node) {
 }
 
 FunctionDeclNode* ASTBuilder::buildFunctionDeclaration(Node* node) {
-    string name;
+    string name = getFirstIdent(node);
     TypeNode* returnType = nullptr;
     bool afterColon = false;
-    Node* parameterNode = nullptr;
-    Node* blockNode = nullptr;
 
     for (Node* child : node->children) {
-        if (isToken(child, "ident")) {
-            if (name.empty()) {
-                name = lexeme(child);
-            } else if (afterColon && returnType == nullptr) {
-                returnType = new NamedTypeNode(lexeme(child));
-            }
-        } else if (isToken(child, "colon")) {
+        if (isToken(child, "colon")) {
             afterColon = true;
-        } else if (child != nullptr && child->type != terminal) {
-            if (parameterNode == nullptr &&
-                (child->type == formal_parameter_list || hasToken(child, "lparent"))) {
-                parameterNode = child;
-            } else if (blockNode == nullptr &&
-                       (child->type == block ||
-                        (findChild(child, declaration_part) != nullptr &&
-                         findChild(child, compound_statement) != nullptr))) {
-                blockNode = child;
-            }
+        } else if (afterColon && isToken(child, "ident")) {
+            returnType = new NamedTypeNode(lexeme(child));
+            assignPosition(returnType, child);
+            break;
         }
     }
 
     FunctionDeclNode* function = new FunctionDeclNode(name, returnType);
+    Node* parameterNode = findChild(node, formal_parameter_list);
+    Node* blockNode = findChild(node, block);
 
     if (parameterNode != nullptr) {
         function->parameters = buildFormalParameterList(parameterNode);
@@ -394,10 +353,11 @@ ExpressionNode* ASTBuilder::buildConstant(Node* node) {
 
 TypeNode* ASTBuilder::buildType(Node* node) {
     if (node == nullptr) return nullptr;
-    if (hasToken(node, "arraysy")) return buildArrayType(node);
-    if (hasToken(node, "recordsy")) return buildRecordType(node);
-    if (hasToken(node, "lparent")) return buildEnumeratedType(node);
-    if (hasToken(node, "period")) return buildRangeType(node);
+
+    if (node->type == array_type) return buildArrayType(node);
+    if (node->type == range) return buildRangeType(node);
+    if (node->type == enumerated) return buildEnumeratedType(node);
+    if (node->type == record_type) return buildRecordType(node);
     
     for (Node* child : node->children){
         if (isToken(child, "ident")){
@@ -462,25 +422,23 @@ TypeNode* ASTBuilder::buildEnumeratedType(Node* node) {
 
 TypeNode* ASTBuilder::buildRecordType(Node* node) {
     RecordTypeNode* record = new RecordTypeNode();
-    vector<Node*> stack;
-    stack.push_back(node);
 
-    while (!stack.empty()) {
-        Node* current = stack.back();
-        stack.pop_back();
+    vector<Node*> fieldParts;
+    Node* fieldList = findChild(node, field_list);
 
-        Node* ids = findChild(current, identifier_list);
-        Node* typeNode = findChild(current, type);
+    if (fieldList != nullptr) {
+        fieldParts = findChildren(fieldList, field_part);
+    } else {
+        fieldParts = findChildren(node, field_part);
+    }
+
+    for (Node* fieldPart : fieldParts) {
+        Node* ids = findChild(fieldPart, identifier_list);
+        Node* typeNode = findChild(fieldPart, type);
         if (ids != nullptr && typeNode != nullptr) {
             VarDeclNode* varDecl = new VarDeclNode(buildIdentifierList(ids), buildType(typeNode));
-            assignPosition(varDecl, current);
+            assignPosition(varDecl, fieldPart);
             record->fields.push_back(varDecl);
-        }
-
-        for (Node* child : current->children) {
-            if (child != nullptr && child->type != terminal) {
-                stack.push_back(child);
-            }
         }
     }
 

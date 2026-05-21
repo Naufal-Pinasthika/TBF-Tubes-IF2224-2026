@@ -120,30 +120,41 @@ void Semantic::analyzeTypeDecl(TypeDeclNode* node) {
     else decorate(node, idx);
 }
 
-void Semantic::analyzeProcedureDecl(ProcedureDeclNode* node) {
-    int idx = symbolTable.insertTab(node->name, ObjClass::Procedure, TypeClass::None, 0, 1, 0);
-    if (idx == 0) addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " redeclaration of procedure: " + node->name);
-
+void Semantic::analyzeSubprogramBody(
+    ASTNode* owner,
+    int tabIndex,
+    const vector<VarDeclNode*>& parameters,
+    const vector<DeclarationNode*>& declarations,
+    StatementNode* body
+) {
     int blockIdx = symbolTable.enterBlock();
-    node->btabIndex = blockIdx;
-    decorate(node, idx);
+    owner->btabIndex = blockIdx;
+    decorate(owner, tabIndex);
 
-    TabEntry* entry = symbolTable.getTab(idx);
+    TabEntry* entry = symbolTable.getTab(tabIndex);
     if (entry != nullptr) entry->ref = blockIdx;
 
-    for (VarDeclNode* param : node->parameters) {
+    for (VarDeclNode* param : parameters) {
         param->isParameter = true;
         analyzeVarDecl(param);
     }
 
-    for (DeclarationNode* decl : node->declarations) analyzeDeclaration(decl);
-    if (node->body != nullptr) {
-        node->body->btabIndex = blockIdx;
-        node->body->level = node->level + 1;
-    }
-    analyzeStatement(node->body);
+    for (DeclarationNode* decl : declarations) analyzeDeclaration(decl);
 
+    if (body != nullptr) {
+        body->btabIndex = blockIdx;
+        body->level = owner->level + 1;
+    }
+
+    analyzeStatement(body);
     symbolTable.exitBlock();
+}
+
+void Semantic::analyzeProcedureDecl(ProcedureDeclNode* node) {
+    int idx = symbolTable.insertTab(node->name, ObjClass::Procedure, TypeClass::None, 0, 1, 0);
+    if (idx == 0) addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " redeclaration of procedure: " + node->name);
+
+    analyzeSubprogramBody(node, idx, node->parameters, node->declarations, node->body);
 }
 
 void Semantic::analyzeFunctionDecl(FunctionDeclNode* node) {
@@ -153,26 +164,7 @@ void Semantic::analyzeFunctionDecl(FunctionDeclNode* node) {
     int idx = symbolTable.insertTab(node->name, ObjClass::Function, returnType, ref, 1, 0);
     if (idx == 0) addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " redeclaration of function: " + node->name);
 
-    int blockIdx = symbolTable.enterBlock();
-    node->btabIndex = blockIdx;
-    decorate(node, idx);
-
-    TabEntry* entry = symbolTable.getTab(idx);
-    if (entry != nullptr) entry->ref = blockIdx;
-
-    for (VarDeclNode* param : node->parameters) {
-        param->isParameter = true;
-        analyzeVarDecl(param);
-    }
-
-    for (DeclarationNode* decl : node->declarations) analyzeDeclaration(decl);
-    if (node->body != nullptr) {
-        node->body->btabIndex = blockIdx;
-        node->body->level = node->level + 1;
-    }
-    analyzeStatement(node->body);
-
-    symbolTable.exitBlock();
+    analyzeSubprogramBody(node, idx, node->parameters, node->declarations, node->body);
 }
 
 void Semantic::analyzeStatement(StatementNode* node) {

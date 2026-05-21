@@ -29,6 +29,13 @@ private:
     void analyzeTypeDecl(TypeDeclNode* node);
     void analyzeProcedureDecl(ProcedureDeclNode* node);
     void analyzeFunctionDecl(FunctionDeclNode* node);
+    void analyzeSubprogramBody(
+        ASTNode* owner,
+        int tabIndex,
+        const vector<VarDeclNode*>& parameters,
+        const vector<DeclarationNode*>& declarations,
+        StatementNode* body
+    );
 
     bool isNumeric(TypeClass type) const;
     bool isCompatible(TypeClass left, TypeClass right) const;
