@@ -1,7 +1,6 @@
 #include "ASTBuilder.hpp"
 
-static bool hasToken(Node* node, const string& type)
-{
+static bool hasToken(Node* node, const string& type){
     if (node == nullptr) return false;
 
     for (Node* child : node->children){
@@ -13,8 +12,7 @@ static bool hasToken(Node* node, const string& type)
     return false;
 }
 
-static string operatorFromToken(const string& type, const string& lexeme)
-{
+static string operatorFromToken(const string& type, const string& lexeme){
     if (type == "plus")  return "+";
     if (type == "minus") return "-";
     if (type == "times") return "*";
@@ -233,13 +231,8 @@ vector<DeclarationNode*> ASTBuilder::buildVarDeclaration(Node* node) {
 
 DeclarationNode* ASTBuilder::buildSubprogramDeclaration(Node* node) {
     if (node == nullptr) return nullptr;
-
-    if (node->type == procedure_declaration) {
-        return buildProcedureDeclaration(node);
-    }
-    if (node->type == function_declaration) {
-        return buildFunctionDeclaration(node);
-    }
+    if (node->type == procedure_declaration) return buildProcedureDeclaration(node);
+    if (node->type == function_declaration) return buildFunctionDeclaration(node);
 
     Node* procedureNode = findChild(node, procedure_declaration);
     if (procedureNode != nullptr) return buildProcedureDeclaration(procedureNode);
@@ -287,15 +280,11 @@ FunctionDeclNode* ASTBuilder::buildFunctionDeclaration(Node* node) {
     Node* parameterNode = findChild(node, formal_parameter_list);
     Node* blockNode = findChild(node, block);
 
-    if (parameterNode != nullptr) {
-        function->parameters = buildFormalParameterList(parameterNode);
-    }
-
+    if (parameterNode != nullptr) function->parameters = buildFormalParameterList(parameterNode);
     if (blockNode != nullptr) {
         function->declarations = buildDeclarationPart(findChild(blockNode, declaration_part));
         function->body = buildCompoundStatement(findChild(blockNode, compound_statement));
     }
-
     assignPosition(function, node);
 
     return function;
@@ -303,14 +292,10 @@ FunctionDeclNode* ASTBuilder::buildFunctionDeclaration(Node* node) {
 
 vector<string> ASTBuilder::buildIdentifierList(Node* node) {
     vector<string> result;
-    if (node == nullptr) {
-        return result;
-    }
+    if (node == nullptr) return result;
 
     for (Node* child : node->children) {
-        if (isToken(child, "ident")) {
-            result.push_back(lexeme(child));
-        }
+        if (isToken(child, "ident")) result.push_back(lexeme(child));
     }
 
     return result;
@@ -410,9 +395,7 @@ TypeNode* ASTBuilder::buildEnumeratedType(Node* node) {
     vector<string> values;
 
     for (Node* child : node->children) {
-        if (isToken(child, "ident")) {
-            values.push_back(lexeme(child));
-        }
+        if (isToken(child, "ident")) values.push_back(lexeme(child));
     }
 
     TypeNode* result = new EnumeratedTypeNode(values);
@@ -451,9 +434,7 @@ StatementNode* ASTBuilder::buildCompoundStatement(Node* node) {
     CompoundNode* compound = new CompoundNode();
     Node* statements = findChild(node, statement_list);
 
-    if (statements != nullptr) {
-        compound->statements = buildStatementList(statements);
-    }
+    if (statements != nullptr) compound->statements = buildStatementList(statements);
 
     assignPosition(compound, node);
 
@@ -689,46 +670,34 @@ ExpressionNode* ASTBuilder::buildFactor(Node* node) {
     ExpressionNode* result = nullptr;
     for (Node* child : node->children) {
         if (isToken(child, "intcon")) result = new NumberNode(lexeme(child), false);
-
         if (isToken(child, "realcon")) result = new NumberNode(lexeme(child), true);
-
         if (isToken(child, "string")) result = new StringNode(lexeme(child));
-
         if (isToken(child, "charcon")) result = new CharNode(lexeme(child));
-
         if (isToken(child, "ident")){
             string name = lexeme(child);
             if (name == "true" || name == "TRUE") return new BoolNode(true);
             if (name == "false" || name == "FALSE") return new BoolNode(false);
             result = new VarNode(name);
         }
-
         if (result != nullptr){
             assignPosition(result, child);
             return result;
         }
-
         if (child->type == expression) return buildExpression(child);
-
         if (child->type == procedure_function_call) return buildCallExpression(child);
-
         if (child->type == variable) return buildVariable(child);
-
         if (child->type == factor) {
             result = new UnaryOpNode("not", buildFactor(child));
             assignPosition(result, child);
             return result;
         }
     }
-
     addError("failed to build factor");
     return nullptr;
 }
 
 ExpressionNode* ASTBuilder::buildVariable(Node* node) {
     if (node == nullptr) return nullptr;
-
-
     ExpressionNode* result = nullptr;
 
     for (Node* child : node->children) {
@@ -749,7 +718,6 @@ ExpressionNode* ASTBuilder::buildVariable(Node* node) {
             }
         }
     }
-
     assignPosition(result, node);
     return result;
 }
@@ -775,7 +743,6 @@ vector<ExpressionNode*> ASTBuilder::buildIndexList(Node* node) {
     vector<ExpressionNode*> result;
     if (node == nullptr) return result;
     
-
     for (Node* child : node->children) {
         if (isToken(child, "intcon")) {
             NumberNode* numberNode = new NumberNode(lexeme(child), false);
@@ -794,6 +761,5 @@ vector<ExpressionNode*> ASTBuilder::buildIndexList(Node* node) {
             result.insert(result.end(), nested.begin(), nested.end());
         }
     }
-
     return result;
 }

@@ -3,20 +3,17 @@
 #include <algorithm>
 #include <cctype>
 
-struct PrintNode
-{
+struct PrintNode{
     string text;
     vector<PrintNode> children;
 };
 
-static vector<bool>& treeLastByDepth()
-{
+static vector<bool>& treeLastByDepth(){
     static vector<bool> lastByDepth(1, true);
     return lastByDepth;
 }
 
-static void markTreeDepth(int depth, bool isLast)
-{
+static void markTreeDepth(int depth, bool isLast){
     vector<bool>& lastByDepth = treeLastByDepth();
     if (lastByDepth.size() <= static_cast<size_t>(depth)){
         lastByDepth.resize(depth + 1, true);
@@ -24,8 +21,7 @@ static void markTreeDepth(int depth, bool isLast)
     lastByDepth[depth] = isLast;
 }
 
-static bool isTreeDepthLast(int depth)
-{
+static bool isTreeDepthLast(int depth){
     vector<bool>& lastByDepth = treeLastByDepth();
     if (lastByDepth.size() <= static_cast<size_t>(depth)){
         lastByDepth.resize(depth + 1, true);
@@ -33,26 +29,21 @@ static bool isTreeDepthLast(int depth)
     return lastByDepth[depth];
 }
 
-static void printTreePrefix(int indent)
-{
+static void printTreePrefix(int indent){
     vector<bool>& lastByDepth = treeLastByDepth();
     if (indent == 0) lastByDepth.assign(1, true);
     if (lastByDepth.size() <= static_cast<size_t>(indent)) lastByDepth.resize(indent + 1, true);
 
-    for (int depth = 1; depth <= indent; ++depth)
-    {
+    for (int depth = 1; depth <= indent; ++depth){
         if (depth == indent){
             cout << (lastByDepth[depth] ? "└── " : "├── ");
-        }
-        else
-        {
+        } else{
             cout << (lastByDepth[depth] ? "    " : "│   ");
         }
     }
 }
 
-static void printRenderedNode(const PrintNode& node, int indent)
-{
+static void printRenderedNode(const PrintNode& node, int indent){
     printTreePrefix(indent);
     cout << node.text << "\n";
 
@@ -62,8 +53,7 @@ static void printRenderedNode(const PrintNode& node, int indent)
     }
 }
 
-static void printRenderedNodes(const vector<PrintNode>& nodes, int indent)
-{
+static void printRenderedNodes(const vector<PrintNode>& nodes, int indent){
     bool originalIsLast = isTreeDepthLast(indent);
     for (size_t i = 0; i < nodes.size(); ++i){
         markTreeDepth(indent, i + 1 == nodes.size() && originalIsLast);
@@ -71,23 +61,19 @@ static void printRenderedNodes(const vector<PrintNode>& nodes, int indent)
     }
 }
 
-static PrintNode leaf(const string& text)
-{
+static PrintNode leaf(const string& text){
     return {text, {}};
 }
 
-static PrintNode branch(const string& text, vector<PrintNode> children)
-{
+static PrintNode branch(const string& text, vector<PrintNode> children){
     return {text, children};
 }
 
-static void appendNodes(vector<PrintNode>& destination, vector<PrintNode> nodes)
-{
+static void appendNodes(vector<PrintNode>& destination, vector<PrintNode> nodes){
     destination.insert(destination.end(), nodes.begin(), nodes.end());
 }
 
-static string typeClassToString(TypeClass type)
-{
+static string typeClassToString(TypeClass type){
     switch (type){
     case TypeClass::Integer: return "integer";
     case TypeClass::Real: return "real";
@@ -103,8 +89,7 @@ static string typeClassToString(TypeClass type)
     }
 }
 
-static string joinParts(const vector<string>& parts)
-{
+static string joinParts(const vector<string>& parts){
     string result;
     for (size_t i = 0; i < parts.size(); ++i){
         if (i > 0){
@@ -115,8 +100,7 @@ static string joinParts(const vector<string>& parts)
     return result;
 }
 
-static string annotationFromValues(TypeClass evalType, int tabIndex, int btabIndex, int atabIndex, int level, bool includeType, bool forceVoid)
-{
+static string annotationFromValues(TypeClass evalType, int tabIndex, int btabIndex, int atabIndex, int level, bool includeType, bool forceVoid){
     vector<string> parts;
 
     if (forceVoid) parts.push_back("type:void");
@@ -129,60 +113,34 @@ static string annotationFromValues(TypeClass evalType, int tabIndex, int btabInd
     return parts.empty() ? "" : " -> " + joinParts(parts);
 }
 
-static string annotation(const ASTNode& node, bool includeType = true, bool forceVoid = false)
-{
+static string annotation(const ASTNode& node, bool includeType = true, bool forceVoid = false){
     return annotationFromValues(node.evalType, node.tabIndex, node.btabIndex, node.atabIndex, node.level, includeType, forceVoid);
 }
 
-static string upperString(string value)
-{
+static string upperString(string value){
     transform(value.begin(), value.end(), value.begin(), [](unsigned char ch) {
         return static_cast<char>(toupper(ch));
     });
     return value;
 }
 
-static bool isPredefinedProcedure(const string& name)
-{
+static bool isPredefinedProcedure(const string& name){
     string upper = upperString(name);
     return upper == "WRITE" || upper == "WRITELN" || upper == "READ" || upper == "READLN";
 }
 
-static string expressionSummary(const ExpressionNode* node)
-{
-    if (node == nullptr){
-        return "<empty>";
-    }
-    if (auto var = dynamic_cast<const VarNode*>(node)){
-        return "'" + var->name + "'";
-    }
-    if (auto number = dynamic_cast<const NumberNode*>(node)){
-        return number->value;
-    }
-    if (auto str = dynamic_cast<const StringNode*>(node)){
-        return "'" + str->value + "'";
-    }
-    if (auto chr = dynamic_cast<const CharNode*>(node)){
-        return "'" + chr->value + "'";
-    }
-    if (auto boolean = dynamic_cast<const BoolNode*>(node)){
-        return boolean->value ? "true" : "false";
-    }
-    if (auto bin = dynamic_cast<const BinOpNode*>(node)){
-        return expressionSummary(bin->left) + " " + bin->op + " " + expressionSummary(bin->right);
-    }
-    if (auto unary = dynamic_cast<const UnaryOpNode*>(node)){
-        return unary->op + " " + expressionSummary(unary->operand);
-    }
-    if (auto access = dynamic_cast<const ArrayAccessNode*>(node)){
-        return expressionSummary(access->array) + "[" + expressionSummary(access->index) + "]";
-    }
-    if (auto access = dynamic_cast<const RecordAccessNode*>(node)){
-        return expressionSummary(access->record) + "." + access->field;
-    }
-    if (auto call = dynamic_cast<const FunctionCallNode*>(node)){
-        return call->name + "(...)";
-    }
+static string expressionSummary(const ExpressionNode* node){
+    if (node == nullptr) return "<empty>";
+    if (auto var = dynamic_cast<const VarNode*>(node)) return "'" + var->name + "'";
+    if (auto number = dynamic_cast<const NumberNode*>(node)) return number->value;
+    if (auto str = dynamic_cast<const StringNode*>(node)) return "'" + str->value + "'";
+    if (auto chr = dynamic_cast<const CharNode*>(node)) return "'" + chr->value + "'";
+    if (auto boolean = dynamic_cast<const BoolNode*>(node)) return boolean->value ? "true" : "false";
+    if (auto bin = dynamic_cast<const BinOpNode*>(node)) return expressionSummary(bin->left) + " " + bin->op + " " + expressionSummary(bin->right);
+    if (auto unary = dynamic_cast<const UnaryOpNode*>(node)) return unary->op + " " + expressionSummary(unary->operand);
+    if (auto access = dynamic_cast<const ArrayAccessNode*>(node)) return expressionSummary(access->array) + "[" + expressionSummary(access->index) + "]";
+    if (auto access = dynamic_cast<const RecordAccessNode*>(node)) return expressionSummary(access->record) + "." + access->field;
+    if (auto call = dynamic_cast<const FunctionCallNode*>(node)) return call->name + "(...)";
     return "<expr>";
 }
 
@@ -191,8 +149,7 @@ static PrintNode renderExpressionWithRole(const string& role, const ExpressionNo
 static PrintNode renderCaseBranch(const CaseBranch& branchNode);
 
 template <typename T>
-static vector<PrintNode> renderAstList(const vector<T*>& nodes)
-{
+static vector<PrintNode> renderAstList(const vector<T*>& nodes){
     vector<PrintNode> rendered;
     for (const T* node : nodes){
         appendNodes(rendered, renderAst(node));
@@ -200,13 +157,11 @@ static vector<PrintNode> renderAstList(const vector<T*>& nodes)
     return rendered;
 }
 
-static PrintNode renderSection(const string& label, vector<PrintNode> children)
-{
+static PrintNode renderSection(const string& label, vector<PrintNode> children){
     return branch(label, children);
 }
 
-static string varDeclAnnotation(const VarDeclNode& node, size_t index)
-{
+static string varDeclAnnotation(const VarDeclNode& node, size_t index){
     int tabIndex = -1;
     if (index < node.tabIndices.size()){
         tabIndex = node.tabIndices[index];
@@ -217,8 +172,7 @@ static string varDeclAnnotation(const VarDeclNode& node, size_t index)
     return annotationFromValues(node.evalType, tabIndex, node.btabIndex, node.atabIndex, node.level, true, false);
 }
 
-static string enumeratedValues(const EnumeratedTypeNode& node)
-{
+static string enumeratedValues(const EnumeratedTypeNode& node){
     string result;
     for (size_t i = 0; i < node.values.size(); ++i){
         if (i > 0){
@@ -229,8 +183,7 @@ static string enumeratedValues(const EnumeratedTypeNode& node)
     return result;
 }
 
-static string caseLabels(const CaseBranch& node)
-{
+static string caseLabels(const CaseBranch& node){
     string result;
     for (size_t i = 0; i < node.labels.size(); ++i){
         if (i > 0){
@@ -241,8 +194,7 @@ static string caseLabels(const CaseBranch& node)
     return result;
 }
 
-static PrintNode renderExpression(const ExpressionNode* node)
-{
+static PrintNode renderExpression(const ExpressionNode* node){
     if (node == nullptr){
         return leaf("<empty>");
     }
@@ -292,8 +244,7 @@ static PrintNode renderExpression(const ExpressionNode* node)
     return leaf(expressionSummary(node) + annotation(*node));
 }
 
-static PrintNode renderExpressionWithRole(const string& role, const ExpressionNode* node)
-{
+static PrintNode renderExpressionWithRole(const string& role, const ExpressionNode* node){
     if (auto bin = dynamic_cast<const BinOpNode*>(node)){
         vector<PrintNode> children;
         appendNodes(children, renderAst(bin->left));
@@ -306,8 +257,7 @@ static PrintNode renderExpressionWithRole(const string& role, const ExpressionNo
     return leaf(role + " " + expressionSummary(node) + annotation(*node));
 }
 
-static vector<PrintNode> renderVarDecl(const VarDeclNode& node)
-{
+static vector<PrintNode> renderVarDecl(const VarDeclNode& node){
     vector<PrintNode> rendered;
     for (size_t i = 0; i < node.names.size(); ++i){
         string text = "VarDecl('" + node.names[i] + "')" + varDeclAnnotation(node, i);
@@ -322,8 +272,7 @@ static vector<PrintNode> renderVarDecl(const VarDeclNode& node)
     return rendered;
 }
 
-static PrintNode renderCaseBranch(const CaseBranch& node)
-{
+static PrintNode renderCaseBranch(const CaseBranch& node){
     string text = "CaseBranch";
     if (!node.labels.empty()){
         text += "(" + caseLabels(node) + ")";
@@ -334,16 +283,12 @@ static PrintNode renderCaseBranch(const CaseBranch& node)
     return branch(text, children);
 }
 
-static vector<PrintNode> renderAst(const ASTNode* node)
-{
-    if (node == nullptr){
-        return {};
-    }
+static vector<PrintNode> renderAst(const ASTNode* node){
+    if (node == nullptr) return {};
+
     if (auto program = dynamic_cast<const ProgramNode*>(node)){
         vector<PrintNode> children;
-        if (!program->declarations.empty()){
-            children.push_back(renderSection("Declarations", renderAstList(program->declarations)));
-        }
+        if (!program->declarations.empty()) children.push_back(renderSection("Declarations", renderAstList(program->declarations)));
         appendNodes(children, renderAst(program->body));
         return {branch("ProgramNode(name: '" + program->name + "')" + annotation(*program, false), children)};
     }
@@ -367,12 +312,8 @@ static vector<PrintNode> renderAst(const ASTNode* node)
     }
     if (auto arrayType = dynamic_cast<const ArrayTypeNode*>(node)){
         vector<PrintNode> children;
-        if (arrayType->indexType != nullptr){
-            children.push_back(renderSection("IndexType", renderAst(arrayType->indexType)));
-        }
-        if (arrayType->elementType != nullptr){
-            children.push_back(renderSection("ElementType", renderAst(arrayType->elementType)));
-        }
+        if (arrayType->indexType != nullptr) children.push_back(renderSection("IndexType", renderAst(arrayType->indexType)));
+        if (arrayType->elementType != nullptr) children.push_back(renderSection("ElementType", renderAst(arrayType->elementType)));
         return {branch("ArrayType" + annotation(*arrayType), children)};
     }
     if (auto recordType = dynamic_cast<const RecordTypeNode*>(node)){
@@ -380,44 +321,28 @@ static vector<PrintNode> renderAst(const ASTNode* node)
     }
     if (auto procedure = dynamic_cast<const ProcedureDeclNode*>(node)){
         vector<PrintNode> children;
-        if (!procedure->parameters.empty()){
-            children.push_back(renderSection("Parameters", renderAstList(procedure->parameters)));
-        }
-        if (!procedure->declarations.empty()){
-            children.push_back(renderSection("Declarations", renderAstList(procedure->declarations)));
-        }
+        if (!procedure->parameters.empty()) children.push_back(renderSection("Parameters", renderAstList(procedure->parameters)));
+        if (!procedure->declarations.empty()) children.push_back(renderSection("Declarations", renderAstList(procedure->declarations)));
         appendNodes(children, renderAst(procedure->body));
         return {branch("ProcedureDecl('" + procedure->name + "')" + annotation(*procedure, false), children)};
     }
     if (auto function = dynamic_cast<const FunctionDeclNode*>(node)){
         vector<PrintNode> children;
-        if (function->returnType != nullptr){
-            children.push_back(renderSection("ReturnType", renderAst(function->returnType)));
-        }
-        if (!function->parameters.empty()){
-            children.push_back(renderSection("Parameters", renderAstList(function->parameters)));
-        }
-        if (!function->declarations.empty()){
-            children.push_back(renderSection("Declarations", renderAstList(function->declarations)));
-        }
+        if (function->returnType != nullptr) children.push_back(renderSection("ReturnType", renderAst(function->returnType)));
+        if (!function->parameters.empty()) children.push_back(renderSection("Parameters", renderAstList(function->parameters)));
+        if (!function->declarations.empty()) children.push_back(renderSection("Declarations", renderAstList(function->declarations)));
         appendNodes(children, renderAst(function->body));
         return {branch("FunctionDecl('" + function->name + "')" + annotation(*function), children)};
     }
     if (auto compound = dynamic_cast<const CompoundNode*>(node)){
         vector<PrintNode> children = renderAstList(compound->statements);
-        if (children.empty()){
-            children.push_back(leaf("(empty)"));
-        }
+        if (children.empty()) children.push_back(leaf("(empty)"));
         return {branch("Block" + annotation(*compound, false), children)};
     }
     if (auto assign = dynamic_cast<const AssignNode*>(node)){
         vector<PrintNode> children;
-        if (assign->target != nullptr){
-            children.push_back(renderExpressionWithRole("target", assign->target));
-        }
-        if (assign->value != nullptr){
-            children.push_back(renderExpressionWithRole("value", assign->value));
-        }
+        if (assign->target != nullptr) children.push_back(renderExpressionWithRole("target", assign->target));
+        if (assign->value != nullptr) children.push_back(renderExpressionWithRole("value", assign->value));
         return {branch("Assign(" + expressionSummary(assign->target) + " := " + expressionSummary(assign->value) + ")" + annotation(*assign, false, true), children)};
     }
     if (auto expression = dynamic_cast<const ExpressionNode*>(node)){
@@ -425,52 +350,34 @@ static vector<PrintNode> renderAst(const ASTNode* node)
     }
     if (auto ifNode = dynamic_cast<const IfNode*>(node)){
         vector<PrintNode> children;
-        if (ifNode->condition != nullptr){
-            children.push_back(renderExpressionWithRole("condition", ifNode->condition));
-        }
-        if (ifNode->thenBranch != nullptr){
-            children.push_back(renderSection("then", renderAst(ifNode->thenBranch)));
-        }
-        if (ifNode->elseBranch != nullptr){
-            children.push_back(renderSection("else", renderAst(ifNode->elseBranch)));
-        }
+        if (ifNode->condition != nullptr) children.push_back(renderExpressionWithRole("condition", ifNode->condition));
+        if (ifNode->thenBranch != nullptr) children.push_back(renderSection("then", renderAst(ifNode->thenBranch)));
+        if (ifNode->elseBranch != nullptr) children.push_back(renderSection("else", renderAst(ifNode->elseBranch)));
         return {branch("If" + annotation(*ifNode, false, true), children)};
     }
     if (auto whileNode = dynamic_cast<const WhileNode*>(node)){
         vector<PrintNode> children;
-        if (whileNode->condition != nullptr){
-            children.push_back(renderExpressionWithRole("condition", whileNode->condition));
-        }
+        if (whileNode->condition != nullptr) children.push_back(renderExpressionWithRole("condition", whileNode->condition));
         appendNodes(children, renderAst(whileNode->body));
         return {branch("While" + annotation(*whileNode, false, true), children)};
     }
     if (auto forNode = dynamic_cast<const ForNode*>(node)){
         vector<PrintNode> children;
-        if (forNode->start != nullptr){
-            children.push_back(renderExpressionWithRole("start", forNode->start));
-        }
-        if (forNode->stop != nullptr){
-            children.push_back(renderExpressionWithRole("stop", forNode->stop));
-        }
+        if (forNode->start != nullptr) children.push_back(renderExpressionWithRole("start", forNode->start));
+        if (forNode->stop != nullptr) children.push_back(renderExpressionWithRole("stop", forNode->stop));
         appendNodes(children, renderAst(forNode->body));
         return {branch("For('" + forNode->variable + "', " + (forNode->isDownto ? "downto" : "to") + ")" + annotation(*forNode, false, true), children)};
     }
     if (auto repeatNode = dynamic_cast<const RepeatNode*>(node)){
         vector<PrintNode> children = renderAstList(repeatNode->statements);
-        if (repeatNode->condition != nullptr){
-            children.push_back(renderExpressionWithRole("until", repeatNode->condition));
-        }
+        if (repeatNode->condition != nullptr) children.push_back(renderExpressionWithRole("until", repeatNode->condition));
         return {branch("Repeat" + annotation(*repeatNode, false, true), children)};
     }
     if (auto caseNode = dynamic_cast<const CaseNode*>(node)){
         vector<PrintNode> children;
-        if (caseNode->expression != nullptr){
-            children.push_back(renderExpressionWithRole("selector", caseNode->expression));
-        }
+        if (caseNode->expression != nullptr) children.push_back(renderExpressionWithRole("selector", caseNode->expression));
         for (const CaseBranch* caseBranch : caseNode->branches){
-            if (caseBranch != nullptr){
-                children.push_back(renderCaseBranch(*caseBranch));
-            }
+            if (caseBranch != nullptr) children.push_back(renderCaseBranch(*caseBranch));
         }
         return {branch("Case" + annotation(*caseNode, false, true), children)};
     }
@@ -486,25 +393,19 @@ static vector<PrintNode> renderAst(const ASTNode* node)
         }
 
         vector<PrintNode> children;
-        for (const ExpressionNode* argument : call->arguments)
-        {
-            if (argument != nullptr){
-                children.push_back(renderExpressionWithRole("argument", argument));
-            }
+        for (const ExpressionNode* argument : call->arguments){
+            if (argument != nullptr) children.push_back(renderExpressionWithRole("argument", argument));
         }
         return {branch(text, children)};
     }
     return {};
 }
 
-void printAstNode(const ASTNode* node, int indent)
-{
+void printAstNode(const ASTNode* node, int indent){
     printRenderedNodes(renderAst(node), indent);
 }
 
-void printAstCaseBranch(const CaseBranch* node, int indent)
-{
-    if (node != nullptr){
-        printRenderedNodes({renderCaseBranch(*node)}, indent);
-    }
+void printAstCaseBranch(const CaseBranch* node, int indent){
+    if (node != nullptr) printRenderedNodes({renderCaseBranch(*node)}, indent);
+    
 }

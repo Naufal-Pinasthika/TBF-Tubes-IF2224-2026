@@ -137,9 +137,7 @@ void SymbolTable::print(ostream& out) const {
 
     for (size_t i = RESERVED_COUNT; i < tab.size(); ++i) {
         const TabEntry& entry = tab[i];
-        if (entry.obj == ObjClass::None) {
-            continue;
-        }
+        if (entry.obj == ObjClass::None) continue;
 
         out << left
             << setw(5) << i

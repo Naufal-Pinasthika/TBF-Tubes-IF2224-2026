@@ -1,7 +1,5 @@
 #include "Semantic.hpp"
 
-#include <cstdlib>
-
 void Semantic::addError(const string& message) {
     errors.push_back("Semantic error:" + message);
 }
@@ -22,8 +20,7 @@ int Semantic::lookupName(const string& name) {
     return symbolTable.lookup(name);
 }
 
-bool Semantic::isRelationalOp(const string& op) const
-{
+bool Semantic::isRelationalOp(const string& op) const{
     return op == "==" || op == "<>" || op == "<" || op == ">" || op == "<=" || op == ">=";
 }
 
@@ -120,13 +117,7 @@ void Semantic::analyzeTypeDecl(TypeDeclNode* node) {
     else decorate(node, idx);
 }
 
-void Semantic::analyzeSubprogramBody(
-    ASTNode* owner,
-    int tabIndex,
-    const vector<VarDeclNode*>& parameters,
-    const vector<DeclarationNode*>& declarations,
-    StatementNode* body
-) {
+void Semantic::analyzeSubprogramBody(ASTNode* owner, int tabIndex, const vector<VarDeclNode*>& parameters, const vector<DeclarationNode*>& declarations, StatementNode* body) {
     int blockIdx = symbolTable.enterBlock();
     owner->btabIndex = blockIdx;
     decorate(owner, tabIndex);
@@ -134,14 +125,16 @@ void Semantic::analyzeSubprogramBody(
     TabEntry* entry = symbolTable.getTab(tabIndex);
     if (entry != nullptr) entry->ref = blockIdx;
 
-    for (VarDeclNode* param : parameters) {
+    for (VarDeclNode* param : parameters){
         param->isParameter = true;
         analyzeVarDecl(param);
     }
 
-    for (DeclarationNode* decl : declarations) analyzeDeclaration(decl);
+    for (DeclarationNode* decl : declarations){
+        analyzeDeclaration(decl);
+    }
 
-    if (body != nullptr) {
+    if (body != nullptr){
         body->btabIndex = blockIdx;
         body->level = owner->level + 1;
     }
@@ -171,30 +164,28 @@ void Semantic::analyzeStatement(StatementNode* node) {
     if (node == nullptr) return;
 
     if (auto compound = dynamic_cast<CompoundNode*>(node)) {
-        for (StatementNode* stmt : compound->statements) analyzeStatement(stmt);
-    }
-    else if (auto assign = dynamic_cast<AssignNode*>(node)) {
+        for (StatementNode* stmt : compound->statements){
+            analyzeStatement(stmt);
+        }
+    } else if (auto assign = dynamic_cast<AssignNode*>(node)) {
         TypeClass target = analyzeExpression(assign->target);
         TypeClass value = analyzeExpression(assign->value);
 
         if (!isAssignable(target, value)) {
             addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " cannot assign " + typeName(value) + " to " + typeName(target));
         }
-    }
-    else if (auto ifNode = dynamic_cast<IfNode*>(node)) {
+    } else if (auto ifNode = dynamic_cast<IfNode*>(node)) {
         if (analyzeExpression(ifNode->condition) != TypeClass::Boolean)
             addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " if condition must be boolean");
 
         analyzeStatement(ifNode->thenBranch);
         analyzeStatement(ifNode->elseBranch);
-    }
-    else if (auto whileNode = dynamic_cast<WhileNode*>(node)) {
+    } else if (auto whileNode = dynamic_cast<WhileNode*>(node)) {
         if (analyzeExpression(whileNode->condition) != TypeClass::Boolean)
             addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " while condition must be boolean");
 
         analyzeStatement(whileNode->body);
-    }
-    else if (auto forNode = dynamic_cast<ForNode*>(node)) {
+    } else if (auto forNode = dynamic_cast<ForNode*>(node)) {
         int idx = lookupName(forNode->variable);
         if (idx == 0) addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " undeclared loop variable: " + forNode->variable);
 
@@ -205,14 +196,12 @@ void Semantic::analyzeStatement(StatementNode* node) {
             addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " for bounds must be integer");
 
         analyzeStatement(forNode->body);
-    }
-    else if (auto repeatNode = dynamic_cast<RepeatNode*>(node)) {
+    } else if (auto repeatNode = dynamic_cast<RepeatNode*>(node)) {
         for (StatementNode* stmt : repeatNode->statements) analyzeStatement(stmt);
 
         if (analyzeExpression(repeatNode->condition) != TypeClass::Boolean)
             addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " repeat-until condition must be boolean");
-    }
-    else if (auto caseNode = dynamic_cast<CaseNode*>(node)) {
+    } else if (auto caseNode = dynamic_cast<CaseNode*>(node)) {
         TypeClass selectorType = analyzeExpression(caseNode->expression);
 
         for (CaseBranch* branch : caseNode->branches) {
@@ -223,8 +212,7 @@ void Semantic::analyzeStatement(StatementNode* node) {
             }
             analyzeStatement(branch->statement);
         }
-    }
-    else if (auto call = dynamic_cast<CallNode*>(node)) {
+    } else if (auto call = dynamic_cast<CallNode*>(node)) {
         int idx = lookupName(call->name);
         if (idx == 0) addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " undeclared procedure/function: " + call->name);
         else decorate(call, idx);
@@ -236,18 +224,17 @@ void Semantic::analyzeStatement(StatementNode* node) {
 TypeClass Semantic::analyzeExpression(ExpressionNode* node) {
     if (node == nullptr) return TypeClass::None;
 
-    if (auto var = dynamic_cast<VarNode*>(node)) {
+    if (auto var = dynamic_cast<VarNode*>(node)){
         int idx = lookupName(var->name);
-        if (idx == 0) {
+        if (idx == 0){
             addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " undeclared identifier: " + var->name);
             return TypeClass::None;
         }
-
         decorate(var, idx);
         return var->evalType;
     }
 
-    if (auto call = dynamic_cast<FunctionCallNode*>(node)) {
+    if (auto call = dynamic_cast<FunctionCallNode*>(node)){
         int idx = lookupName(call->name);
         if (idx == 0) {
             addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " undeclared function: " + call->name);
@@ -290,8 +277,7 @@ TypeClass Semantic::analyzeExpression(ExpressionNode* node) {
             if (left != TypeClass::Boolean || right != TypeClass::Boolean)
                 addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " logical operands must be boolean");
             bin->evalType = TypeClass::Boolean;
-        }
-        else {
+        } else {
             if (!isNumeric(left) || !isNumeric(right))
                 addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " arithmetic operands must be numeric");
 
@@ -399,8 +385,9 @@ TypeClass Semantic::resolveType(TypeNode* node, int& ref) {
         int blockIdx = symbolTable.enterBlock();
         record->btabIndex = blockIdx;
 
-        for (VarDeclNode* field : record->fields) analyzeVarDecl(field);
-
+        for (VarDeclNode* field : record->fields){
+            analyzeVarDecl(field);
+        }
         symbolTable.exitBlock();
 
         record->evalType = TypeClass::Record;
