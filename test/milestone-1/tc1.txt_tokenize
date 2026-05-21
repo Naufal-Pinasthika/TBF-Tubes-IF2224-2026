@@ -26,5 +26,9 @@ comma
 ident (b)
 rparent
 semicolon
+ident (c)
+becomes
+ident (x)
+semicolon
 endsy
 period

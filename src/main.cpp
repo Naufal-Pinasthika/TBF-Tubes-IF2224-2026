@@ -127,7 +127,6 @@ int main(int argc, char *argv[])
 
     parser.getRoot()->printTreeToFile(s + "_parsed");
 
-
     ASTBuilder astBuilder;
     ProgramNode* ast = astBuilder.build(parser.getRoot());
 
