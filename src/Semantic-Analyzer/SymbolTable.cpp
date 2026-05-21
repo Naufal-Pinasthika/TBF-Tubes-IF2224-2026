@@ -133,7 +133,7 @@ void SymbolTable::print(ostream& out) const {
     out << "-------------------------------------------------------------\n";
     out << "...  reserved words / keyword entries omitted\n";
 
-    for (size_t i = 0; i < tab.size(); ++i) {
+    for (size_t i = RESERVED_COUNT; i < tab.size(); ++i) {
         const TabEntry& entry = tab[i];
         if (entry.obj == ObjClass::None) {
             continue;

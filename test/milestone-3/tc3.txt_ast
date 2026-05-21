@@ -1,0 +1,54 @@
+Keluaran (output)
+
+tab (hanya sebagian yang relevan):
+idx  id            obj         type   ref   nrm   lev   adr   link
+-------------------------------------------------------------
+...  reserved words / keyword entries omitted
+39   testingagain  program     0      0     1     0     0     38
+40   PI            constant    2      0     1     0     3     39
+41   NumOfiterator constant    1      0     1     0     100   40
+42   Pesan         constant    5      0     1     0     0     41
+43   BeeMovieScriptconstant    5      0     1     0     0     42
+44   area          variable    2      0     1     0     0     43
+45   r             variable    2      0     1     0     0     44
+46   hate          variable    4      0     1     0     0     45
+
+btab:
+idx  last   lpar   psze   vsze
+-----------------------------
+0    46     0      0      3
+1    0      0      0      0
+
+atab:
+(kosong karena tidak ada array)
+
+Decorated AST (contoh anotasi minimal):
+ProgramNode(name: 'testingagain') -> tab_index:39, lev:0
+    Declarations
+        ConstDecl('PI' = 3.14) -> tab_index:40, type:real, lev:0
+        ConstDecl('NumOfiterator' = 100) -> tab_index:41, type:integer, lev:0
+        ConstDecl('Pesan' = 'Selamat Datang') -> tab_index:42, type:string, lev:0
+        ConstDecl('BeeMovieScript' = 'According to all all law') -> tab_index:43, type:string, lev:0
+        VarDecl('area') -> tab_index:44, type:real, lev:0
+        VarDecl('r') -> tab_index:45, type:real, lev:0
+        VarDecl('hate') -> tab_index:46, type:boolean, lev:0
+    Block -> block_index:1, lev:1
+        Assign('r' := 12.7) -> type:void
+            target 'r' -> tab_index:45, type:real, lev:0
+            value 12.7 -> type:real
+        Assign('area' := 'PI' * 'r' * 'r') -> type:void
+            target 'area' -> tab_index:44, type:real, lev:0
+            value BinOp '*' -> type:real
+                'PI' -> tab_index:40, type:real, lev:0
+                BinOp '*' -> type:real
+                    'r' -> tab_index:45, type:real, lev:0
+                    'r' -> tab_index:45, type:real, lev:0
+        Assign('hate' := 'False') -> type:void
+            target 'hate' -> tab_index:46, type:boolean, lev:0
+            value 'False' -> tab_index:34, type:boolean, lev:0
+        writeln(...) -> predefined, tab_index:36, lev:0
+            argument 'BeeMovieScript' -> tab_index:43, type:string, lev:0
+        writeln(...) -> predefined, tab_index:36, lev:0
+            argument 'Area of circle: ' -> type:string
+        writeln(...) -> predefined, tab_index:36, lev:0
+            argument 'area' -> tab_index:44, type:real, lev:0

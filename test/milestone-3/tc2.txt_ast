@@ -1,0 +1,45 @@
+Keluaran (output)
+
+tab (hanya sebagian yang relevan):
+idx  id            obj         type   ref   nrm   lev   adr   link
+-------------------------------------------------------------
+...  reserved words / keyword entries omitted
+39   ControlFlow   program     0      0     1     0     0     38
+40   i             variable    1      0     1     0     0     39
+
+btab:
+idx  last   lpar   psze   vsze
+-----------------------------
+0    40     0      0      1
+1    0      0      0      0
+
+atab:
+(kosong karena tidak ada array)
+
+Decorated AST (contoh anotasi minimal):
+ProgramNode(name: 'ControlFlow') -> tab_index:39, lev:0
+    Declarations
+        VarDecl('i') -> tab_index:40, type:integer, lev:0
+    Block -> block_index:1, lev:1
+        Assign('i' := 10) -> type:void
+            target 'i' -> tab_index:40, type:integer, lev:0
+            value 10 -> type:integer
+        While -> type:void
+            condition BinOp '>' -> type:boolean
+                'i' -> tab_index:40, type:integer, lev:0
+                0 -> type:integer
+            Block
+                If -> type:void
+                    condition BinOp '==' -> type:boolean
+                        BinOp 'mod' -> type:integer
+                            'i' -> tab_index:40, type:integer, lev:0
+                            5 -> type:integer
+                        0 -> type:integer
+                    then
+                        writeln(...) -> predefined, tab_index:36, lev:0
+                            argument 'i' -> tab_index:40, type:integer, lev:0
+                Assign('i' := 'i' - 1) -> type:void
+                    target 'i' -> tab_index:40, type:integer, lev:0
+                    value BinOp '-' -> type:integer
+                        'i' -> tab_index:40, type:integer, lev:0
+                        1 -> type:integer

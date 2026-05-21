@@ -79,6 +79,7 @@ private:
     int currentBlock;
     vector<int> display;
 public:
+    const int RESERVED_COUNT{39};
     SymbolTable()
     {
         // init tab for reserved keywords

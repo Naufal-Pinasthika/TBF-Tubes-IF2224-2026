@@ -287,7 +287,7 @@ TypeClass Semantic::analyzeExpression(ExpressionNode* node) {
         TypeClass left = analyzeExpression(bin->left);
         TypeClass right = analyzeExpression(bin->right);
 
-        if (bin->op == "=" || bin->op == "<>" || bin->op == "<" ||
+        if (bin->op == "==" || bin->op == "<>" || bin->op == "<" ||
             bin->op == ">" || bin->op == "<=" || bin->op == ">=") {
             if (!isCompatible(left, right)) addError("relational operand type mismatch");
             bin->evalType = TypeClass::Boolean;

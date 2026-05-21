@@ -147,9 +147,6 @@ int main(int argc, char *argv[])
     {
         for (const string& error : semantic.getErrors())
             cout << error << endl;
-
-        delete ast;
-        return 1;
     }
 
     ofstream astOutput("test/milestone-3/" + outputName + "_ast");

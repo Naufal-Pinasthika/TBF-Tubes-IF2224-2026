@@ -29,7 +29,7 @@
 │   └── <var-declaration>
 │       ├── varsy
 │       ├── <identifier-list>
-│       │   ├── ident (diameter)
+│       │   ├── ident (area)
 │       │   ├── comma
 │       │   └── ident (r)
 │       ├── colon

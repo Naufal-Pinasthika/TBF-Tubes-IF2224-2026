@@ -7,7 +7,7 @@ const
   BeeMovieScript == 'According to all all law';
 
 var
-  diameter, r: Real;
+  area, r: Real;
   hate: Boolean;
 
 begin
