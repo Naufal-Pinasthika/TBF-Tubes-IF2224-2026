@@ -4,8 +4,9 @@ Token::Token(const string& type, const string& lexeme) : type(type), lexeme(lexe
 
 }
 
-Token::Token(const string& type, const string& lexeme, const int row, const int col) : type(type), lexeme(lexeme), pos{row,col} {
+Token::Token(const string& type, const string& lexeme, const int row, const int col) : type(type), lexeme(lexeme), row(row), col(col), pos{row,col} {
     pos[1] = pos[1] - lexeme.size();
+    this->col = this->col - lexeme.size();
 }
 
 string Token::getType() const {
@@ -18,6 +19,13 @@ string Token::getLexeme() const {
 
 vector<int> Token::getPos() const {
     return pos;
+}
+
+int Token::getRow() const {
+    return row;
+}
+int Token::getCol() const {
+    return col;
 }
 
 string Token::toString() const {

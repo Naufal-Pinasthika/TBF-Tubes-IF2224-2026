@@ -3,7 +3,7 @@
 #include <cstdlib>
 
 void Semantic::addError(const string& message) {
-    errors.push_back("Semantic error: " + message);
+    errors.push_back("Semantic error:" + message);
 }
 
 bool Semantic::hasErrors() const {
@@ -42,12 +42,12 @@ void Semantic::analyze(ProgramNode* root) {
     errors.clear();
 
     if (root == nullptr) {
-        addError("empty AST");
+        addError(to_string(root->line) + ":" + to_string(root->column) + ":" + " empty AST");
         return;
     }
 
     int idx = symbolTable.insertTab(root->name, ObjClass::Program, TypeClass::None, 0, 1, 0);
-    if (idx == 0) addError("program redeclared: " + root->name);
+    if (idx == 0) addError(to_string(root->line) + ":" + to_string(root->column) + ":" + " program redeclared: " + root->name);
     decorate(root, idx);
 
     for (DeclarationNode* decl : root->declarations) analyzeDeclaration(decl);
@@ -83,7 +83,7 @@ void Semantic::analyzeVarDecl(VarDeclNode* node) {
         node->tabIndices.push_back(idx);
 
         if (idx == 0) {
-            addError("redeclaration of variable: " + name);
+            addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " redeclaration of variable: " + name);
         } else {
             decorate(node, idx);
         }
@@ -103,7 +103,7 @@ void Semantic::analyzeConstDecl(ConstDeclNode* node) {
         constantAddress(node->value)
     );
 
-    if (idx == 0) addError("redeclaration of constant: " + node->name);
+    if (idx == 0) addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " redeclaration of constant: " + node->name);
     else decorate(node, idx);
 }
 
@@ -113,13 +113,13 @@ void Semantic::analyzeTypeDecl(TypeDeclNode* node) {
     node->evalType = type;
 
     int idx = symbolTable.insertTab(node->name, ObjClass::Type, type, ref, 1, 0);
-    if (idx == 0) addError("redeclaration of type: " + node->name);
+    if (idx == 0) addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " redeclaration of type: " + node->name);
     else decorate(node, idx);
 }
 
 void Semantic::analyzeProcedureDecl(ProcedureDeclNode* node) {
     int idx = symbolTable.insertTab(node->name, ObjClass::Procedure, TypeClass::None, 0, 1, 0);
-    if (idx == 0) addError("redeclaration of procedure: " + node->name);
+    if (idx == 0) addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " redeclaration of procedure: " + node->name);
 
     int blockIdx = symbolTable.enterBlock();
     node->btabIndex = blockIdx;
@@ -148,7 +148,7 @@ void Semantic::analyzeFunctionDecl(FunctionDeclNode* node) {
     TypeClass returnType = resolveType(node->returnType, ref);
 
     int idx = symbolTable.insertTab(node->name, ObjClass::Function, returnType, ref, 1, 0);
-    if (idx == 0) addError("redeclaration of function: " + node->name);
+    if (idx == 0) addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " redeclaration of function: " + node->name);
 
     int blockIdx = symbolTable.enterBlock();
     node->btabIndex = blockIdx;
@@ -183,31 +183,31 @@ void Semantic::analyzeStatement(StatementNode* node) {
         TypeClass value = analyzeExpression(assign->value);
 
         if (!isAssignable(target, value)) {
-            addError("cannot assign " + typeName(value) + " to " + typeName(target));
+            addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " cannot assign " + typeName(value) + " to " + typeName(target));
         }
     }
     else if (auto ifNode = dynamic_cast<IfNode*>(node)) {
         if (analyzeExpression(ifNode->condition) != TypeClass::Boolean)
-            addError("if condition must be boolean");
+            addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " if condition must be boolean");
 
         analyzeStatement(ifNode->thenBranch);
         analyzeStatement(ifNode->elseBranch);
     }
     else if (auto whileNode = dynamic_cast<WhileNode*>(node)) {
         if (analyzeExpression(whileNode->condition) != TypeClass::Boolean)
-            addError("while condition must be boolean");
+            addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " while condition must be boolean");
 
         analyzeStatement(whileNode->body);
     }
     else if (auto forNode = dynamic_cast<ForNode*>(node)) {
         int idx = lookupName(forNode->variable);
-        if (idx == 0) addError("undeclared loop variable: " + forNode->variable);
+        if (idx == 0) addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " undeclared loop variable: " + forNode->variable);
 
         TypeClass startType = analyzeExpression(forNode->start);
         TypeClass stopType = analyzeExpression(forNode->stop);
 
         if (startType != TypeClass::Integer || stopType != TypeClass::Integer)
-            addError("for bounds must be integer");
+            addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " for bounds must be integer");
 
         analyzeStatement(forNode->body);
     }
@@ -215,7 +215,7 @@ void Semantic::analyzeStatement(StatementNode* node) {
         for (StatementNode* stmt : repeatNode->statements) analyzeStatement(stmt);
 
         if (analyzeExpression(repeatNode->condition) != TypeClass::Boolean)
-            addError("repeat-until condition must be boolean");
+            addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " repeat-until condition must be boolean");
     }
     else if (auto caseNode = dynamic_cast<CaseNode*>(node)) {
         TypeClass selectorType = analyzeExpression(caseNode->expression);
@@ -224,14 +224,14 @@ void Semantic::analyzeStatement(StatementNode* node) {
             for (ExpressionNode* label : branch->labels) {
                 TypeClass labelType = analyzeExpression(label);
                 if (!isCompatible(selectorType, labelType))
-                    addError("case label type mismatch");
+                    addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " case label type mismatch");
             }
             analyzeStatement(branch->statement);
         }
     }
     else if (auto call = dynamic_cast<CallNode*>(node)) {
         int idx = lookupName(call->name);
-        if (idx == 0) addError("undeclared procedure/function: " + call->name);
+        if (idx == 0) addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " undeclared procedure/function: " + call->name);
         else decorate(call, idx);
 
         for (ExpressionNode* arg : call->arguments) analyzeExpression(arg);
@@ -244,7 +244,7 @@ TypeClass Semantic::analyzeExpression(ExpressionNode* node) {
     if (auto var = dynamic_cast<VarNode*>(node)) {
         int idx = lookupName(var->name);
         if (idx == 0) {
-            addError("undeclared identifier: " + var->name);
+            addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " undeclared identifier: " + var->name);
             return TypeClass::None;
         }
 
@@ -255,7 +255,7 @@ TypeClass Semantic::analyzeExpression(ExpressionNode* node) {
     if (auto call = dynamic_cast<FunctionCallNode*>(node)) {
         int idx = lookupName(call->name);
         if (idx == 0) {
-            addError("undeclared function: " + call->name);
+            addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " undeclared function: " + call->name);
             return TypeClass::None;
         }
 
@@ -273,10 +273,10 @@ TypeClass Semantic::analyzeExpression(ExpressionNode* node) {
         TypeClass operand = analyzeExpression(unary->operand);
 
         if (unary->op == "not") {
-            if (operand != TypeClass::Boolean) addError("not operand must be boolean");
+            if (operand != TypeClass::Boolean) addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " not operand must be boolean");
             unary->evalType = TypeClass::Boolean;
         } else {
-            if (!isNumeric(operand)) addError("unary +/- operand must be numeric");
+            if (!isNumeric(operand)) addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " unary +/- operand must be numeric");
             unary->evalType = operand;
         }
 
@@ -289,17 +289,17 @@ TypeClass Semantic::analyzeExpression(ExpressionNode* node) {
 
         if (bin->op == "==" || bin->op == "<>" || bin->op == "<" ||
             bin->op == ">" || bin->op == "<=" || bin->op == ">=") {
-            if (!isCompatible(left, right)) addError("relational operand type mismatch");
+            if (!isCompatible(left, right)) addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " relational operand type mismatch");
             bin->evalType = TypeClass::Boolean;
         }
         else if (bin->op == "AND" || bin->op == "OR") {
             if (left != TypeClass::Boolean || right != TypeClass::Boolean)
-                addError("logical operands must be boolean");
+                addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " logical operands must be boolean");
             bin->evalType = TypeClass::Boolean;
         }
         else {
             if (!isNumeric(left) || !isNumeric(right))
-                addError("arithmetic operands must be numeric");
+                addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " arithmetic operands must be numeric");
 
             if (bin->op == "/" || left == TypeClass::Real || right == TypeClass::Real)
                 bin->evalType = TypeClass::Real;
@@ -315,10 +315,10 @@ TypeClass Semantic::analyzeExpression(ExpressionNode* node) {
         TypeClass indexType = analyzeExpression(access->index);
 
         if (arrayType != TypeClass::Array)
-            addError("indexed value is not array");
+            addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " indexed value is not array");
 
         if (indexType == TypeClass::Real || indexType == TypeClass::String)
-            addError("array index must be simple non-real type");
+            addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " array index must be simple non-real type");
 
         if (access->array != nullptr && access->array->atabIndex != -1) {
             AtabEntry* entry = symbolTable.getAtab(access->array->atabIndex);
@@ -331,7 +331,7 @@ TypeClass Semantic::analyzeExpression(ExpressionNode* node) {
     if (auto access = dynamic_cast<RecordAccessNode*>(node)) {
         TypeClass recordType = analyzeExpression(access->record);
         if (recordType != TypeClass::Record)
-            addError("field access target is not record");
+            addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " field access target is not record");
 
         return access->evalType;
     }
@@ -346,7 +346,7 @@ TypeClass Semantic::resolveType(TypeNode* node, int& ref) {
     if (auto named = dynamic_cast<NamedTypeNode*>(node)) {
         int idx = lookupName(named->name);
         if (idx == 0) {
-            addError("unknown type: " + named->name);
+            addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " unknown type: " + named->name);
             return TypeClass::None;
         }
 
@@ -361,8 +361,8 @@ TypeClass Semantic::resolveType(TypeNode* node, int& ref) {
         TypeClass low = analyzeExpression(range->low);
         TypeClass high = analyzeExpression(range->high);
 
-        if (low != high) addError("range bounds must have same type");
-        if (low == TypeClass::Real) addError("range bounds cannot be real");
+        if (low != high) addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " range bounds must have same type");
+        if (low == TypeClass::Real) addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " range bounds cannot be real");
 
         range->evalType = TypeClass::Subrange;
         return TypeClass::Subrange;
@@ -371,7 +371,7 @@ TypeClass Semantic::resolveType(TypeNode* node, int& ref) {
     if (auto enumerated = dynamic_cast<EnumeratedTypeNode*>(node)) {
         for (const string& value : enumerated->values) {
             int idx = symbolTable.insertTab(value, ObjClass::Constant, TypeClass::Enumerated, 0, 1, 0);
-            if (idx == 0) addError("redeclaration of enumerated value: " + value);
+            if (idx == 0) addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " redeclaration of enumerated value: " + value);
         }
 
         enumerated->evalType = TypeClass::Enumerated;

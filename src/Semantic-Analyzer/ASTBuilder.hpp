@@ -21,7 +21,10 @@ private:
     vector<Node*> findChildren(Node* node, NodeType type) const;
 
     string getFirstIdent(Node* node) const;
+    Node* getFirstTerminal(Node* node) const;
     string getOperator(Node* node) const;
+
+    void assignPosition(ASTNode* astNode, Node* parseNode);
 
     ProgramNode* buildProgram(Node* node);
 
