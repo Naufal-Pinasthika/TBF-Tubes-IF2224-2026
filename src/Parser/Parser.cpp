@@ -251,7 +251,7 @@ bool Parser::arrayTypeProd()
 
 bool Parser::rangeProd()
 {
-    Node *parent = insert(array_type);
+    Node *parent = insert(range);
     int save = pos;
 
     if (constantProd() && match("period") && match("period") && constantProd())
@@ -263,7 +263,7 @@ bool Parser::rangeProd()
 
 bool Parser::enumeratedProd()
 {
-    Node *parent = insert(array_type);
+    Node *parent = insert(enumerated);
     int save = pos;
 
     if (match("lparent") && match("ident"))
@@ -282,7 +282,7 @@ bool Parser::enumeratedProd()
 
 bool Parser::recordTypeProd()
 {
-    Node *parent = insert(array_type);
+    Node *parent = insert(record_type);
     int save = pos;
 
     if (match("recordsy") && fieldListProd() && match("endsy"))
@@ -294,7 +294,7 @@ bool Parser::recordTypeProd()
 
 bool Parser::fieldListProd()
 {
-    Node *parent = insert(array_type);
+    Node *parent = insert(field_list);
     int save = pos;
 
     if (fieldPartProd())
@@ -312,7 +312,7 @@ bool Parser::fieldListProd()
 
 bool Parser::fieldPartProd()
 {
-    Node *parent = insert(array_type);
+    Node *parent = insert(field_part);
     int save = pos;
 
     if (identifierListProd() && match("colon") && typeProd())
@@ -324,7 +324,7 @@ bool Parser::fieldPartProd()
 
 bool Parser::subprogramDeclarationProd()
 {
-    Node *parent = insert(array_type);
+    Node *parent = insert(subprogram_declaration);
     int save = pos;
 
     if (procedureDeclarationProd())
@@ -339,7 +339,7 @@ bool Parser::subprogramDeclarationProd()
 
 bool Parser::procedureDeclarationProd()
 {
-    Node *parent = insert(array_type);
+    Node *parent = insert(procedure_declaration);
     int save = pos;
 
     if (match("proceduresy") && match("ident"))
@@ -359,7 +359,7 @@ bool Parser::procedureDeclarationProd()
 
 bool Parser::functionDeclarationProd()
 {
-    Node *parent = insert(array_type);
+    Node *parent = insert(function_declaration);
     int save = pos;
 
     if (match("functionsy") && match("ident"))
@@ -379,7 +379,7 @@ bool Parser::functionDeclarationProd()
 
 bool Parser::blockProd()
 {
-    Node *parent = insert(array_type);
+    Node *parent = insert(block);
     int save = pos;
 
     if (declarationPartProd() && compoundStatementProd())
@@ -391,7 +391,7 @@ bool Parser::blockProd()
 
 bool Parser::formalParameterListProd()
 {
-    Node *parent = insert(array_type);
+    Node *parent = insert(formal_parameter_list);
     int save = pos;
 
     if (match("lparent") && parameterGroupProd())

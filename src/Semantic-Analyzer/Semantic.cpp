@@ -19,9 +19,7 @@ SymbolTable& Semantic::getSymbolTable() {
 }
 
 int Semantic::lookupName(const string& name) {
-    int idx = symbolTable.lookup(name);
-    if (idx == 0) idx = symbolTable.lookup(symbolTable.toUpper(name));
-    return idx;
+    return symbolTable.lookup(name);
 }
 
 bool Semantic::isRelationalOp(const string& op) const
@@ -47,7 +45,7 @@ void Semantic::analyze(ProgramNode* root) {
     errors.clear();
 
     if (root == nullptr) {
-        addError(to_string(root->line) + ":" + to_string(root->column) + ":" + " empty AST");
+        addError("0:0: empty AST"); 
         return;
     }
 

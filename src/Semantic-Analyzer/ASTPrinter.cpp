@@ -88,37 +88,25 @@ static void appendNodes(vector<PrintNode>& destination, vector<PrintNode> nodes)
 
 static string typeClassToString(TypeClass type)
 {
-    switch (type)
-    {
-    case TypeClass::Integer:
-        return "integer";
-    case TypeClass::Real:
-        return "real";
-    case TypeClass::Char:
-        return "char";
-    case TypeClass::Boolean:
-        return "boolean";
-    case TypeClass::String:
-        return "string";
-    case TypeClass::Array:
-        return "array";
-    case TypeClass::Record:
-        return "record";
-    case TypeClass::Subrange:
-        return "subrange";
-    case TypeClass::Enumerated:
-        return "enumerated";
+    switch (type){
+    case TypeClass::Integer: return "integer";
+    case TypeClass::Real: return "real";
+    case TypeClass::Char: return "char";
+    case TypeClass::Boolean: return "boolean";
+    case TypeClass::String: return "string";
+    case TypeClass::Array: return "array";
+    case TypeClass::Record: return "record";
+    case TypeClass::Subrange: return "subrange";
+    case TypeClass::Enumerated: return "enumerated";
     case TypeClass::None:
-    default:
-        return "none";
+    default: return "none";
     }
 }
 
 static string joinParts(const vector<string>& parts)
 {
     string result;
-    for (size_t i = 0; i < parts.size(); ++i)
-    {
+    for (size_t i = 0; i < parts.size(); ++i){
         if (i > 0){
             result += ", ";
         }
