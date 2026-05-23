@@ -119,7 +119,7 @@ private:
     bool multiplicativeOperatorProd();
 
 public:
-    Parser(vector<Token> tokens) : tokens(tokens), pos(0), highestPos(0) {}
+    Parser(vector<Token> tokens) : tokens(tokens), pos(0), highestPos(0), root(nullptr), curr(nullptr) {}
 
     bool parse();
 

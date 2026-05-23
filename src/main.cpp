@@ -124,7 +124,6 @@ int main(int argc, char *argv[])
 
         Lexer lexer(file);
         tokens = lexer.runLexer();
-        parser = Parser(tokens);
 
         filepath = "test/milestone-1/" + outputName + "_tokenize";
         ofstream outputFile(filepath);
@@ -145,6 +144,8 @@ int main(int argc, char *argv[])
         {
             return 0;
         }
+
+        parser = Parser(tokens);
     }
 
     if (!loadedParsedTree && !parser.parse())
