@@ -52,6 +52,6 @@ FLAG yang diterima adalah `-L` (_lexer_) untuk _Lexical Analysis_, `-P` (_parser
 Nama | NIM | Workload | Presentase
 --- | --- | --- | ---
 Faiq Azzam Nafidz | 13524003 | AST (sebagian), Semantic (sebagian), Laporan (Perancangan, Implementasi), README.md, Debugging | 30% | 
-Anindya Naufal Pinasthika | 13524013 | Symbol Table, AST (sebagian), Semantic (sebagian), main.cpp, Debugging | 30% |
-Mahmudia Kimdaro Amin | 13524083 | AST (sebagian), Semantic (sebagian), Laporan (Teori dasar, Kesimpulan) | 20% | 
-Jingglang Galih Rinenggan | 13524095 | Input file Parse Tree, AST (sebagian), Semantic (sebagian) | 20% | 
+Anindya Naufal Pinasthika | 13524013 | Symbol Table, AST (sebagian), Semantic (sebagian), main.cpp, Debugging, Laporan (Tesing [sebagian]) | 35% |
+Mahmudia Kimdaro Amin | 13524083 | AST (sebagian), Semantic (sebagian), Laporan (Teori dasar, Kesimpulan, Tesing [sebagian]) | 20% | 
+Jingglang Galih Rinenggan | 13524095 | Input file Parse Tree, AST (sebagian), Semantic (sebagian) | 15% | 
