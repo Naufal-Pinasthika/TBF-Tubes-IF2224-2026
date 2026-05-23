@@ -51,7 +51,7 @@ FLAG yang diterima adalah `-L` (_lexer_) untuk _Lexical Analysis_, `-P` (_parser
 ### _Semantic Analysis_
 Nama | NIM | Workload | Presentase
 --- | --- | --- | ---
-Faiq Azzam Nafidz | 13524003 | Membuat struktur kelas terkait parser, membuat desain awal parser, membuat fungsi produksi 1–10 + 25–27, membuat fungsi pencetak parse tree, membuat mekanisme error handling, membuat laporan (perancangan & implementasi). | 35% | 
-Anindya Naufal Pinasthika | 13524013 | Membuat fungsi produksi 34–43, membuat fitur pemilihan proses program (antara lexer atau parser), memodifikasi README.md, membuat laporan (teori singkat). | 25% |
-Mahmudia Kimdaro Amin | 13524083 | Membuat fungsi produksi 21–24 + 28–33, melakukan pengujian program, membuat laporan (pengujian). | 20% | 
-Jingglang Galih Rinenggan | 13524095 | Membuat fungsi produksi 11–20, membuat laporan (kesimpulan dan saran). | 20% | 
+Faiq Azzam Nafidz | 13524003 | AST (sebagian), Semantic (sebagian), Laporan (Perancangan, Implementasi), README.md, Debugging | 30% | 
+Anindya Naufal Pinasthika | 13524013 | Symbol Table, AST (sebagian), Semantic (sebagian), main.cpp, Debugging | 30% |
+Mahmudia Kimdaro Amin | 13524083 | AST (sebagian), Semantic (sebagian), Laporan (Teori dasar, Kesimpulan) | 20% | 
+Jingglang Galih Rinenggan | 13524095 | Input file Parse Tree, AST (sebagian), Semantic (sebagian) | 20% | 
