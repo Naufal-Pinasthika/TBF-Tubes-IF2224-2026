@@ -10,6 +10,14 @@
 
 using namespace std;
 
+static string getBaseName(const string &path)
+{
+    size_t p = path.find_last_of('/');
+    if (p == string::npos)
+        return path;
+    return path.substr(p + 1);
+}
+
 int main(int argc, char *argv[])
 {
     std::filesystem::create_directories("test/milestone-1");
@@ -35,32 +43,63 @@ int main(int argc, char *argv[])
         else if (flag == "-P")
         {
             mode = "P";
+        } else if (flag == "-S")
+        {
+            mode = "S";
         }
         else
         {
             cerr << "Unknown flag: " << flag << endl;
-            cerr << "Usage: " << argv[0] << " [ -L | -P ] <file>" << endl;
+            cerr << "Usage: " << argv[0] << " [ -L | -P | -S ] <file>" << endl;
             return 1;
         }
     }
     else
     {
-        cerr << "Usage: " << argv[0] << " [ -L | -P ] <file>" << endl;
+        cerr << "Usage: " << argv[0] << " [ -L | -P | -S ] <file>" << endl;
         return 1;
     }
 
     bool isTokenFile = s.size() >= 9 && s.substr(s.size() - 9) == "_tokenize";
     vector<Token> tokens;
+    Parser parser = Parser(vector<Token>{});
+    string outputName = s;
+    string baseName;
     if (isTokenFile)
     {
         if (mode == "L")
         {
             cerr << "Cannot lexer a tokenized file\n";
             return 1;
+        } else if (mode == "S")
+        {
+            cerr << "Cannot semantic analyze a tokenized file\n";
+            return 1;
         }
 
         string filepath = "test/" + s;
         tokens = Lexer::readTokensFromFile(filepath);
+        parser = Parser(tokens);
+
+        baseName = getBaseName(s);
+        outputName = (baseName.size() > 9) ? baseName.substr(0, baseName.size() - 9) : baseName;
+    }
+    else if (s.size() >= 7 && s.substr(s.size() - 7) == "_parsed")
+    {
+        if (mode == "L")
+        {
+            cerr << "Cannot lexer a parsed file\n";
+            return 1;
+        } else if (mode == "P")
+        {
+            cerr << "Cannot parse a parsed file\n";
+            return 1;
+        }
+
+        string filepath = "test/" + s;
+        parser = Parser::buildFromParsedFile(filepath);
+        baseName = getBaseName(s);
+        outputName = (baseName.size() > 7) ? baseName.substr(0, baseName.size() - 7) : baseName;
     }
     else
     {
@@ -97,8 +136,6 @@ int main(int argc, char *argv[])
         }
     }
 
-    Parser parser(tokens);
-
     if (!parser.parse())
     {
         Token token = parser.getTokens().at(parser.getHighestPos());
@@ -119,13 +156,8 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    string outputName = s;
-    if (isTokenFile)
-    {
-        outputName = s.substr(0, s.size() - 9);
-    }
-
-    parser.getRoot()->printTreeToFile(s + "_parsed");
+    if (parser.getRoot())
+        parser.getRoot()->printTreeToFile(outputName + "_parsed");
 
     ASTBuilder astBuilder;
     ProgramNode* ast = astBuilder.build(parser.getRoot());

@@ -1,5 +1,8 @@
 #include "Parser.hpp"
 
+#include <fstream>
+#include <stdexcept>
+
 Token Parser::peek()
 {
     return tokens[pos];
@@ -849,4 +852,208 @@ bool Parser::multiplicativeOperatorProd()
         return success(parent);
     backTrack(save);
     return fails(parent);
+}
+
+string trim(const string &text)
+{
+    size_t start = text.find_first_not_of(" \t\r\n");
+    if (start == string::npos)
+        return "";
+
+    size_t end = text.find_last_not_of(" \t\r\n");
+    return text.substr(start, end - start + 1);
+}
+
+int parseDepthAndLabel(const string &line, string &label)
+{
+    string s = line;
+    size_t p = 0;
+    while (p < s.size() && !(isalnum((unsigned char)s[p]) || s[p] == '<'))
+        p++;
+
+    int depth = 0;
+    size_t scanPos = 0;
+    while (true)
+    {
+        size_t found = s.find("│", scanPos);
+        if (found == string::npos || found >= p)
+            break;
+        depth++;
+        scanPos = found + 1;
+    }
+
+    if (p >= s.size())
+    {
+        label.clear();
+        return depth;
+    }
+
+    label = trim(s.substr(p));
+    return depth;
+}
+
+bool isNodeLabel(const string &label)
+{
+    static const string labels[] = {
+        "<program>",
+        "<program-header>",
+        "<declaration-part>",
+        "<const-declaration>",
+        "<constant>",
+        "<type-declaration>",
+        "<var-declaration>",
+        "<identifier-list>",
+        "<type>",
+        "<array-type>",
+        "<range>",
+        "<enumerated>",
+        "<record-type>",
+        "<field-list>",
+        "<field-part>",
+        "<subprogram-declaration>",
+        "<procedure-declaration>",
+        "<function-declaration>",
+        "block",
+        "<formal-parameter-list>",
+        "<parameter-group>",
+        "<compound-statement>",
+        "<statement-list>",
+        "<statement>",
+        "<variable>",
+        "<component_variable>",
+        "<index_list>",
+        "<assignment-statement>",
+        "<if-statement>",
+        "<case-statement>",
+        "<case-block>",
+        "<while-statement>",
+        "<repeat-statement>",
+        "<for-statement>",
+        "<procedure/function-call>",
+        "<parameter-list>",
+        "<expression>",
+        "<simple-expression>",
+        "<term>",
+        "<factor>",
+        "<relational-operator>",
+        "<additive-operator>",
+        "<multiplicative-operator>",
+        "<terminal>"};
+
+    for (const string &nodeLabel : labels)
+    {
+        if (label == nodeLabel)
+            return true;
+    }
+
+    return false;
+}
+
+NodeType nodeTypeFromLabel(const string &label)
+{
+    for (int i = 0; i < terminal; i++)
+    {
+        if (label == nodeTypeStr[i])
+            return static_cast<NodeType>(i);
+    }
+
+    throw runtime_error("Unknown node label: " + label);
+}
+
+Token tokenFromLabel(const string &label)
+{
+    size_t open = label.find(" (");
+    if (open == string::npos || label.back() != ')')
+        return Token(label, "");
+
+    string type = label.substr(0, open);
+    string lexeme = label.substr(open + 2, label.size() - open - 3);
+
+    if (lexeme.size() >= 2 && lexeme.front() == '\'' && lexeme.back() == '\'')
+        lexeme = lexeme.substr(1, lexeme.size() - 2);
+
+    return Token(type, lexeme);
+}
+
+Parser Parser::buildFromParsedFile(const string& filepath) {
+    ifstream file(filepath);
+    if (!file.is_open())
+        return Parser(vector<Token>{});
+
+    vector<Token> tokens;
+    vector<pair<int, Node *>> nodeStack;
+    Node *root = nullptr;
+
+    string line;
+    while (getline(file, line))
+    {
+        line = trim(line);
+        if (line.empty())
+            continue;
+
+        string label;
+        int depth = parseDepthAndLabel(line, label);
+        if (label.empty())
+            continue;
+
+        Node *node = nullptr;
+        if (isNodeLabel(label))
+        {
+            node = new Node(nodeTypeFromLabel(label));
+        }
+        else
+        {
+            Token token = tokenFromLabel(label);
+            tokens.push_back(token);
+            node = new Node(token);
+        }
+
+        while (!nodeStack.empty() && nodeStack.back().first >= depth)
+            nodeStack.pop_back();
+
+        if (nodeStack.empty())
+        {
+            root = node;
+        }
+        else
+        {
+            nodeStack.back().second->children.push_back(node);
+        }
+
+        nodeStack.push_back({depth, node});
+    }
+
+    Parser parser(tokens);
+    parser.root = root;
+    parser.curr = root;
+    return parser;
+}
+
+vector<Token> Parser::readTokensFromParsedFile(const string& filepath)
+{
+    ifstream file(filepath);
+    vector<Token> tokens;
+    if (!file.is_open())
+        return tokens;
+
+    string line;
+    while (getline(file, line))
+    {
+        string s = trim(line);
+        if (s.empty())
+            continue;
+
+        size_t lastSpace = s.find_last_of(' ');
+        string label = (lastSpace == string::npos) ? s : trim(s.substr(lastSpace + 1));
+        if (label.empty())
+            continue;
+
+        if (label[0] == '<')
+            continue;
+
+        Token token = tokenFromLabel(label);
+        tokens.push_back(token);
+    }
+
+    return tokens;
 }

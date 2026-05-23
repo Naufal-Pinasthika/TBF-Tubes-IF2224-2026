@@ -128,4 +128,6 @@ public:
     set<string> getExpected() const { return expected; }
     int getPos() const { return pos; }
     int getHighestPos() const { return highestPos; }
+    static Parser buildFromParsedFile(const string& filepath);
+    static vector<Token> readTokensFromParsedFile(const string& filepath);
 };
