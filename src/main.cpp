@@ -18,13 +18,25 @@ static string getBaseName(const string &path)
     return path.substr(p + 1);
 }
 
+static string resolveInputPath(const string &path, const string &fallbackDir)
+{
+    if (std::filesystem::exists(path))
+        return path;
+
+    string testPath = "test/" + path;
+    if (std::filesystem::exists(testPath))
+        return testPath;
+
+    return "test/" + fallbackDir + "/" + getBaseName(path);
+}
+
 int main(int argc, char *argv[])
 {
     std::filesystem::create_directories("test/milestone-1");
     std::filesystem::create_directories("test/milestone-2");
     std::filesystem::create_directories("test/milestone-3");
 
-    string mode = "P"; // default parser
+    string mode = "S"; // default semantic analyzer
     string s;
 
     if (argc == 2)
@@ -61,6 +73,8 @@ int main(int argc, char *argv[])
     }
 
     bool isTokenFile = s.size() >= 9 && s.substr(s.size() - 9) == "_tokenize";
+    bool isParsedFile = s.size() >= 7 && s.substr(s.size() - 7) == "_parsed";
+    bool loadedParsedTree = false;
     vector<Token> tokens;
     Parser parser = Parser(vector<Token>{});
     string outputName = s;
@@ -71,39 +85,35 @@ int main(int argc, char *argv[])
         {
             cerr << "Cannot lexer a tokenized file\n";
             return 1;
-        } else if (mode == "S")
-        {
-            cerr << "Cannot semantic analyze a tokenized file\n";
-            return 1;
         }
 
-        string filepath = "test/" + s;
+        string filepath = resolveInputPath(s, "milestone-1");
         tokens = Lexer::readTokensFromFile(filepath);
         parser = Parser(tokens);
 
         baseName = getBaseName(s);
         outputName = (baseName.size() > 9) ? baseName.substr(0, baseName.size() - 9) : baseName;
     }
-    else if (s.size() >= 7 && s.substr(s.size() - 7) == "_parsed")
+    else if (isParsedFile)
     {
         if (mode == "L")
         {
             cerr << "Cannot lexer a parsed file\n";
             return 1;
-        } else if (mode == "P")
-        {
-            cerr << "Cannot parse a parsed file\n";
-            return 1;
         }
 
-        string filepath = "test/" + s;
+        string filepath = resolveInputPath(s, "milestone-2");
         parser = Parser::buildFromParsedFile(filepath);
+        loadedParsedTree = true;
         baseName = getBaseName(s);
         outputName = (baseName.size() > 7) ? baseName.substr(0, baseName.size() - 7) : baseName;
     }
     else
     {
-        string filepath = "test/input/" + s;
+        baseName = getBaseName(s);
+        outputName = baseName;
+
+        string filepath = resolveInputPath(s, "input");
         ifstream file(filepath);
 
         if (!file.is_open())
@@ -114,8 +124,9 @@ int main(int argc, char *argv[])
 
         Lexer lexer(file);
         tokens = lexer.runLexer();
+        parser = Parser(tokens);
 
-        filepath = "test/milestone-1/" + s + "_tokenize";
+        filepath = "test/milestone-1/" + outputName + "_tokenize";
         ofstream outputFile(filepath);
 
         if (!outputFile.is_open())
@@ -136,9 +147,13 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (!parser.parse())
+    if (!loadedParsedTree && !parser.parse())
     {
-        Token token = parser.getTokens().at(parser.getHighestPos());
+        vector<Token> parserTokens = parser.getTokens();
+        int highestPos = parser.getHighestPos();
+        Token token = (highestPos >= 0 && static_cast<size_t>(highestPos) < parserTokens.size())
+            ? parserTokens[highestPos]
+            : Token("eof", "");
         set<string> expected = parser.getExpected();
         vector<int> pos = token.getPos();
 
@@ -155,9 +170,17 @@ int main(int argc, char *argv[])
         cout << "\n";
         return 1;
     }
+    else if (loadedParsedTree && parser.getRoot() == nullptr)
+    {
+        cerr << "Invalid parsed file" << endl;
+        return 1;
+    }
 
     if (parser.getRoot())
         parser.getRoot()->printTreeToFile(outputName + "_parsed");
+
+    if (mode == "P")
+        return 0;
 
     ASTBuilder astBuilder;
     ProgramNode* ast = astBuilder.build(parser.getRoot());

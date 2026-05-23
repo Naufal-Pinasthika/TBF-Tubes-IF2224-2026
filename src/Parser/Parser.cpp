@@ -854,6 +854,20 @@ bool Parser::multiplicativeOperatorProd()
     return fails(parent);
 }
 
+namespace
+{
+struct ParsedTreeLine
+{
+    int depth;
+    string label;
+};
+
+struct ParsedTree
+{
+    Node *root = nullptr;
+    vector<Token> tokens;
+};
+
 string trim(const string &text)
 {
     size_t start = text.find_first_not_of(" \t\r\n");
@@ -864,104 +878,76 @@ string trim(const string &text)
     return text.substr(start, end - start + 1);
 }
 
-int parseDepthAndLabel(const string &line, string &label)
+bool consumePrefix(const string &text, size_t &pos, const string &prefix)
 {
-    string s = line;
-    size_t p = 0;
-    while (p < s.size() && !(isalnum((unsigned char)s[p]) || s[p] == '<'))
-        p++;
+    if (text.compare(pos, prefix.size(), prefix) != 0)
+        return false;
 
-    int depth = 0;
-    size_t scanPos = 0;
-    while (true)
-    {
-        size_t found = s.find("│", scanPos);
-        if (found == string::npos || found >= p)
-            break;
-        depth++;
-        scanPos = found + 1;
-    }
-
-    if (p >= s.size())
-    {
-        label.clear();
-        return depth;
-    }
-
-    label = trim(s.substr(p));
-    return depth;
+    pos += prefix.size();
+    return true;
 }
 
-bool isNodeLabel(const string &label)
+ParsedTreeLine parseTreeLine(const string &line)
 {
-    static const string labels[] = {
-        "<program>",
-        "<program-header>",
-        "<declaration-part>",
-        "<const-declaration>",
-        "<constant>",
-        "<type-declaration>",
-        "<var-declaration>",
-        "<identifier-list>",
-        "<type>",
-        "<array-type>",
-        "<range>",
-        "<enumerated>",
-        "<record-type>",
-        "<field-list>",
-        "<field-part>",
-        "<subprogram-declaration>",
-        "<procedure-declaration>",
-        "<function-declaration>",
-        "block",
-        "<formal-parameter-list>",
-        "<parameter-group>",
-        "<compound-statement>",
-        "<statement-list>",
-        "<statement>",
-        "<variable>",
-        "<component_variable>",
-        "<index_list>",
-        "<assignment-statement>",
-        "<if-statement>",
-        "<case-statement>",
-        "<case-block>",
-        "<while-statement>",
-        "<repeat-statement>",
-        "<for-statement>",
-        "<procedure/function-call>",
-        "<parameter-list>",
-        "<expression>",
-        "<simple-expression>",
-        "<term>",
-        "<factor>",
-        "<relational-operator>",
-        "<additive-operator>",
-        "<multiplicative-operator>",
-        "<terminal>"};
+    ParsedTreeLine parsed{0, ""};
 
-    for (const string &nodeLabel : labels)
+    if (trim(line).empty())
+        return parsed;
+
+    size_t pos = 0;
+    while (consumePrefix(line, pos, "│   ") ||
+           consumePrefix(line, pos, "|   ") ||
+           consumePrefix(line, pos, "    "))
     {
-        if (label == nodeLabel)
+        parsed.depth++;
+    }
+
+    if (consumePrefix(line, pos, "├── ") ||
+        consumePrefix(line, pos, "└── ") ||
+        consumePrefix(line, pos, "+-- ") ||
+        consumePrefix(line, pos, "`-- "))
+    {
+        parsed.depth++;
+    }
+
+    parsed.label = trim(line.substr(pos));
+    return parsed;
+}
+
+bool tryNodeTypeFromLabel(const string &label, NodeType &type)
+{
+    for (int i = 0; i <= terminal; i++)
+    {
+        if (label == nodeTypeStr[i])
+        {
+            type = static_cast<NodeType>(i);
             return true;
+        }
     }
 
     return false;
 }
 
+bool isNodeLabel(const string &label)
+{
+    NodeType type;
+    return tryNodeTypeFromLabel(label, type);
+}
+
 NodeType nodeTypeFromLabel(const string &label)
 {
-    for (int i = 0; i < terminal; i++)
-    {
-        if (label == nodeTypeStr[i])
-            return static_cast<NodeType>(i);
-    }
+    NodeType type;
+    if (tryNodeTypeFromLabel(label, type))
+        return type;
 
     throw runtime_error("Unknown node label: " + label);
 }
 
 Token tokenFromLabel(const string &label)
 {
+    if (label.empty())
+        return Token("", "");
+
     size_t open = label.find(" (");
     if (open == string::npos || label.back() != ')')
         return Token(label, "");
@@ -975,85 +961,69 @@ Token tokenFromLabel(const string &label)
     return Token(type, lexeme);
 }
 
-Parser Parser::buildFromParsedFile(const string& filepath) {
+ParsedTree parseParsedTreeFile(const string &filepath)
+{
     ifstream file(filepath);
-    if (!file.is_open())
-        return Parser(vector<Token>{});
+    ParsedTree parsed;
 
-    vector<Token> tokens;
+    if (!file.is_open())
+        return parsed;
+
     vector<pair<int, Node *>> nodeStack;
-    Node *root = nullptr;
 
     string line;
     while (getline(file, line))
     {
-        line = trim(line);
-        if (line.empty())
-            continue;
-
-        string label;
-        int depth = parseDepthAndLabel(line, label);
-        if (label.empty())
+        ParsedTreeLine treeLine = parseTreeLine(line);
+        if (treeLine.label.empty())
             continue;
 
         Node *node = nullptr;
-        if (isNodeLabel(label))
+        if (isNodeLabel(treeLine.label))
         {
-            node = new Node(nodeTypeFromLabel(label));
+            node = new Node(nodeTypeFromLabel(treeLine.label));
         }
         else
         {
-            Token token = tokenFromLabel(label);
-            tokens.push_back(token);
+            Token token = tokenFromLabel(treeLine.label);
+            parsed.tokens.push_back(token);
             node = new Node(token);
         }
 
-        while (!nodeStack.empty() && nodeStack.back().first >= depth)
+        while (!nodeStack.empty() && nodeStack.back().first >= treeLine.depth)
             nodeStack.pop_back();
 
         if (nodeStack.empty())
         {
-            root = node;
+            if (parsed.root != nullptr)
+                delete parsed.root;
+            parsed.root = node;
         }
         else
         {
             nodeStack.back().second->children.push_back(node);
         }
 
-        nodeStack.push_back({depth, node});
+        nodeStack.push_back({treeLine.depth, node});
     }
 
-    Parser parser(tokens);
-    parser.root = root;
-    parser.curr = root;
+    return parsed;
+}
+}
+
+Parser Parser::buildFromParsedFile(const string& filepath) {
+    ParsedTree parsedTree = parseParsedTreeFile(filepath);
+
+    Parser parser(parsedTree.tokens);
+    parser.root = parsedTree.root;
+    parser.curr = parsedTree.root;
     return parser;
 }
 
 vector<Token> Parser::readTokensFromParsedFile(const string& filepath)
 {
-    ifstream file(filepath);
-    vector<Token> tokens;
-    if (!file.is_open())
-        return tokens;
+    ParsedTree parsedTree = parseParsedTreeFile(filepath);
+    delete parsedTree.root;
 
-    string line;
-    while (getline(file, line))
-    {
-        string s = trim(line);
-        if (s.empty())
-            continue;
-
-        size_t lastSpace = s.find_last_of(' ');
-        string label = (lastSpace == string::npos) ? s : trim(s.substr(lastSpace + 1));
-        if (label.empty())
-            continue;
-
-        if (label[0] == '<')
-            continue;
-
-        Token token = tokenFromLabel(label);
-        tokens.push_back(token);
-    }
-
-    return tokens;
+    return parsedTree.tokens;
 }
