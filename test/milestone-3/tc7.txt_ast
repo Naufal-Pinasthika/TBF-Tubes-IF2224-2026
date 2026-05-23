@@ -1,6 +1,4 @@
-Keluaran (output)
-
-tab (hanya sebagian yang relevan):
+tab:
 idx  id            obj         type   ref   nrm   lev   adr   link
 -------------------------------------------------------------
 0    NULL          none        0      0     0     0     0     0
@@ -58,7 +56,7 @@ idx  last   lpar   psze   vsze
 atab:
 (kosong karena tidak ada array)
 
-Decorated AST (contoh anotasi minimal):
+Decorated AST:
 ProgramNode(name: 'Circle') -> tab_index:39, lev:0
 ├── Declarations
 │   ├── VarDecl('Pi') -> tab_index:40, type:real, lev:0
