@@ -121,7 +121,7 @@ int SymbolTable::lookup(const string& name) {
 }
 
 void SymbolTable::print(ostream& out) const {
-    out << "tab (hanya sebagian yang relevan):\n";
+    out << "tab:\n";
     out << left
         << setw(5) << "idx"
         << setw(14) << "id"
@@ -133,11 +133,11 @@ void SymbolTable::print(ostream& out) const {
         << setw(6) << "adr"
         << "link\n";
     out << "-------------------------------------------------------------\n";
-    out << "...  reserved words / keyword entries omitted\n";
+    // out << "...  reserved words / keyword entries omitted\n";
 
-    for (size_t i = RESERVED_COUNT; i < tab.size(); ++i) {
+    for (size_t i = 0; i < tab.size(); ++i) {
         const TabEntry& entry = tab[i];
-        if (entry.obj == ObjClass::None) continue;
+        // if (entry.obj == ObjClass::None) continue;
 
         out << left
             << setw(5) << i

@@ -151,9 +151,8 @@ int main(int argc, char *argv[])
     ofstream astOutput("test/milestone-3/" + outputName + "_ast");
     streambuf* oldCout = cout.rdbuf(astOutput.rdbuf());
 
-    cout << "Keluaran (output)\n\n";
     semantic.getSymbolTable().print(cout);
-    cout << "\nDecorated AST (contoh anotasi minimal):\n";
+    cout << "\nDecorated AST:\n";
     ast->print();
 
     cout.rdbuf(oldCout);

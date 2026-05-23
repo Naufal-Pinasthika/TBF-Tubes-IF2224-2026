@@ -30,11 +30,11 @@
 │   │   ├── <type>
 │   │   │   └── ident (Boolean)
 │   │   └── semicolon
-│   └── <array-type>
-│       └── <array-type>
+│   └── <subprogram-declaration>
+│       └── <procedure-declaration>
 │           ├── proceduresy
 │           ├── ident (calculate)
-│           ├── <array-type>
+│           ├── <formal-parameter-list>
 │           │   ├── lparent
 │           │   ├── <parameter-group>
 │           │   │   ├── <identifier-list>
@@ -45,7 +45,7 @@
 │           │   │   └── ident (integer)
 │           │   └── rparent
 │           ├── semicolon
-│           ├── <array-type>
+│           ├── block
 │           │   ├── <declaration-part>
 │           │   │   └── <var-declaration>
 │           │   │       ├── varsy
