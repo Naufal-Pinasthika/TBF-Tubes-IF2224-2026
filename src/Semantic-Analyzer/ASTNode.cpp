@@ -216,15 +216,15 @@ CallNode::~CallNode(){
 
 void CallNode::print(int indent) const { printAstNode(this, indent); }
 
-FunctionCallNode::FunctionCallNode(string name, vector<ExpressionNode*> arguments) : name(name), arguments(arguments) {}
+ProcedureFunctionCallNode::ProcedureFunctionCallNode(string name, vector<ExpressionNode*> arguments) : name(name), arguments(arguments) {}
 
-FunctionCallNode::~FunctionCallNode(){
+ProcedureFunctionCallNode::~ProcedureFunctionCallNode(){
     for (ExpressionNode* argument : arguments){
         delete argument;
     }
 }
 
-void FunctionCallNode::print(int indent) const { printAstNode(this, indent); }
+void ProcedureFunctionCallNode::print(int indent) const { printAstNode(this, indent); }
 
 UnaryOpNode::UnaryOpNode(string op, ExpressionNode* operand) : op(op), operand(operand) {}
 

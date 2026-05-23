@@ -722,8 +722,8 @@ ExpressionNode* ASTBuilder::buildVariable(Node* node) {
     return result;
 }
 
-FunctionCallNode* ASTBuilder::buildCallExpression(Node* node) {
-    FunctionCallNode* result = new FunctionCallNode(getFirstIdent(node), buildParameterList(findChild(node, parameter_list)));
+ProcedureFunctionCallNode* ASTBuilder::buildCallExpression(Node* node) {
+    ProcedureFunctionCallNode* result = new ProcedureFunctionCallNode(getFirstIdent(node), buildParameterList(findChild(node, parameter_list)));
     assignPosition(result, node);
     return result;
 }

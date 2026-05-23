@@ -234,7 +234,7 @@ TypeClass Semantic::analyzeExpression(ExpressionNode* node) {
         return var->evalType;
     }
 
-    if (auto call = dynamic_cast<FunctionCallNode*>(node)){
+    if (auto call = dynamic_cast<ProcedureFunctionCallNode*>(node)){
         int idx = lookupName(call->name);
         if (idx == 0) {
             addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " undeclared function: " + call->name);

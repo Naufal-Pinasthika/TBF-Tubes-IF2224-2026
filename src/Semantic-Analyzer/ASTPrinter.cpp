@@ -140,7 +140,7 @@ static string expressionSummary(const ExpressionNode* node){
     if (auto unary = dynamic_cast<const UnaryOpNode*>(node)) return unary->op + " " + expressionSummary(unary->operand);
     if (auto access = dynamic_cast<const ArrayAccessNode*>(node)) return expressionSummary(access->array) + "[" + expressionSummary(access->index) + "]";
     if (auto access = dynamic_cast<const RecordAccessNode*>(node)) return expressionSummary(access->record) + "." + access->field;
-    if (auto call = dynamic_cast<const FunctionCallNode*>(node)) return call->name + "(...)";
+    if (auto call = dynamic_cast<const ProcedureFunctionCallNode*>(node)) return call->name + "(...)";
     return "<expr>";
 }
 
@@ -231,7 +231,7 @@ static PrintNode renderExpression(const ExpressionNode* node){
     if (auto access = dynamic_cast<const RecordAccessNode*>(node)){
         return branch("RecordAccess(" + expressionSummary(access) + ")" + annotation(*access), renderAst(access->record));
     }
-    if (auto call = dynamic_cast<const FunctionCallNode*>(node)){
+    if (auto call = dynamic_cast<const ProcedureFunctionCallNode*>(node)){
         vector<PrintNode> children;
         for (const ExpressionNode* argument : call->arguments)
         {

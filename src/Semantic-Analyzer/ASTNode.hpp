@@ -267,13 +267,13 @@ public:
     void print(int indent = 0) const override;
 };
 
-class FunctionCallNode : public ExpressionNode {
+class ProcedureFunctionCallNode : public ExpressionNode {
 public:
     string name;
     vector<ExpressionNode*> arguments;
 
-    FunctionCallNode(string name, vector<ExpressionNode*> arguments);
-    ~FunctionCallNode();
+    ProcedureFunctionCallNode(string name, vector<ExpressionNode*> arguments);
+    ~ProcedureFunctionCallNode();
     void print(int indent = 0) const override;
 };
 

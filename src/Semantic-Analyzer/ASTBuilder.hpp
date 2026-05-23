@@ -63,7 +63,7 @@ private:
     ExpressionNode* buildTerm(Node* node);
     ExpressionNode* buildFactor(Node* node);
     ExpressionNode* buildVariable(Node* node);
-    FunctionCallNode* buildCallExpression(Node* node);
+    ProcedureFunctionCallNode* buildCallExpression(Node* node);
 
     vector<VarDeclNode*> buildFormalParameterList(Node* node);
     vector<VarDeclNode*> buildParameterGroup(Node* node);
