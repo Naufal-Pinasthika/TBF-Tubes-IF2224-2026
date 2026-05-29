@@ -3,10 +3,10 @@
 #include <string>
 #include <vector>
 #include <filesystem>
-#include "Lexer/Lexer.hpp"
-#include "Parser/Parser.hpp"
-#include "Semantic-Analyzer/ASTBuilder.hpp"
-#include "Semantic-Analyzer/Semantic.hpp"
+#include "1-Lexer/Lexer.hpp"
+#include "2-Parser/Parser.hpp"
+#include "3-Semantic-Analyzer/ASTBuilder.hpp"
+#include "3-Semantic-Analyzer/Semantic.hpp"
 
 using namespace std;
 
