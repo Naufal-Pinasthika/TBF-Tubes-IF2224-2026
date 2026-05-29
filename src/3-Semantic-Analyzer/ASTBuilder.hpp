@@ -1,7 +1,7 @@
 #pragma once
 
 #include "ASTNode.hpp"
-#include "../Parser/Node.hpp"
+#include "../2-Parser/Node.hpp"
 
 #include <string>
 #include <vector>

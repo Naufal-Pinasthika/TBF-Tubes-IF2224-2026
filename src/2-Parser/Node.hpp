@@ -1,5 +1,5 @@
 #pragma once
-#include "../Lexer/Lexer.hpp"
+#include "../1-Lexer/Lexer.hpp"
 #include <iostream>
 
 enum NodeType
