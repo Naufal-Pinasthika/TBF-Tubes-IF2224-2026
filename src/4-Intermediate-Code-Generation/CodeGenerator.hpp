@@ -2,9 +2,11 @@
 
 #include "IntermediateCode.hpp"
 #include "../3-Semantic-Analyzer/ASTNode.hpp"
+#include "../3-Semantic-Analyzer/SymbolTable.hpp"
 
-#include <map>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 using namespace std;
 
@@ -12,13 +14,24 @@ class CodeGenerator
 {
 private:
     TacProgram program;
-    int nextTempId = 0;
+    SymbolTable* symbols = nullptr;
     int nextLabelId = 0;
+    unordered_map<int, int> addressByTabIndex;
+    unordered_map<int, int> frameSizeByBlockIndex;
 
-    string newTemp();
     string newLabel(const string& prefix = "L");
 
-    string emitExpression(ExpressionNode* node);
+    void buildAddressMap(ProgramNode* root);
+    void collectDeclarations(const vector<DeclarationNode*>& declarations);
+    void collectBlock(StatementNode* body, int blockIndex);
+
+    int addressOf(const ASTNode* node) const;
+    int addressOf(int tabIndex) const;
+    int frameSizeOf(int blockIndex) const;
+
+    void emitExpression(ExpressionNode* node);
+    void emitLValue(ExpressionNode* node);
+    void emitOperation(TacOperation operation);
     void emitStatement(StatementNode* node);
     void emitDeclaration(DeclarationNode* node);
     void emitProgram(ProgramNode* node);
@@ -31,20 +44,18 @@ private:
     void emitRepeat(RepeatNode* node);
     void emitCase(CaseNode* node);
     void emitCall(CallNode* node);
+    void emitWriteCall(CallNode* node);
 
-    string emitBinary(BinOpNode* node);
-    string emitUnary(UnaryOpNode* node);
-    string emitVar(VarNode* node);
-    string emitLiteral(NumberNode* node);
-    string emitLiteral(StringNode* node);
-    string emitLiteral(CharNode* node);
-    string emitLiteral(BoolNode* node);
-    string emitCallExpr(ProcedureFunctionCallNode* node);
+    void emitBinary(BinOpNode* node);
+    void emitUnary(UnaryOpNode* node);
+    void emitCallExpr(ProcedureFunctionCallNode* node);
+
+    bool isWriteCall(const string& name) const;
 
 public:
     CodeGenerator() = default;
 
-    const TacProgram& generate(ProgramNode* root);
+    const TacProgram& generate(ProgramNode* root, SymbolTable& symbols);
     const TacProgram& getProgram() const;
     void reset();
 };
