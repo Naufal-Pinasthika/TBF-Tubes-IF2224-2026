@@ -16,8 +16,11 @@ private:
     TacProgram program;
     SymbolTable* symbols = nullptr;
     int nextLabelId = 0;
+    int currentBlockIndex = 0;
     unordered_map<int, int> addressByTabIndex;
+    unordered_map<int, unordered_map<string, int>> addressByNameByBlock;
     unordered_map<int, int> frameSizeByBlockIndex;
+    unordered_map<int, TacValue> constantByTabIndex;
 
     string newLabel(const string& prefix = "L");
 
@@ -27,6 +30,7 @@ private:
 
     int addressOf(const ASTNode* node) const;
     int addressOf(int tabIndex) const;
+    int addressOfName(const string& name) const;
     int frameSizeOf(int blockIndex) const;
 
     void emitExpression(ExpressionNode* node);
