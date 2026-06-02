@@ -30,11 +30,20 @@ string IntermediateInstruction::toString() const {
         case TacOpcode::Lit:
             text = "LIT " + to_string(level) + " " + operand.toString();
             break;
+        case TacOpcode::Lda:
+            text = "LDA " + to_string(level) + " " + operand.toString();
+            break;
         case TacOpcode::Lod:
             text = "LOD " + to_string(level) + " " + operand.toString();
             break;
+        case TacOpcode::Ldi:
+            text = "LDI";
+            break;
         case TacOpcode::Sto:
             text = "STO " + to_string(level) + " " + operand.toString();
+            break;
+        case TacOpcode::Sti:
+            text = "STI";
             break;
         case TacOpcode::Add:
             text = "ADD";

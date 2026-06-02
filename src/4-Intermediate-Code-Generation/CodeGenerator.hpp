@@ -32,13 +32,18 @@ private:
     int addressOf(int tabIndex) const;
     int addressOfName(const string& name) const;
     int frameSizeOf(int blockIndex) const;
+    int typeSize(TypeClass type, int ref) const;
+    int arraySize(int atabIndex) const;
+    int recordFieldOffset(int recordBlockIndex, const string& field) const;
 
+    void emitAddress(ExpressionNode* node);
     void emitExpression(ExpressionNode* node);
     void emitLValue(ExpressionNode* node);
     void emitOperation(TacOperation operation);
     void emitStatement(StatementNode* node);
     void emitDeclaration(DeclarationNode* node);
     void emitProgram(ProgramNode* node);
+    void emitParameterStores(const vector<VarDeclNode*>& parameters);
 
     void emitCompound(CompoundNode* node);
     void emitAssign(AssignNode* node);

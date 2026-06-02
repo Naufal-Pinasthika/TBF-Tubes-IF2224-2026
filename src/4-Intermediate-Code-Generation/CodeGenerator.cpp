@@ -41,7 +41,9 @@ void CodeGenerator::buildAddressMap(ProgramNode* root) {
         if (auto varDecl = dynamic_cast<VarDeclNode*>(declaration)){
             for (size_t i = 0; i < varDecl->tabIndices.size(); ++i){
                 int tabIndex = varDecl->tabIndices[i];
-                addressByTabIndex[tabIndex] = nextAddress++;
+                TabEntry* entry = symbols != nullptr ? symbols->getTab(tabIndex) : nullptr;
+                addressByTabIndex[tabIndex] = nextAddress;
+                nextAddress += entry != nullptr ? typeSize(entry->type, entry->ref) : 1;
                 if (i < varDecl->names.size() && symbols != nullptr){
                     addressByNameByBlock[mainBlock][symbols->toUpper(varDecl->names[i])] = addressByTabIndex[tabIndex];
                 }
@@ -77,7 +79,9 @@ void CodeGenerator::collectDeclarations(const vector<DeclarationNode*>& declarat
             for (VarDeclNode* parameter : procDecl->parameters){
                 for (size_t i = 0; i < parameter->tabIndices.size(); ++i){
                     int tabIndex = parameter->tabIndices[i];
-                    addressByTabIndex[tabIndex] = nextAddress++;
+                    TabEntry* entry = symbols != nullptr ? symbols->getTab(tabIndex) : nullptr;
+                    addressByTabIndex[tabIndex] = nextAddress;
+                    nextAddress += entry != nullptr ? typeSize(entry->type, entry->ref) : 1;
                     if (i < parameter->names.size() && symbols != nullptr){
                         addressByNameByBlock[procDecl->btabIndex][symbols->toUpper(parameter->names[i])] = addressByTabIndex[tabIndex];
                     }
@@ -87,7 +91,9 @@ void CodeGenerator::collectDeclarations(const vector<DeclarationNode*>& declarat
                 if (auto varDecl = dynamic_cast<VarDeclNode*>(localDeclaration)){
                     for (size_t i = 0; i < varDecl->tabIndices.size(); ++i){
                         int tabIndex = varDecl->tabIndices[i];
-                        addressByTabIndex[tabIndex] = nextAddress++;
+                        TabEntry* entry = symbols != nullptr ? symbols->getTab(tabIndex) : nullptr;
+                        addressByTabIndex[tabIndex] = nextAddress;
+                        nextAddress += entry != nullptr ? typeSize(entry->type, entry->ref) : 1;
                         if (i < varDecl->names.size() && symbols != nullptr){
                             addressByNameByBlock[procDecl->btabIndex][symbols->toUpper(varDecl->names[i])] = addressByTabIndex[tabIndex];
                         }
@@ -119,7 +125,9 @@ void CodeGenerator::collectDeclarations(const vector<DeclarationNode*>& declarat
             for (VarDeclNode* parameter : funcDecl->parameters){
                 for (size_t i = 0; i < parameter->tabIndices.size(); ++i){
                     int tabIndex = parameter->tabIndices[i];
-                    addressByTabIndex[tabIndex] = nextAddress++;
+                    TabEntry* entry = symbols != nullptr ? symbols->getTab(tabIndex) : nullptr;
+                    addressByTabIndex[tabIndex] = nextAddress;
+                    nextAddress += entry != nullptr ? typeSize(entry->type, entry->ref) : 1;
                     if (i < parameter->names.size() && symbols != nullptr){
                         addressByNameByBlock[funcDecl->btabIndex][symbols->toUpper(parameter->names[i])] = addressByTabIndex[tabIndex];
                     }
@@ -129,7 +137,9 @@ void CodeGenerator::collectDeclarations(const vector<DeclarationNode*>& declarat
                 if (auto varDecl = dynamic_cast<VarDeclNode*>(localDeclaration)){
                     for (size_t i = 0; i < varDecl->tabIndices.size(); ++i){
                         int tabIndex = varDecl->tabIndices[i];
-                        addressByTabIndex[tabIndex] = nextAddress++;
+                        TabEntry* entry = symbols != nullptr ? symbols->getTab(tabIndex) : nullptr;
+                        addressByTabIndex[tabIndex] = nextAddress;
+                        nextAddress += entry != nullptr ? typeSize(entry->type, entry->ref) : 1;
                         if (i < varDecl->names.size() && symbols != nullptr) {
                             addressByNameByBlock[funcDecl->btabIndex][symbols->toUpper(varDecl->names[i])] = addressByTabIndex[tabIndex];
                         }
@@ -192,6 +202,130 @@ int CodeGenerator::frameSizeOf(int blockIndex) const {
         return found->second;
     }
     return 3;
+}
+
+int CodeGenerator::typeSize(TypeClass type, int ref) const {
+    if (type == TypeClass::Array) return arraySize(ref);
+
+    if (type == TypeClass::Record && symbols != nullptr){
+        BtabEntry* block = symbols->getBtab(ref);
+        if (block == nullptr) return 1;
+
+        int total = 0;
+        int current = block->last;
+        while (current > 0){
+            TabEntry* entry = symbols->getTab(current);
+            if (entry == nullptr) break;
+            total += typeSize(entry->type, entry->ref);
+            current = entry->link;
+        }
+        return total > 0 ? total : 1;
+    }
+
+    return 1;
+}
+
+int CodeGenerator::arraySize(int atabIndex) const {
+    if (symbols == nullptr) return 1;
+
+    AtabEntry* entry = symbols->getAtab(atabIndex);
+    if (entry == nullptr || entry->size <= 0) return 1;
+    return entry->size;
+}
+
+int CodeGenerator::recordFieldOffset(int recordBlockIndex, const string& field) const {
+    if (symbols == nullptr) return 0;
+
+    BtabEntry* block = symbols->getBtab(recordBlockIndex);
+    if (block == nullptr) return 0;
+
+    vector<int> fields;
+    int current = block->last;
+    while (current > 0){
+        fields.push_back(current);
+        TabEntry* entry = symbols->getTab(current);
+        if (entry == nullptr) break;
+        current = entry->link;
+    }
+
+    int offset = 0;
+    string target = symbols->toUpper(field);
+    for (auto it = fields.rbegin(); it != fields.rend(); ++it){
+        TabEntry* entry = symbols->getTab(*it);
+        if (entry == nullptr) continue;
+        if (symbols->toUpper(entry->identifiers) == target) return offset;
+        offset += typeSize(entry->type, entry->ref);
+    }
+
+    return 0;
+}
+
+void CodeGenerator::emitAddress(ExpressionNode* node) {
+    if (node == nullptr) return;
+
+    if (auto var = dynamic_cast<VarNode*>(node)){
+        IntermediateInstruction instruction;
+        instruction.opcode = TacOpcode::Lda;
+        instruction.level = 0;
+        instruction.operand.kind = TacOperandKind::Address;
+        instruction.operand.address = addressOf(var);
+        program.add(instruction);
+    } else if (auto access = dynamic_cast<ArrayAccessNode*>(node)){
+        emitAddress(access->array);
+        emitExpression(access->index);
+
+        AtabEntry* entry = nullptr;
+        if (symbols != nullptr && access->array != nullptr){
+            entry = symbols->getAtab(access->array->atabIndex);
+        }
+
+        if (entry != nullptr && entry->low != 0){
+            IntermediateInstruction low;
+            low.opcode = TacOpcode::Lit;
+            low.operand.kind = TacOperandKind::Literal;
+            low.operand.literal.type = TacValueType::Integer;
+            low.operand.literal.text = to_string(entry->low);
+            program.add(low);
+
+            IntermediateInstruction subtract;
+            subtract.opcode = TacOpcode::Sub;
+            program.add(subtract);
+        }
+
+        int elementSize = entry != nullptr ? typeSize(static_cast<TypeClass>(entry->etype), entry->eref) : 1;
+        if (elementSize != 1){
+            IntermediateInstruction size;
+            size.opcode = TacOpcode::Lit;
+            size.operand.kind = TacOperandKind::Literal;
+            size.operand.literal.type = TacValueType::Integer;
+            size.operand.literal.text = to_string(elementSize);
+            program.add(size);
+
+            IntermediateInstruction multiply;
+            multiply.opcode = TacOpcode::Mul;
+            program.add(multiply);
+        }
+
+        IntermediateInstruction add;
+        add.opcode = TacOpcode::Add;
+        program.add(add);
+    } else if (auto access = dynamic_cast<RecordAccessNode*>(node)){
+        emitAddress(access->record);
+
+        int offset = access->record != nullptr ? recordFieldOffset(access->record->btabIndex, access->field) : 0;
+        if (offset != 0){
+            IntermediateInstruction literal;
+            literal.opcode = TacOpcode::Lit;
+            literal.operand.kind = TacOperandKind::Literal;
+            literal.operand.literal.type = TacValueType::Integer;
+            literal.operand.literal.text = to_string(offset);
+            program.add(literal);
+
+            IntermediateInstruction add;
+            add.opcode = TacOpcode::Add;
+            program.add(add);
+        }
+    }
 }
 
 void CodeGenerator::emitExpression(ExpressionNode* node) {
@@ -269,6 +403,12 @@ void CodeGenerator::emitExpression(ExpressionNode* node) {
             instruction.operand.address = addressOf(var);
             program.add(instruction);
         }
+    } else if (dynamic_cast<ArrayAccessNode*>(node) != nullptr || dynamic_cast<RecordAccessNode*>(node) != nullptr){
+        emitAddress(node);
+
+        IntermediateInstruction instruction;
+        instruction.opcode = TacOpcode::Ldi;
+        program.add(instruction);
     } else if (auto binary = dynamic_cast<BinOpNode*>(node)){
         emitBinary(binary);
     } else if (auto unary = dynamic_cast<UnaryOpNode*>(node)){
@@ -279,13 +419,7 @@ void CodeGenerator::emitExpression(ExpressionNode* node) {
 }
 
 void CodeGenerator::emitLValue(ExpressionNode* node) {
-    if (auto var = dynamic_cast<VarNode*>(node)){
-        IntermediateInstruction instruction;
-        instruction.opcode = TacOpcode::Lit;
-        instruction.operand.kind = TacOperandKind::Address;
-        instruction.operand.address = addressOf(var);
-        program.add(instruction);
-    }
+    emitAddress(node);
 }
 
 void CodeGenerator::emitOperation(TacOperation operation) {
@@ -310,6 +444,24 @@ void CodeGenerator::emitStatement(StatementNode* node) {
     else if (auto call = dynamic_cast<CallNode*>(node)) emitCall(call);
 }
 
+void CodeGenerator::emitParameterStores(const vector<VarDeclNode*>& parameters) {
+    vector<int> tabIndices;
+    for (VarDeclNode* parameter : parameters){
+        for (int tabIndex : parameter->tabIndices){
+            tabIndices.push_back(tabIndex);
+        }
+    }
+
+    for (auto it = tabIndices.rbegin(); it != tabIndices.rend(); ++it){
+        IntermediateInstruction instruction;
+        instruction.opcode = TacOpcode::Sto;
+        instruction.level = 0;
+        instruction.operand.kind = TacOperandKind::Address;
+        instruction.operand.address = addressOf(*it);
+        program.add(instruction);
+    }
+}
+
 void CodeGenerator::emitDeclaration(DeclarationNode* node) {
     if (auto procDecl = dynamic_cast<ProcedureDeclNode*>(node)){
         int previousBlock = currentBlockIndex;
@@ -328,6 +480,7 @@ void CodeGenerator::emitDeclaration(DeclarationNode* node) {
         init.operand.address = frameSizeOf(procDecl->btabIndex);
         program.add(init);
 
+        emitParameterStores(procDecl->parameters);
         emitStatement(procDecl->body);
 
         IntermediateInstruction ret;
@@ -352,6 +505,7 @@ void CodeGenerator::emitDeclaration(DeclarationNode* node) {
         init.operand.address = frameSizeOf(funcDecl->btabIndex);
         program.add(init);
 
+        emitParameterStores(funcDecl->parameters);
         emitStatement(funcDecl->body);
 
         IntermediateInstruction ret;
@@ -417,14 +571,21 @@ void CodeGenerator::emitCompound(CompoundNode* node) {
 }
 
 void CodeGenerator::emitAssign(AssignNode* node) {
-    emitExpression(node->value);
-
     if (auto var = dynamic_cast<VarNode*>(node->target)){
+        emitExpression(node->value);
+
         IntermediateInstruction instruction;
         instruction.opcode = TacOpcode::Sto;
         instruction.level = 0;
         instruction.operand.kind = TacOperandKind::Address;
         instruction.operand.address = addressOf(var);
+        program.add(instruction);
+    } else {
+        emitAddress(node->target);
+        emitExpression(node->value);
+
+        IntermediateInstruction instruction;
+        instruction.opcode = TacOpcode::Sti;
         program.add(instruction);
     }
 }

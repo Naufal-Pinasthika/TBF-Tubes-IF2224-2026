@@ -11,8 +11,11 @@ using namespace std;
 enum class TacOpcode
 {
     Lit, // push(v)
+    Lda, // push(a)
     Lod, // push(mem[a])
+    Ldi, // addr=pop; push(mem[addr])
     Sto, // pop(val); mem[a] = val
+    Sti, // val=pop; addr=pop; mem[addr] = val
     Add, // v2=pop; v1=pop; push(v1+v2)
     Sub, // v2=pop; v1=pop; push(v1-v2) 
     Mul, // v2=pop; v1=pop; push(v1*v2)
