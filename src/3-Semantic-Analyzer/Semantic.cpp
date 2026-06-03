@@ -312,6 +312,14 @@ TypeClass Semantic::analyzeExpression(ExpressionNode* node) {
         TypeClass recordType = analyzeExpression(access->record);
         if (recordType != TypeClass::Record)
             addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " field access target is not record");
+        else if (access->record != nullptr) {
+            int fieldIndex = symbolTable.lookupCurrentBlock(access->field, access->record->btabIndex);
+            if (fieldIndex == 0) {
+                addError(to_string(node->line) + ":" + to_string(node->column) + ":" + " unknown record field: " + access->field);
+            } else {
+                decorate(access, fieldIndex);
+            }
+        }
 
         return access->evalType;
     }
@@ -361,16 +369,22 @@ TypeClass Semantic::resolveType(TypeNode* node, int& ref) {
     if (auto array = dynamic_cast<ArrayTypeNode*>(node)) {
         int indexRef = 0;
         int elementRef = 0;
+        int low = 0;
+        int high = 0;
 
         TypeClass indexType = resolveType(array->indexType, indexRef);
         TypeClass elementType = resolveType(array->elementType, elementRef);
+        if (auto range = dynamic_cast<RangeTypeNode*>(array->indexType)) {
+            low = constantAddress(range->low);
+            high = constantAddress(range->high);
+        }
 
         int atabIdx = symbolTable.insertAtab(
             static_cast<int>(indexType),
             static_cast<int>(elementType),
             elementRef,
-            0,
-            0,
+            low,
+            high,
             1
         );
 

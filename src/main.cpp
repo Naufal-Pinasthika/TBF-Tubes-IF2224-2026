@@ -3,10 +3,13 @@
 #include <string>
 #include <vector>
 #include <filesystem>
+#include <exception>
 #include "1-Lexer/Lexer.hpp"
 #include "2-Parser/Parser.hpp"
 #include "3-Semantic-Analyzer/ASTBuilder.hpp"
 #include "3-Semantic-Analyzer/Semantic.hpp"
+#include "4-Intermediate-Code-Generation/CodeGenerator.hpp"
+#include "4-Intermediate-Code-Generation/Interpreter.hpp"
 
 using namespace std;
 
@@ -35,8 +38,9 @@ int main(int argc, char *argv[])
     std::filesystem::create_directories("test/milestone-1");
     std::filesystem::create_directories("test/milestone-2");
     std::filesystem::create_directories("test/milestone-3");
+    std::filesystem::create_directories("test/milestone-4");
 
-    string mode = "S"; // default semantic analyzer
+    string mode = "I"; // default interpreter
     string s;
 
     if (argc == 2)
@@ -58,17 +62,20 @@ int main(int argc, char *argv[])
         } else if (flag == "-S")
         {
             mode = "S";
+        } else if (flag == "-I")
+        {
+            mode = "I";
         }
         else
         {
             cerr << "Unknown flag: " << flag << endl;
-            cerr << "Usage: " << argv[0] << " [ -L | -P | -S ] <file>" << endl;
+            cerr << "Usage: " << argv[0] << " [ -L | -P | -S | -I ] <file>" << endl;
             return 1;
         }
     }
     else
     {
-        cerr << "Usage: " << argv[0] << " [ -L | -P | -S ] <file>" << endl;
+        cerr << "Usage: " << argv[0] << " [ -L | -P | -S | -I ] <file>" << endl;
         return 1;
     }
 
@@ -202,6 +209,12 @@ int main(int argc, char *argv[])
     {
         for (const string& error : semantic.getErrors())
             cout << error << endl;
+
+        if (mode == "I")
+        {
+            delete ast;
+            return 1;
+        }
     }
 
     ofstream astOutput("test/milestone-3/" + outputName + "_ast");
@@ -212,6 +225,35 @@ int main(int argc, char *argv[])
     ast->print();
 
     cout.rdbuf(oldCout);
+
+    if (mode == "I")
+    {
+        CodeGenerator generator;
+        const TacProgram& program = generator.generate(ast, semantic.getSymbolTable());
+
+        ofstream icOutput("test/milestone-4/" + outputName + "_ic");
+        if (!icOutput.is_open())
+        {
+            cerr << "Failed to open intermediate code output file" << endl;
+            delete ast;
+            return 1;
+        }
+
+        program.print(icOutput);
+
+        Interpreter interpreter;
+        try
+        {
+            interpreter.load(program);
+            interpreter.run();
+        }
+        catch (const exception& error)
+        {
+            cerr << "Runtime error: " << error.what() << endl;
+            delete ast;
+            return 1;
+        }
+    }
 
     delete ast;
     return 0;

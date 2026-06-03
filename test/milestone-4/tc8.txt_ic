@@ -1,0 +1,13 @@
+0 INT 0 5
+1 LIT 0 green
+2 STO 0 3
+3 LIT 0 blue
+4 STO 0 4
+5 LOD 0 3
+6 LOD 0 4
+7 OPR 0 7
+8 JPC 0 L_END_1
+9 LIT 0 sky is blue
+10 OPR 0 14
+11 L_END_1:
+12 RET

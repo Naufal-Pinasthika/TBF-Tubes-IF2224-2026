@@ -1,0 +1,69 @@
+programsy
+ident (ArrayAccessTest)
+semicolon
+varsy
+ident (nums)
+colon
+arraysy
+lbrack
+intcon (1)
+period
+period
+intcon (3)
+rbrack
+ofsy
+ident (Integer)
+semicolon
+ident (i)
+comma
+ident (total)
+colon
+ident (Integer)
+semicolon
+beginsy
+ident (nums)
+lbrack
+intcon (1)
+rbrack
+becomes
+intcon (10)
+semicolon
+ident (nums)
+lbrack
+intcon (2)
+rbrack
+becomes
+intcon (20)
+semicolon
+ident (i)
+becomes
+intcon (3)
+semicolon
+ident (nums)
+lbrack
+ident (i)
+rbrack
+becomes
+ident (nums)
+lbrack
+intcon (1)
+rbrack
+plus
+ident (nums)
+lbrack
+intcon (2)
+rbrack
+semicolon
+ident (total)
+becomes
+ident (nums)
+lbrack
+ident (i)
+rbrack
+semicolon
+ident (writeln)
+lparent
+ident (total)
+rparent
+endsy
+period
