@@ -1,0 +1,92 @@
+tab:
+idx  id            obj         type   ref   nrm   lev   adr   link
+-------------------------------------------------------------
+0    NULL          none        0      0     0     0     0     0
+1    AND           none        0      0     0     0     0     0
+2    ARRAY         none        0      0     0     0     0     0
+3    BEGIN         none        0      0     0     0     0     0
+4    CASE          none        0      0     0     0     0     0
+5    CONST         none        0      0     0     0     0     0
+6    DIV           none        0      0     0     0     0     0
+7    DOWNTO        none        0      0     0     0     0     0
+8    DO            none        0      0     0     0     0     0
+9    ELSE          none        0      0     0     0     0     0
+10   END           none        0      0     0     0     0     0
+11   FOR           none        0      0     0     0     0     0
+12   FUNCTION      none        0      0     0     0     0     0
+13   IF            none        0      0     0     0     0     0
+14   MOD           none        0      0     0     0     0     0
+15   NOT           none        0      0     0     0     0     0
+16   OF            none        0      0     0     0     0     0
+17   OR            none        0      0     0     0     0     0
+18   PROCEDURE     none        0      0     0     0     0     0
+19   PROGRAM       none        0      0     0     0     0     0
+20   RECORD        none        0      0     0     0     0     0
+21   REPEAT        none        0      0     0     0     0     0
+22   INTEGER       type        1      0     1     0     0     0
+23   REAL          type        2      0     1     0     0     22
+24   BOOLEAN       type        4      0     1     0     0     23
+25   CHAR          type        3      0     1     0     0     24
+26   STRING        type        5      0     1     0     0     25
+27   THEN          none        0      0     0     0     0     0
+28   TO            none        0      0     0     0     0     0
+29   TYPE          none        0      0     0     0     0     0
+30   UNTIL         none        0      0     0     0     0     0
+31   VAR           none        0      0     0     0     0     0
+32   WHILE         none        0      0     0     0     0     0
+33   TRUE          constant    4      0     1     0     1     26
+34   FALSE         constant    4      0     1     0     0     33
+35   WRITE         procedure   0      0     1     0     0     34
+36   WRITELN       procedure   0      0     1     0     0     35
+37   READ          procedure   0      0     1     0     0     36
+38   READLN        procedure   0      0     1     0     0     37
+39   RecordAccessTestprogram     0      0     1     0     0     38
+40   x             variable    1      0     1     1     0     0
+41   y             variable    1      0     1     1     0     40
+42   valid         variable    4      0     1     1     0     41
+43   Point         type        7      1     1     0     0     39
+44   p             variable    7      1     1     0     0     43
+45   total         variable    1      0     1     0     0     44
+
+btab:
+idx  last   lpar   psze   vsze
+-----------------------------
+0    45     0      0      2
+1    42     0      0      3
+2    0      0      0      0
+
+atab:
+(kosong karena tidak ada array)
+
+Decorated AST:
+ProgramNode(name: 'RecordAccessTest') -> tab_index:39, lev:0
+├── Declarations
+│   ├── TypeDecl('Point') -> tab_index:43, type:record, block_index:1, lev:0
+│   │   └── RecordType -> type:record, block_index:1
+│   │       ├── VarDecl('x') -> tab_index:40, type:integer, lev:1
+│   │       ├── VarDecl('y') -> tab_index:41, type:integer, lev:1
+│   │       └── VarDecl('valid') -> tab_index:42, type:boolean, lev:1
+│   ├── VarDecl('p') -> tab_index:44, type:record, block_index:1, lev:0
+│   └── VarDecl('total') -> tab_index:45, type:integer, lev:0
+└── Block -> block_index:2, lev:1
+    ├── Assign('p'.x := 7) -> type:void
+    │   ├── target 'p'.x -> tab_index:40, type:integer, lev:1
+    │   └── value 7 -> type:integer
+    ├── Assign('p'.y := 5) -> type:void
+    │   ├── target 'p'.y -> tab_index:41, type:integer, lev:1
+    │   └── value 5 -> type:integer
+    ├── Assign('p'.valid := 'True') -> type:void
+    │   ├── target 'p'.valid -> tab_index:42, type:boolean, lev:1
+    │   └── value 'True' -> tab_index:33, type:boolean, lev:0
+    ├── Assign('total' := 'p'.x + 'p'.y) -> type:void
+    │   ├── target 'total' -> tab_index:45, type:integer, lev:0
+    │   └── value BinOp '+' -> type:integer
+    │       ├── RecordAccess('p'.x) -> tab_index:40, type:integer, lev:1
+    │       │   └── 'p' -> tab_index:44, type:record, block_index:1, lev:0
+    │       └── RecordAccess('p'.y) -> tab_index:41, type:integer, lev:1
+    │           └── 'p' -> tab_index:44, type:record, block_index:1, lev:0
+    └── If -> type:void
+        ├── condition 'p'.valid -> tab_index:42, type:boolean, lev:1
+        └── then
+            └── writeln(...) -> predefined, tab_index:36, lev:0
+                └── argument 'total' -> tab_index:45, type:integer, lev:0

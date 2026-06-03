@@ -1,0 +1,67 @@
+programsy
+ident (RecordAccessTest)
+semicolon
+typesy
+ident (Point)
+eql
+recordsy
+ident (x)
+comma
+ident (y)
+colon
+ident (Integer)
+semicolon
+ident (valid)
+colon
+ident (Boolean)
+endsy
+semicolon
+varsy
+ident (p)
+colon
+ident (Point)
+semicolon
+ident (total)
+colon
+ident (Integer)
+semicolon
+beginsy
+ident (p)
+period
+ident (x)
+becomes
+intcon (7)
+semicolon
+ident (p)
+period
+ident (y)
+becomes
+intcon (5)
+semicolon
+ident (p)
+period
+ident (valid)
+becomes
+ident (True)
+semicolon
+ident (total)
+becomes
+ident (p)
+period
+ident (x)
+plus
+ident (p)
+period
+ident (y)
+semicolon
+ifsy
+ident (p)
+period
+ident (valid)
+thensy
+ident (writeln)
+lparent
+ident (total)
+rparent
+endsy
+period

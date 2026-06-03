@@ -1,0 +1,20 @@
+program RecordAccessTest;
+
+type
+    Point == record
+        x, y: Integer;
+        valid: Boolean
+    end;
+
+var
+    p: Point;
+    total: Integer;
+
+begin
+    p.x := 7;
+    p.y := 5;
+    p.valid := True;
+    total := p.x + p.y;
+    if p.valid then
+        writeln(total)
+end.
