@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
     std::filesystem::create_directories("test/milestone-3");
     std::filesystem::create_directories("test/milestone-4");
 
-    string mode = "S"; // default semantic analyzer
+    string mode = "I"; // default interpreter
     string s;
 
     if (argc == 2)
@@ -239,9 +239,7 @@ int main(int argc, char *argv[])
             return 1;
         }
 
-        program.print(cout);
         program.print(icOutput);
-        cout.flush();
 
         Interpreter interpreter;
         try
