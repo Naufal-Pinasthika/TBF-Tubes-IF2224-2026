@@ -3,11 +3,13 @@
 #include <string>
 #include <vector>
 #include <filesystem>
+#include <exception>
 #include "1-Lexer/Lexer.hpp"
 #include "2-Parser/Parser.hpp"
 #include "3-Semantic-Analyzer/ASTBuilder.hpp"
 #include "3-Semantic-Analyzer/Semantic.hpp"
 #include "4-Intermediate-Code-Generation/CodeGenerator.hpp"
+#include "4-Intermediate-Code-Generation/Interpreter.hpp"
 
 using namespace std;
 
@@ -239,6 +241,20 @@ int main(int argc, char *argv[])
 
         program.print(cout);
         program.print(icOutput);
+        cout.flush();
+
+        Interpreter interpreter;
+        try
+        {
+            interpreter.load(program);
+            interpreter.run();
+        }
+        catch (const exception& error)
+        {
+            cerr << "Runtime error: " << error.what() << endl;
+            delete ast;
+            return 1;
+        }
     }
 
     delete ast;
