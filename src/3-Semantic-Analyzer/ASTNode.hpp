@@ -31,6 +31,7 @@ public:
     virtual ~ASTNode() = default;
     virtual void print(int indent = 0) const = 0;
 
+    static ASTFileReadResult buildFromAstStream(istream& input);
     static ASTFileReadResult buildFromAstFile(const string& filepath);
 };
 

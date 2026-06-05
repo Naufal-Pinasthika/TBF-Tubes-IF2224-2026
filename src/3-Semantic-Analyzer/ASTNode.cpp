@@ -818,23 +818,10 @@ ProgramNode* buildAstProgram(const AstDumpNode* root, SymbolTable* symbols)
 
     return program;
 }
-}
 
-ASTFileReadResult ASTNode::buildFromAstFile(const string& filepath)
+ASTFileReadResult buildAstFromLines(const vector<string>& lines)
 {
     ASTFileReadResult result;
-    ifstream file(filepath);
-    if (!file.is_open()) {
-        result.errors.push_back("Invalid AST file: " + filepath);
-        return result;
-    }
-
-    vector<string> lines;
-    string line;
-    while (getline(file, line)) {
-        lines.push_back(line);
-    }
-
     result.symbolTable = SymbolTable::buildFromAstDumpLines(lines, result.errors);
 
     size_t astStart = lines.size();
@@ -863,6 +850,31 @@ ASTFileReadResult ASTNode::buildFromAstFile(const string& filepath)
         result.errors.push_back("Failed to rebuild ProgramNode from AST dump");
     }
 
+    return result;
+}
+}
+
+ASTFileReadResult ASTNode::buildFromAstStream(istream& input)
+{
+    vector<string> lines;
+    string line;
+    while (getline(input, line)) {
+        lines.push_back(line);
+    }
+
+    return buildAstFromLines(lines);
+}
+
+ASTFileReadResult ASTNode::buildFromAstFile(const string& filepath)
+{
+    ifstream file(filepath);
+    if (!file.is_open()) {
+        ASTFileReadResult result;
+        result.errors.push_back("Invalid AST file: " + filepath);
+        return result;
+    }
+
+    ASTFileReadResult result = buildFromAstStream(file);
     return result;
 }
 

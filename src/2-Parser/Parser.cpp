@@ -961,18 +961,14 @@ Token tokenFromLabel(const string &label)
     return Token(type, lexeme);
 }
 
-ParsedTree parseParsedTreeFile(const string &filepath)
+ParsedTree parseParsedTreeStream(istream &input)
 {
-    ifstream file(filepath);
     ParsedTree parsed;
-
-    if (!file.is_open())
-        return parsed;
 
     vector<pair<int, Node *>> nodeStack;
 
     string line;
-    while (getline(file, line))
+    while (getline(input, line))
     {
         ParsedTreeLine treeLine = parseTreeLine(line);
         if (treeLine.label.empty())
@@ -1009,6 +1005,22 @@ ParsedTree parseParsedTreeFile(const string &filepath)
 
     return parsed;
 }
+
+ParsedTree parseParsedTreeFile(const string &filepath)
+{
+    ifstream file(filepath);
+    if (!file.is_open()) return ParsedTree{};
+    return parseParsedTreeStream(file);
+}
+}
+
+Parser Parser::buildFromParsedStream(istream& input) {
+    ParsedTree parsedTree = parseParsedTreeStream(input);
+
+    Parser parser(parsedTree.tokens);
+    parser.root = parsedTree.root;
+    parser.curr = parsedTree.root;
+    return parser;
 }
 
 Parser Parser::buildFromParsedFile(const string& filepath) {
@@ -1018,6 +1030,14 @@ Parser Parser::buildFromParsedFile(const string& filepath) {
     parser.root = parsedTree.root;
     parser.curr = parsedTree.root;
     return parser;
+}
+
+vector<Token> Parser::readTokensFromParsedStream(istream& input)
+{
+    ParsedTree parsedTree = parseParsedTreeStream(input);
+    delete parsedTree.root;
+
+    return parsedTree.tokens;
 }
 
 vector<Token> Parser::readTokensFromParsedFile(const string& filepath)
