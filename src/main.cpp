@@ -81,12 +81,64 @@ int main(int argc, char *argv[])
 
     bool isTokenFile = s.size() >= 9 && s.substr(s.size() - 9) == "_tokenize";
     bool isParsedFile = s.size() >= 7 && s.substr(s.size() - 7) == "_parsed";
+    bool isAstFile = s.size() >= 4 && s.substr(s.size() - 4) == "_ast";
     bool loadedParsedTree = false;
     vector<Token> tokens;
     Parser parser = Parser(vector<Token>{});
     string outputName = s;
     string baseName;
-    if (isTokenFile)
+    if (isAstFile)
+    {
+        if (mode != "I")
+        {
+            cerr << "Cannot run lexer/parser/semantic mode on an AST file\n";
+            return 1;
+        }
+
+        string filepath = resolveInputPath(s, "milestone-3");
+        ASTFileReadResult astInput = ASTNode::buildFromAstFile(filepath);
+        if (!astInput.errors.empty() || astInput.root == nullptr)
+        {
+            for (const string& error : astInput.errors)
+                cerr << error << endl;
+
+            delete astInput.root;
+            return 1;
+        }
+
+        baseName = getBaseName(s);
+        outputName = (baseName.size() > 4) ? baseName.substr(0, baseName.size() - 4) : baseName;
+
+        CodeGenerator generator;
+        const TacProgram& program = generator.generate(astInput.root, astInput.symbolTable);
+
+        ofstream icOutput("test/milestone-4/" + outputName + "_ic");
+        if (!icOutput.is_open())
+        {
+            cerr << "Failed to open intermediate code output file" << endl;
+            delete astInput.root;
+            return 1;
+        }
+
+        program.print(icOutput);
+
+        Interpreter interpreter;
+        try
+        {
+            interpreter.load(program);
+            interpreter.run();
+        }
+        catch (const exception& error)
+        {
+            cerr << "Runtime error: " << error.what() << endl;
+            delete astInput.root;
+            return 1;
+        }
+
+        delete astInput.root;
+        return 0;
+    }
+    else if (isTokenFile)
     {
         if (mode == "L")
         {

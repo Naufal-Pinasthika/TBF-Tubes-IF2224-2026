@@ -8,6 +8,15 @@
 
 using namespace std;
 
+class ProgramNode;
+
+struct ASTFileReadResult
+{
+    ProgramNode* root = nullptr;
+    SymbolTable symbolTable;
+    vector<string> errors;
+};
+
 class ASTNode 
 {
 public:
@@ -21,6 +30,8 @@ public:
 
     virtual ~ASTNode() = default;
     virtual void print(int indent = 0) const = 0;
+
+    static ASTFileReadResult buildFromAstFile(const string& filepath);
 };
 
 // base category node (the ones that will not be visit/analyze further)

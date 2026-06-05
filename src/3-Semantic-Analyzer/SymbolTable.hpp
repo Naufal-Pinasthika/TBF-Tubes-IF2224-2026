@@ -79,8 +79,8 @@ private:
     int currentBlock;
     vector<int> display;
 public:
-    const int RESERVED_COUNT{39};
-    SymbolTable()
+    int RESERVED_COUNT;
+    SymbolTable() : RESERVED_COUNT(39)
     {
         // init tab for reserved keywords
         tab.push_back({"NULL",      0, ObjClass::None, TypeClass::None,    0, 0, 0, 0});
@@ -154,6 +154,7 @@ public:
     int insertTab(const string& name, ObjClass obj, TypeClass type, int ref, int nrm, int adr);
     int lookupCurrentBlock(const string& name, int blockIdx);
     int lookup(const string& name);
+    static SymbolTable buildFromAstDumpLines(const vector<string>& lines, vector<string>& errors);
     void print(ostream& out) const;
     string toUpper(const string& name);
     TabEntry* getTab(int idx);

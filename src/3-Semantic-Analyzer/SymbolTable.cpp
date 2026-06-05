@@ -1,6 +1,7 @@
 #include "SymbolTable.hpp"
 
 #include <iomanip>
+#include <sstream>
 
 static string objClassToString(ObjClass obj) {
     switch (obj) {
@@ -13,6 +14,202 @@ static string objClassToString(ObjClass obj) {
         case ObjClass::None:
         default: return "none";
     }
+}
+
+static string trimText(const string& text) {
+    size_t start = text.find_first_not_of(" \t\r\n");
+    if (start == string::npos) return "";
+
+    size_t end = text.find_last_not_of(" \t\r\n");
+    return text.substr(start, end - start + 1);
+}
+
+static string lowerText(string text) {
+    transform(text.begin(), text.end(), text.begin(), [](unsigned char ch) {
+        return static_cast<char>(tolower(ch));
+    });
+    return text;
+}
+
+static bool startsWithText(const string& text, const string& prefix) {
+    return text.compare(0, prefix.size(), prefix) == 0;
+}
+
+static ObjClass objClassFromString(const string& value) {
+    if (value == "program") return ObjClass::Program;
+    if (value == "constant") return ObjClass::Constant;
+    if (value == "variable") return ObjClass::Variable;
+    if (value == "type") return ObjClass::Type;
+    if (value == "procedure") return ObjClass::Procedure;
+    if (value == "function") return ObjClass::Function;
+    return ObjClass::None;
+}
+
+static bool parseTabDumpLine(const string& line, TabEntry& entry, int& index) {
+    string trimmed = trimText(line);
+    if (trimmed.empty()) return false;
+
+    size_t pos = 0;
+    while (pos < trimmed.size() && isdigit(static_cast<unsigned char>(trimmed[pos]))) pos++;
+    if (pos == 0) return false;
+
+    index = atoi(trimmed.substr(0, pos).c_str());
+    string rest = trimText(trimmed.substr(pos));
+    string lowered = lowerText(rest);
+    vector<string> objNames = {"procedure", "function", "constant", "variable", "program", "type", "none"};
+
+    for (const string& objName : objNames) {
+        size_t searchPos = 0;
+        while (searchPos < lowered.size()) {
+            size_t objPos = lowered.find(objName, searchPos);
+            if (objPos == string::npos) break;
+
+            string numberPart = trimText(rest.substr(objPos + objName.size()));
+            stringstream numbers(numberPart);
+            int type = 0;
+            int ref = 0;
+            int nrm = 0;
+            int lev = 0;
+            int adr = 0;
+            int link = 0;
+            if (numbers >> type >> ref >> nrm >> lev >> adr >> link) {
+                string leftover;
+                getline(numbers, leftover);
+                if (trimText(leftover).empty()) {
+                    entry.identifiers = trimText(rest.substr(0, objPos));
+                    entry.obj = objClassFromString(objName);
+                    entry.type = static_cast<TypeClass>(type);
+                    entry.ref = ref;
+                    entry.nrm = nrm;
+                    entry.lev = lev;
+                    entry.adr = adr;
+                    entry.link = link;
+                    return true;
+                }
+            }
+
+            searchPos = objPos + 1;
+        }
+    }
+
+    return false;
+}
+
+static bool parseBtabDumpLine(const string& line, BtabEntry& entry, int& index) {
+    stringstream stream(line);
+    int last = 0;
+    int lpar = 0;
+    int psze = 0;
+    int vsze = 0;
+    if (!(stream >> index >> last >> lpar >> psze >> vsze)) return false;
+
+    entry.blocks = index;
+    entry.last = last;
+    entry.lpar = lpar;
+    entry.psze = psze;
+    entry.vsze = vsze;
+    return true;
+}
+
+static bool parseAtabDumpLine(const string& line, AtabEntry& entry) {
+    stringstream stream(line);
+    if (!(stream >> entry.arrays >> entry.xtype >> entry.etype >> entry.eref >> entry.low >> entry.high >> entry.elsz >> entry.size)) {
+        return false;
+    }
+    return true;
+}
+
+SymbolTable SymbolTable::buildFromAstDumpLines(const vector<string>& lines, vector<string>& errors) {
+    SymbolTable result;
+    result.tab.clear();
+    result.atab.clear();
+    result.btab.clear();
+    result.display.clear();
+    result.currentLevel = 0;
+    result.currentBlock = 0;
+
+    enum class DumpSection { None, Tab, Btab, Atab };
+    DumpSection section = DumpSection::None;
+
+    for (const string& line : lines) {
+        string trimmed = trimText(line);
+        if (trimmed == "Decorated AST:") break;
+        if (trimmed == "tab:") {
+            section = DumpSection::Tab;
+            continue;
+        }
+        if (trimmed == "btab:") {
+            section = DumpSection::Btab;
+            continue;
+        }
+        if (trimmed == "atab:") {
+            section = DumpSection::Atab;
+            continue;
+        }
+
+        if (trimmed.empty() ||
+            startsWithText(trimmed, "idx") ||
+            startsWithText(trimmed, "---") ||
+            startsWithText(trimmed, "(kosong")) {
+            continue;
+        }
+
+        if (section == DumpSection::Tab) {
+            TabEntry entry;
+            int index = 0;
+            if (!parseTabDumpLine(line, entry, index)) {
+                errors.push_back("Failed to parse tab entry: " + line);
+                continue;
+            }
+            if (index < 0) {
+                errors.push_back("Invalid negative tab index: " + line);
+                continue;
+            }
+            if (static_cast<int>(result.tab.size()) <= index) {
+                result.tab.resize(index + 1);
+            }
+            result.tab[index] = entry;
+        } else if (section == DumpSection::Btab) {
+            BtabEntry entry;
+            int index = 0;
+            if (!parseBtabDumpLine(line, entry, index)) {
+                errors.push_back("Failed to parse btab entry: " + line);
+                continue;
+            }
+            if (index < 0) {
+                errors.push_back("Invalid negative btab index: " + line);
+                continue;
+            }
+            if (static_cast<int>(result.btab.size()) <= index) {
+                result.btab.resize(index + 1);
+            }
+            result.btab[index] = entry;
+        } else if (section == DumpSection::Atab) {
+            AtabEntry entry;
+            if (!parseAtabDumpLine(line, entry)) {
+                errors.push_back("Failed to parse atab entry: " + line);
+                continue;
+            }
+            if (entry.arrays <= 0) {
+                errors.push_back("Invalid atab index: " + line);
+                continue;
+            }
+            if (static_cast<int>(result.atab.size()) < entry.arrays) {
+                result.atab.resize(entry.arrays);
+            }
+            result.atab[entry.arrays - 1] = entry;
+        }
+    }
+
+    if (result.tab.empty()) {
+        errors.push_back("AST dump does not contain tab entries");
+    }
+    if (result.btab.empty()) {
+        result.btab.push_back({0, 0, 0, 0, 0});
+    }
+
+    result.display.push_back(0);
+    return result;
 }
 
 int SymbolTable::enterBlock() {
