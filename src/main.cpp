@@ -394,7 +394,7 @@ int main(int argc, char* argv[])
         interpreter.load(program);
         interpreter.run();
     } catch (const exception& error) {
-        cerr << "Runtime error: " << error.what() << endl;
+        cerr << "Runtime Error: " << error.what() << endl;
         delete ast;
         return 1;
     }

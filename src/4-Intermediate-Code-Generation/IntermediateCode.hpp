@@ -71,6 +71,9 @@ struct ICValue
 {
     ICValueType type = ICValueType::None;
     string text;
+    bool isAddress = false;
+    long long addressBase = 0;
+    long long addressLimit = 0;
 };
 
 struct ICOperand
@@ -78,6 +81,7 @@ struct ICOperand
     ICOperandKind kind = ICOperandKind::None;
     ICValue literal;
     int address = 0;
+    int addressSpan = 1;
     string label;
     ICOperation operationCode = ICOperation::None;
 
@@ -88,6 +92,7 @@ struct IntermediateInstruction
 {
     ICOpCode opcode = ICOpCode::Label;
     int level = 0;
+    int argumentCount = 0;
     ICOperand operand;
 
     string toString() const;
