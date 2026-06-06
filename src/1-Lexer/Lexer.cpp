@@ -52,7 +52,7 @@ static const unordered_map<string, string> SYMBOLS = {
     {".", "period"},
     {":", "colon"}};
 
-Lexer::Lexer(ifstream &input) : input(input), readRow(1), readCol(1) {}
+Lexer::Lexer(istream &input) : input(input), readRow(1), readCol(1) {}
 
 int Lexer::get()
 {
@@ -358,13 +358,12 @@ Token Lexer::scanCommentParen()
     return Token("comment", tokenName, readRow, readCol);
 }
 
-// cases when reading form tokenize file immediately
-vector<Token> Lexer::readTokensFromFile(const string& filepath) {
-    ifstream file(filepath);
+// cases when reading from tokenize output immediately
+vector<Token> Lexer::readTokensFromStream(istream& input) {
     vector<Token> tokens;
     string line;
 
-    while (getline(file, line)) {
+    while (getline(input, line)) {
         if (line.empty()) continue;
 
         size_t pos = line.find(" (");
@@ -387,4 +386,9 @@ vector<Token> Lexer::readTokensFromFile(const string& filepath) {
     }
 
     return tokens;
+}
+
+vector<Token> Lexer::readTokensFromFile(const string& filepath) {
+    ifstream file(filepath);
+    return readTokensFromStream(file);
 }

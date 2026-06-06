@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fstream>
+#include <istream>
 #include <string>
 #include "Token.hpp"
 #include <unordered_map>
@@ -12,11 +13,11 @@ using namespace std;
 
 class Lexer {
 private:
-    ifstream& input;
+    istream& input;
     int readRow;
     int readCol;
 public:
-    Lexer(ifstream& input);
+    Lexer(istream& input);
     int get();
     int peek() const;
     vector<Token> runLexer();
@@ -26,5 +27,6 @@ public:
     Token scanString();
     Token scanCommentCurly();
     Token scanCommentParen();
+    static vector<Token> readTokensFromStream(istream& input);
     static vector<Token> readTokensFromFile(const string& filepath);
 };
