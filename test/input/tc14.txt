@@ -1,0 +1,5 @@
+program IntegerUnderflowBonus;
+
+begin
+    writeln(0 - 2147483647 - 2)
+end.

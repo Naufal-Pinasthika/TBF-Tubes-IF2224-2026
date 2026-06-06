@@ -1,0 +1,10 @@
+program StackOverflowBonus;
+
+procedure recurse(x: integer);
+begin
+    recurse(x)
+end;
+
+begin
+    recurse(0)
+end.

@@ -1,5 +1,6 @@
 #include "Interpreter.hpp"
 
+#include <cctype>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
@@ -11,6 +12,9 @@ using namespace std;
 
 namespace
 {
+    const long long IC_INT_MIN = -2147483648LL;
+    const long long IC_INT_MAX = 2147483647LL;
+
     ICValue defaultValue()
     {
         return ICValue{};
@@ -42,16 +46,60 @@ namespace
         return text == "-0" ? "0" : text;
     }
 
+    long long ensureIntegerRange(long long number, const string& context)
+    {
+        string suffix = context.empty() ? "" : " in " + context;
+        if (number > IC_INT_MAX)
+        {
+            throw runtime_error("Integer Overflow" + suffix);
+        }
+        if (number < IC_INT_MIN)
+        {
+            throw runtime_error("Integer Underflow" + suffix);
+        }
+        return number;
+    }
+
+    double ensureFiniteReal(double number, const string& context)
+    {
+        if (!isfinite(number))
+        {
+            string suffix = context.empty() ? "" : " in " + context;
+            throw runtime_error("real overflow" + suffix);
+        }
+        return number;
+    }
+
+    bool isNegativeIntegerText(const string& text)
+    {
+        size_t index = 0;
+        while (index < text.size() && isspace(static_cast<unsigned char>(text[index]))) ++index;
+        return index < text.size() && text[index] == '-';
+    }
+
     ICValue makeInteger(long long number)
     {
+        ensureIntegerRange(number, "integer value");
         ICValue value;
         value.type = ICValueType::Integer;
         value.text = to_string(number);
         return value;
     }
 
+    ICValue makeAddress(long long address, long long base, long long limit)
+    {
+        ICValue value;
+        value.type = ICValueType::Integer;
+        value.text = to_string(address);
+        value.isAddress = true;
+        value.addressBase = base;
+        value.addressLimit = limit;
+        return value;
+    }
+
     ICValue makeReal(double number)
     {
+        ensureFiniteReal(number, "real value");
         ICValue value;
         value.type = ICValueType::Real;
         value.text = formatReal(number);
@@ -85,7 +133,8 @@ namespace
 
         try
         {
-            return stod(value.text);
+            double number = stod(value.text);
+            return ensureFiniteReal(number, "real value");
         }
         catch (const exception&)
         {
@@ -93,14 +142,29 @@ namespace
         }
     }
 
-    long long toInteger(const ICValue& value)
+    long long toRawInteger(const ICValue& value)
     {
         requireInitialized(value, "");
         if (value.text.empty()) return 0;
 
         try
         {
-            return stoll(value.text);
+            size_t parsed = 0;
+            long long number = stoll(value.text, &parsed);
+            if (parsed != value.text.size())
+            {
+                throw invalid_argument("trailing characters");
+            }
+            return number;
+        }
+        catch (const out_of_range&)
+        {
+            throw runtime_error(string(isNegativeIntegerText(value.text) ? "Integer Underflow" : "Integer Overflow") +
+                                " in integer value");
+        }
+        catch (const invalid_argument&)
+        {
+            throw runtime_error("expected integer value, got '" + value.text + "'");
         }
         catch (const exception&)
         {
@@ -108,15 +172,82 @@ namespace
         }
     }
 
+    long long toInteger(const ICValue& value)
+    {
+        return ensureIntegerRange(toRawInteger(value), "integer value");
+    }
+
     size_t toAddress(const ICValue& value)
     {
-        long long address = toInteger(value);
+        long long address = toRawInteger(value);
         if (address < 0)
         {
             throw runtime_error("negative memory address: " + to_string(address));
         }
 
         return static_cast<size_t>(address);
+    }
+
+    long long checkedAdd(long long left, long long right)
+    {
+        return ensureIntegerRange(left + right, "addition");
+    }
+
+    long long checkedSub(long long left, long long right)
+    {
+        return ensureIntegerRange(left - right, "subtraction");
+    }
+
+    long long checkedMul(long long left, long long right)
+    {
+        return ensureIntegerRange(left * right, "multiplication");
+    }
+
+    long long checkedDiv(long long left, long long right)
+    {
+        if (right == 0)
+        {
+            throw runtime_error("division by zero");
+        }
+        if (left == IC_INT_MIN && right == -1)
+        {
+            throw runtime_error("Integer Overflow in division");
+        }
+        return ensureIntegerRange(left / right, "division");
+    }
+
+    long long checkedMod(long long left, long long right)
+    {
+        if (right == 0)
+        {
+            throw runtime_error("modulo by zero");
+        }
+        if (left == IC_INT_MIN && right == -1)
+        {
+            throw runtime_error("Integer Overflow in modulo");
+        }
+        return ensureIntegerRange(left % right, "modulo");
+    }
+
+    long long checkedNeg(long long number)
+    {
+        if (number == IC_INT_MIN)
+        {
+            throw runtime_error("Integer Overflow in negation");
+        }
+        return ensureIntegerRange(-number, "negation");
+    }
+
+    void validateStackValue(const ICValue& value)
+    {
+        if (value.type == ICValueType::Integer && !value.isAddress)
+        {
+            toInteger(value);
+        }
+        else if (value.type == ICValueType::Real)
+        {
+            toReal(value);
+        }
     }
 
     string outputText(const ICValue& value)
@@ -153,6 +284,40 @@ namespace
         }
 
         return index;
+    }
+
+    bool isProtectedFrameMetadataAddress(const vector<StackFrame>& callStack, size_t address)
+    {
+        for (const StackFrame& frame : callStack)
+        {
+            size_t protectedSlots = frame.frameSize < 3 ? frame.frameSize : 3;
+            if (address >= frame.basePointer && address < frame.basePointer + protectedSlots)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void validateAddressRange(const ICValue& addressValue, size_t address)
+    {
+        if (!addressValue.isAddress)
+        {
+            throw runtime_error("Memory Access Out of Bounds: indirect access requires an address");
+        }
+
+        long long rawAddress = static_cast<long long>(address);
+        if (rawAddress < addressValue.addressBase || rawAddress >= addressValue.addressLimit)
+        {
+            throw runtime_error("Memory Access Out of Bounds: address " + to_string(rawAddress) +
+                                " is outside allocated range [" + to_string(addressValue.addressBase) +
+                                ", " + to_string(addressValue.addressLimit) + ")");
+        }
+    }
+
+    bool labelsFunction(const string& label)
+    {
+        return label.size() >= 2 && label[0] == 'F' && label[1] == '_';
     }
 }
 
@@ -280,22 +445,32 @@ void Interpreter::buildLabelMap()
         const string& label = instruction.operand.label;
         if (labelMap.find(label) != labelMap.end())
         {
-            throw runtime_error("duplicate label: " + label);
+            throw runtime_error("Duplicate label: " + label);
         }
         labelMap[label] = i;
     }
 }
 
-void Interpreter::pushFrame(int level, int frameSize, int returnAddress, int staticLink, int dynamicLink)
+void Interpreter::pushFrame(int level, int frameSize, int returnAddress, int staticLink, int dynamicLink, int argumentCount, bool expectsReturnValue)
 {
     if (callStack.size() >= maxCallDepth)
     {
-        throw runtime_error("stack overflow: maximum call depth exceeded");
+        throw runtime_error("Stack Overflow: maximum call depth exceeded");
     }
 
     if (frameSize < 0)
     {
         throw runtime_error("negative frame size: " + to_string(frameSize));
+    }
+
+    if (argumentCount < 0)
+    {
+        throw runtime_error("negative argument count: " + to_string(argumentCount));
+    }
+
+    if (evalStack.size() < static_cast<size_t>(argumentCount))
+    {
+        throw runtime_error("Stack Underflow: missing call arguments");
     }
 
     StackFrame frame;
@@ -305,6 +480,9 @@ void Interpreter::pushFrame(int level, int frameSize, int returnAddress, int sta
     frame.dynamicLink = dynamicLink;
     frame.basePointer = memory.size();
     frame.frameSize = static_cast<size_t>(frameSize);
+    frame.evalStackBase = evalStack.size() - static_cast<size_t>(argumentCount);
+    frame.argumentCount = argumentCount;
+    frame.expectsReturnValue = expectsReturnValue;
 
     callStack.push_back(frame);
 
@@ -324,18 +502,38 @@ void Interpreter::popFrame()
 {
     if (callStack.empty())
     {
-        throw runtime_error("stack underflow: no frame to return from");
+        throw runtime_error("Stack Underflow: no frame to return from");
     }
 
     StackFrame frame = callStack.back();
+
+    if (frame.basePointer > memory.size())
+    {
+        throw runtime_error("Stack Corruption: invalid frame base pointer");
+    }
+
+    if (frame.frameSize > memory.size() - frame.basePointer)
+    {
+        throw runtime_error("Stack Corruption: invalid frame extent");
+    }
+
+    if (frame.frameSize > 0 && toRawInteger(memory[frame.basePointer]) != frame.staticLink)
+    {
+        throw runtime_error("Stack Corruption: static link was overwritten");
+    }
+    if (frame.frameSize > 1 && toRawInteger(memory[frame.basePointer + 1]) != frame.dynamicLink)
+    {
+        throw runtime_error("Stack Corruption: dynamic link was overwritten");
+    }
+    if (frame.frameSize > 2 && toRawInteger(memory[frame.basePointer + 2]) != frame.returnAddress)
+    {
+        throw runtime_error("Stack Corruption: return address was overwritten");
+    }
+
     callStack.pop_back();
 
     if (frame.frameSize > 0)
     {
-        if (frame.basePointer > memory.size())
-        {
-            throw runtime_error("stack corruption: invalid frame base pointer");
-        }
         memory.resize(frame.basePointer);
     }
 
@@ -347,7 +545,7 @@ ICValue Interpreter::popValue()
 {
     if (evalStack.empty())
     {
-        throw runtime_error("stack underflow: operand stack is empty");
+        throw runtime_error("Stack Underflow: operand stack is empty");
     }
 
     ICValue value = evalStack.back();
@@ -360,9 +558,10 @@ void Interpreter::pushValue(const ICValue& value)
 {
     if (evalStack.size() >= maxEvalStackSize)
     {
-        throw runtime_error("stack overflow: operand stack limit exceeded");
+        throw runtime_error("Stack Overflow: operand stack limit exceeded");
     }
 
+    validateStackValue(value);
     evalStack.push_back(value);
     sp = evalStack.size();
 }
@@ -410,7 +609,7 @@ string Interpreter::readLabelOperand(const IntermediateInstruction& instruction)
 
     if (labelMap.find(instruction.operand.label) == labelMap.end())
     {
-        throw runtime_error("label not found: " + instruction.operand.label);
+        throw runtime_error("Label not found: " + instruction.operand.label);
     }
 
     return instruction.operand.label;
@@ -432,6 +631,10 @@ void Interpreter::storeAtAddress(int level, int address, const ICValue& value)
     {
         throw runtime_error("negative memory address: " + to_string(address));
     }
+    if (address < 3)
+    {
+        throw runtime_error("Stack Smashing: cannot write stack frame metadata");
+    }
 
     size_t frameIndex = frameIndexForLevel(callStack, level);
     const StackFrame& frame = callStack[frameIndex];
@@ -439,13 +642,13 @@ void Interpreter::storeAtAddress(int level, int address, const ICValue& value)
 
     if (relativeAddress >= frame.frameSize)
     {
-        throw runtime_error("memory access out of bounds at address " + to_string(address));
+        throw runtime_error("Memory Access Out of Bounds at address " + to_string(address));
     }
 
     size_t absoluteAddress = frame.basePointer + relativeAddress;
     if (absoluteAddress >= memory.size())
     {
-        throw runtime_error("memory access out of bounds at address " + to_string(absoluteAddress));
+        throw runtime_error("Memory Access Out of Bounds at address " + to_string(absoluteAddress));
     }
 
     memory[absoluteAddress] = value;
@@ -464,13 +667,13 @@ ICValue Interpreter::loadAtAddress(int level, int address) const
 
     if (relativeAddress >= frame.frameSize)
     {
-        throw runtime_error("memory access out of bounds at address " + to_string(address));
+        throw runtime_error("Memory Access Out of Bounds at address " + to_string(address));
     }
 
     size_t absoluteAddress = frame.basePointer + relativeAddress;
     if (absoluteAddress >= memory.size())
     {
-        throw runtime_error("memory access out of bounds at address " + to_string(absoluteAddress));
+        throw runtime_error("Memory Access Out of Bounds at address " + to_string(absoluteAddress));
     }
 
     const ICValue& value = memory[absoluteAddress];
@@ -496,7 +699,7 @@ void Interpreter::executeInt(const IntermediateInstruction& instruction)
 
     if (callStack.empty() || callStack.back().frameSize != 0)
     {
-        pushFrame(instruction.level, frameSize, -1, -1, -1);
+        pushFrame(instruction.level, frameSize, -1, -1, -1, 0, false);
         return;
     }
 
@@ -534,12 +737,14 @@ void Interpreter::executeLoadAddress(const IntermediateInstruction& instruction)
     size_t frameIndex = frameIndexForLevel(callStack, instruction.level);
     const StackFrame& frame = callStack[frameIndex];
     size_t relativeAddress = static_cast<size_t>(address);
-    if (relativeAddress >= frame.frameSize)
+    size_t span = instruction.operand.addressSpan > 0 ? static_cast<size_t>(instruction.operand.addressSpan) : 1;
+    if (relativeAddress >= frame.frameSize || span > frame.frameSize - relativeAddress)
     {
-        throw runtime_error("memory access out of bounds at address " + to_string(address));
+        throw runtime_error("Memory Access Out of Bounds at address " + to_string(address));
     }
 
-    pushValue(makeInteger(static_cast<long long>(frame.basePointer + relativeAddress)));
+    long long absoluteAddress = static_cast<long long>(frame.basePointer + relativeAddress);
+    pushValue(makeAddress(absoluteAddress, absoluteAddress, absoluteAddress + static_cast<long long>(span)));
 }
 
 void Interpreter::executeLoad(const IntermediateInstruction& instruction)
@@ -549,11 +754,13 @@ void Interpreter::executeLoad(const IntermediateInstruction& instruction)
 
 void Interpreter::executeIndirectLoad()
 {
-    size_t address = toAddress(popValue());
+    ICValue addressValue = popValue();
+    size_t address = toAddress(addressValue);
     if (address >= memory.size())
     {
-        throw runtime_error("memory access out of bounds at address " + to_string(address));
+        throw runtime_error("Memory Access Out of Bounds at address " + to_string(address));
     }
+    validateAddressRange(addressValue, address);
 
     const ICValue& value = memory[address];
     requireInitialized(value, " at address " + to_string(address));
@@ -569,10 +776,16 @@ void Interpreter::executeStore(const IntermediateInstruction& instruction)
 void Interpreter::executeIndirectStore()
 {
     ICValue value = popValue();
-    size_t address = toAddress(popValue());
+    ICValue addressValue = popValue();
+    size_t address = toAddress(addressValue);
     if (address >= memory.size())
     {
-        throw runtime_error("memory access out of bounds at address " + to_string(address));
+        throw runtime_error("Memory Access Out of Bounds at address " + to_string(address));
+    }
+    validateAddressRange(addressValue, address);
+    if (isProtectedFrameMetadataAddress(callStack, address))
+    {
+        throw runtime_error("Stack Smashing: cannot write stack frame metadata");
     }
 
     memory[address] = value;
@@ -594,11 +807,11 @@ void Interpreter::executeArithmetic(const IntermediateInstruction& instruction)
 
         if (realResult)
         {
-            pushValue(makeReal(toReal(left) / denominator));
+            pushValue(makeReal(ensureFiniteReal(toReal(left) / denominator, "division")));
         }
         else
         {
-            pushValue(makeInteger(toInteger(left) / toInteger(right)));
+            pushValue(makeInteger(checkedDiv(toInteger(left), toInteger(right))));
         }
         return;
     }
@@ -608,20 +821,36 @@ void Interpreter::executeArithmetic(const IntermediateInstruction& instruction)
         double leftNumber = toReal(left);
         double rightNumber = toReal(right);
 
-        if (instruction.opcode == ICOpCode::Add) pushValue(makeReal(leftNumber + rightNumber));
-        else if (instruction.opcode == ICOpCode::Sub) pushValue(makeReal(leftNumber - rightNumber));
-        else if (instruction.opcode == ICOpCode::Mul) pushValue(makeReal(leftNumber * rightNumber));
+        if (instruction.opcode == ICOpCode::Add) pushValue(makeReal(ensureFiniteReal(leftNumber + rightNumber, "addition")));
+        else if (instruction.opcode == ICOpCode::Sub) pushValue(makeReal(ensureFiniteReal(leftNumber - rightNumber, "subtraction")));
+        else if (instruction.opcode == ICOpCode::Mul) pushValue(makeReal(ensureFiniteReal(leftNumber * rightNumber, "multiplication")));
         else throw runtime_error("unsupported arithmetic instruction");
     }
     else
     {
         long long leftNumber = toInteger(left);
         long long rightNumber = toInteger(right);
+        long long result = 0;
 
-        if (instruction.opcode == ICOpCode::Add) pushValue(makeInteger(leftNumber + rightNumber));
-        else if (instruction.opcode == ICOpCode::Sub) pushValue(makeInteger(leftNumber - rightNumber));
-        else if (instruction.opcode == ICOpCode::Mul) pushValue(makeInteger(leftNumber * rightNumber));
+        if (instruction.opcode == ICOpCode::Add) result = checkedAdd(leftNumber, rightNumber);
+        else if (instruction.opcode == ICOpCode::Sub) result = checkedSub(leftNumber, rightNumber);
+        else if (instruction.opcode == ICOpCode::Mul) result = checkedMul(leftNumber, rightNumber);
         else throw runtime_error("unsupported arithmetic instruction");
+
+        if (instruction.opcode == ICOpCode::Add && left.isAddress != right.isAddress)
+        {
+            const ICValue& source = left.isAddress ? left : right;
+            pushValue(makeAddress(result, source.addressBase, source.addressLimit));
+            return;
+        }
+
+        if (instruction.opcode == ICOpCode::Sub && left.isAddress && !right.isAddress)
+        {
+            pushValue(makeAddress(result, left.addressBase, left.addressLimit));
+            return;
+        }
+
+        pushValue(makeInteger(result));
     }
 }
 
@@ -645,8 +874,8 @@ void Interpreter::executeOperation(const IntermediateInstruction& instruction)
     if (operation == ICOperation::Neg)
     {
         ICValue value = popValue();
-        if (isRealValue(value)) pushValue(makeReal(-toReal(value)));
-        else pushValue(makeInteger(-toInteger(value)));
+        if (isRealValue(value)) pushValue(makeReal(ensureFiniteReal(-toReal(value), "negation")));
+        else pushValue(makeInteger(checkedNeg(toInteger(value))));
         return;
     }
 
@@ -654,12 +883,7 @@ void Interpreter::executeOperation(const IntermediateInstruction& instruction)
     {
         ICValue right = popValue();
         ICValue left = popValue();
-        long long denominator = toInteger(right);
-        if (denominator == 0)
-        {
-            throw runtime_error("modulo by zero");
-        }
-        pushValue(makeInteger(toInteger(left) % denominator));
+        pushValue(makeInteger(checkedMod(toInteger(left), toInteger(right))));
         return;
     }
 
@@ -735,7 +959,7 @@ void Interpreter::executeCall(const IntermediateInstruction& instruction)
 {
     string label = readLabelOperand(instruction);
     int currentFrameIndex = callStack.empty() ? -1 : static_cast<int>(callStack.size() - 1);
-    pushFrame(instruction.level, 0, static_cast<int>(pc), currentFrameIndex, currentFrameIndex);
+    pushFrame(instruction.level, 0, static_cast<int>(pc), currentFrameIndex, currentFrameIndex, instruction.argumentCount, labelsFunction(label));
     pc = labelMap.at(label);
 }
 
@@ -743,11 +967,29 @@ void Interpreter::executeReturn(const IntermediateInstruction&)
 {
     if (callStack.empty())
     {
-        pc = program == nullptr ? 0 : program->size();
-        return;
+        throw runtime_error("Stack Underflow: no frame to return from");
     }
 
-    int returnAddress = callStack.back().returnAddress;
+    const StackFrame& frame = callStack.back();
+    int returnAddress = frame.returnAddress;
+    size_t maxResultCount = frame.expectsReturnValue ? 1 : 0;
+    size_t maxExpectedStackSize = frame.evalStackBase + maxResultCount;
+
+    if (evalStack.size() < frame.evalStackBase)
+    {
+        throw runtime_error("Stack Corruption: operand stack below frame base");
+    }
+
+    if (evalStack.size() > maxExpectedStackSize)
+    {
+        throw runtime_error("Stack Corruption: operand stack has leftover values at return");
+    }
+
+    if (returnAddress >= 0 && (program == nullptr || static_cast<size_t>(returnAddress) >= program->size()))
+    {
+        throw runtime_error("Stack Corruption: invalid return address");
+    }
+
     popFrame();
 
     if (returnAddress < 0)

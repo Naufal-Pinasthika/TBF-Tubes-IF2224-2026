@@ -122,6 +122,14 @@ void CodeGenerator::collectDeclarations(const vector<DeclarationNode*>& declarat
             collectDeclarations(procDecl->declarations);
         } else if (auto funcDecl = dynamic_cast<FunctionDeclNode*>(declaration)){
             int nextAddress = 3;
+            int returnSlot = nextAddress;
+            addressByTabIndex[funcDecl->tabIndex] = returnSlot;
+            if (symbols != nullptr){
+                addressByNameByBlock[funcDecl->btabIndex][symbols->toUpper(funcDecl->name)] = returnSlot;
+            }
+            TabEntry* functionEntry = symbols != nullptr ? symbols->getTab(funcDecl->tabIndex) : nullptr;
+            nextAddress += functionEntry != nullptr ? typeSize(functionEntry->type, functionEntry->ref) : 1;
+
             for (VarDeclNode* parameter : funcDecl->parameters){
                 for (size_t i = 0; i < parameter->tabIndices.size(); ++i){
                     int tabIndex = parameter->tabIndices[i];
@@ -269,6 +277,12 @@ void CodeGenerator::emitAddress(ExpressionNode* node) {
         instruction.level = 0;
         instruction.operand.kind = ICOperandKind::Address;
         instruction.operand.address = addressOf(var);
+        if (symbols != nullptr) {
+            TabEntry* entry = symbols->getTab(var->tabIndex);
+            if (entry != nullptr) {
+                instruction.operand.addressSpan = typeSize(entry->type, entry->ref);
+            }
+        }
         program.add(instruction);
     } else if (auto access = dynamic_cast<ArrayAccessNode*>(node)){
         emitAddress(access->array);
@@ -507,6 +521,13 @@ void CodeGenerator::emitDeclaration(DeclarationNode* node) {
 
         emitParameterStores(funcDecl->parameters);
         emitStatement(funcDecl->body);
+
+        IntermediateInstruction loadReturnValue;
+        loadReturnValue.opcode = ICOpCode::Lod;
+        loadReturnValue.level = 0;
+        loadReturnValue.operand.kind = ICOperandKind::Address;
+        loadReturnValue.operand.address = addressOf(funcDecl->tabIndex);
+        program.add(loadReturnValue);
 
         IntermediateInstruction ret;
         ret.opcode = ICOpCode::Ret;
@@ -823,6 +844,7 @@ void CodeGenerator::emitCall(CallNode* node) {
     IntermediateInstruction instruction;
     instruction.opcode = ICOpCode::Cal;
     instruction.level = 0;
+    instruction.argumentCount = static_cast<int>(node->arguments.size());
     instruction.operand.kind = ICOperandKind::Label;
     instruction.operand.label = "P_" + to_string(node->tabIndex);
     program.add(instruction);
@@ -916,6 +938,7 @@ void CodeGenerator::emitCallExpr(ProcedureFunctionCallNode* node) {
     IntermediateInstruction instruction;
     instruction.opcode = ICOpCode::Cal;
     instruction.level = 0;
+    instruction.argumentCount = static_cast<int>(node->arguments.size());
     instruction.operand.kind = ICOperandKind::Label;
     instruction.operand.label = "F_" + to_string(node->tabIndex);
     program.add(instruction);

@@ -1,0 +1,15 @@
+program StackSmashingTest;
+
+var
+    nums: array[1..2] of Integer;
+    i, total, n: Integer;
+
+begin
+    i := 1;
+    n := 8;
+    while i <= n do
+        begin
+            writeln(nums[i]);
+            i := i + 1;
+        end;
+end.

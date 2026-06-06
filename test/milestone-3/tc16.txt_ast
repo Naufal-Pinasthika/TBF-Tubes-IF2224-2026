@@ -1,0 +1,75 @@
+tab:
+idx  id            obj         type   ref   nrm   lev   adr   link
+-------------------------------------------------------------
+0    NULL          none        0      0     0     0     0     0
+1    AND           none        0      0     0     0     0     0
+2    ARRAY         none        0      0     0     0     0     0
+3    BEGIN         none        0      0     0     0     0     0
+4    CASE          none        0      0     0     0     0     0
+5    CONST         none        0      0     0     0     0     0
+6    DIV           none        0      0     0     0     0     0
+7    DOWNTO        none        0      0     0     0     0     0
+8    DO            none        0      0     0     0     0     0
+9    ELSE          none        0      0     0     0     0     0
+10   END           none        0      0     0     0     0     0
+11   FOR           none        0      0     0     0     0     0
+12   FUNCTION      none        0      0     0     0     0     0
+13   IF            none        0      0     0     0     0     0
+14   MOD           none        0      0     0     0     0     0
+15   NOT           none        0      0     0     0     0     0
+16   OF            none        0      0     0     0     0     0
+17   OR            none        0      0     0     0     0     0
+18   PROCEDURE     none        0      0     0     0     0     0
+19   PROGRAM       none        0      0     0     0     0     0
+20   RECORD        none        0      0     0     0     0     0
+21   REPEAT        none        0      0     0     0     0     0
+22   INTEGER       type        1      0     1     0     0     0
+23   REAL          type        2      0     1     0     0     22
+24   BOOLEAN       type        4      0     1     0     0     23
+25   CHAR          type        3      0     1     0     0     24
+26   STRING        type        5      0     1     0     0     25
+27   THEN          none        0      0     0     0     0     0
+28   TO            none        0      0     0     0     0     0
+29   TYPE          none        0      0     0     0     0     0
+30   UNTIL         none        0      0     0     0     0     0
+31   VAR           none        0      0     0     0     0     0
+32   WHILE         none        0      0     0     0     0     0
+33   TRUE          constant    4      0     1     0     1     26
+34   FALSE         constant    4      0     1     0     0     33
+35   WRITE         procedure   0      0     1     0     0     34
+36   WRITELN       procedure   0      0     1     0     0     35
+37   READ          procedure   0      0     1     0     0     36
+38   READLN        procedure   0      0     1     0     0     37
+39   ArrayHighOutOfBoundsBonusprogram     0      0     1     0     0     38
+40   nums          variable    6      1     1     0     0     39
+41   i             variable    1      0     1     0     0     40
+
+btab:
+idx  last   lpar   psze   vsze
+-----------------------------
+0    41     0      0      2
+1    0      0      0      0
+
+atab:
+idx  xtyp   etyp   eref   low    high   elsz   size
+------------------------------------------------
+1    8      1      0      1      3      1      3
+
+Decorated AST:
+ProgramNode(name: 'ArrayHighOutOfBoundsBonus') -> tab_index:39, lev:0
+├── Declarations
+│   ├── VarDecl('nums') -> tab_index:40, type:array, array_index:1, lev:0
+│   └── VarDecl('i') -> tab_index:41, type:integer, lev:0
+└── Block -> block_index:1, lev:1
+    ├── Assign('nums'[4] := 99) -> type:void
+    │   ├── target 'nums'[4] -> type:integer
+    │   └── value 99 -> type:integer
+    ├── Assign('i' := - 10) -> type:void
+    │   ├── target 'i' -> tab_index:41, type:integer, lev:0
+    │   └── value UnaryOp '-' -> type:integer
+    │       └── 10 -> type:integer
+    ├── Assign('i' := 'nums'[99]) -> type:void
+    │   ├── target 'i' -> tab_index:41, type:integer, lev:0
+    │   └── value 'nums'[99] -> type:integer
+    └── writeln(...) -> predefined, tab_index:36, lev:0
+        └── argument 'i' -> tab_index:41, type:integer, lev:0

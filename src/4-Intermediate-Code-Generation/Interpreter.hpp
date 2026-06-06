@@ -17,6 +17,9 @@ struct StackFrame
     int dynamicLink = -1;
     size_t basePointer = 0;
     size_t frameSize = 0;
+    size_t evalStackBase = 0;
+    int argumentCount = 0;
+    bool expectsReturnValue = false;
 };
 
 class Interpreter
@@ -34,7 +37,7 @@ private:
     size_t maxCallDepth = 1000;
 
     void buildLabelMap();
-    void pushFrame(int level, int frameSize, int returnAddress, int staticLink, int dynamicLink);
+    void pushFrame(int level, int frameSize, int returnAddress, int staticLink, int dynamicLink, int argumentCount, bool expectsReturnValue);
     void popFrame();
 
     ICValue popValue();
