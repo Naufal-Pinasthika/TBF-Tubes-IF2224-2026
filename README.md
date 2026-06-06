@@ -63,7 +63,7 @@ INPUT_FILE berupa nama _file_ (bukan _path_) yang berisi kode sumber berbahasa A
 ### _Intermediate Code Generation & Interpreter_
 Nama | NIM | Workload | Persentase
 --- | --- | --- | ---
-Faiq Azzam Nafidz | 13524003 |  |  | 
-Anindya Naufal Pinasthika | 13524013 |  |  |
-Mahmudia Kimdaro Amin | 13524083 |  |  | 
-Jingglang Galih Rinenggan | 13524095 |  |  | 
+Faiq Azzam Nafidz | 13524003 | Intermediate Code Generation (parsial), Interpreter (parsial), Laporan (Teori Singkat [parsial], Perancangan & Implementasi, Kesimpulan dan Saran), README.md | 32.5% | 
+Anindya Naufal Pinasthika | 13524013 | Intermediate Code Generation, Interpreter, I/O chaining, AST parser, Laporan (Teori Singkat [parsial]) | 37.5% |
+Mahmudia Kimdaro Amin | 13524083 | Intermediate Code Generation (parsial), Interpreter (parsial), Testing, Laporan (Pengujian) | 20% | 
+Jingglang Galih Rinenggan | 13524095 | Intermediate Code Generation (parsial), Interpreter (parsial) | 10% | 
