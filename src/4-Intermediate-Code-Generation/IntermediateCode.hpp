@@ -25,7 +25,7 @@ enum class ICOpCode
     Jpc, // val=pop; if val==0 then PC=l
     Cal, // save context (PC, BP)
     Ret, // restore context
-    Int, // allocate memory frame of size m
+    Int, // SP = SP + m
     Label // define a jump/call target
 };
 

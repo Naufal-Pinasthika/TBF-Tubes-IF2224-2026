@@ -13,10 +13,15 @@ namespace
 {
     ICValue defaultValue()
     {
-        ICValue value;
-        value.type = ICValueType::Integer;
-        value.text = "0";
-        return value;
+        return ICValue{};
+    }
+
+    void requireInitialized(const ICValue& value, const string& context)
+    {
+        if (value.type == ICValueType::None)
+        {
+            throw runtime_error("uninitialized value access" + context);
+        }
     }
 
     string formatReal(double value)
@@ -75,6 +80,7 @@ namespace
 
     double toReal(const ICValue& value)
     {
+        requireInitialized(value, "");
         if (value.text.empty()) return 0.0;
 
         try
@@ -89,6 +95,7 @@ namespace
 
     long long toInteger(const ICValue& value)
     {
+        requireInitialized(value, "");
         if (value.text.empty()) return 0;
 
         try
@@ -114,6 +121,7 @@ namespace
 
     string outputText(const ICValue& value)
     {
+        requireInitialized(value, "");
         if (value.type == ICValueType::Boolean)
         {
             return toInteger(value) == 0 ? "false" : "true";
@@ -465,12 +473,15 @@ ICValue Interpreter::loadAtAddress(int level, int address) const
         throw runtime_error("memory access out of bounds at address " + to_string(absoluteAddress));
     }
 
-    return memory[absoluteAddress];
+    const ICValue& value = memory[absoluteAddress];
+    requireInitialized(value, " at address " + to_string(address));
+    return value;
 }
 
 bool Interpreter::isTruthy(const ICValue& value) const
 {
-    if (value.type == ICValueType::None || value.text.empty()) return false;
+    requireInitialized(value, "");
+    if (value.text.empty()) return false;
     if (isNumericValue(value)) return toReal(value) != 0.0;
     return value.text != "false" && value.text != "FALSE";
 }
@@ -544,7 +555,9 @@ void Interpreter::executeIndirectLoad()
         throw runtime_error("memory access out of bounds at address " + to_string(address));
     }
 
-    pushValue(memory[address]);
+    const ICValue& value = memory[address];
+    requireInitialized(value, " at address " + to_string(address));
+    pushValue(value);
 }
 
 void Interpreter::executeStore(const IntermediateInstruction& instruction)
