@@ -1,0 +1,5 @@
+program IntegerOverflowBonus;
+
+begin
+    writeln(2147483647 + 1)
+end.

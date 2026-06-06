@@ -1,0 +1,9 @@
+program ArrayLowOutOfBoundsBonus;
+
+var
+    nums: array[1..3] of Integer;
+
+begin
+    nums[0] := 99;
+    writeln(nums[0])
+end.
