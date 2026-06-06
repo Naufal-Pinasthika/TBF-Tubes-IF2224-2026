@@ -4,19 +4,19 @@
 
 using namespace std;
 
-string TacOperand::toString() const
+string ICOperand::toString() const
 {
     switch (kind)
     {
-        case TacOperandKind::None:
+        case ICOperandKind::None:
             return "";
-        case TacOperandKind::Literal:
+        case ICOperandKind::Literal:
             return literal.text;
-        case TacOperandKind::Address:
+        case ICOperandKind::Address:
             return to_string(address);
-        case TacOperandKind::Label:
+        case ICOperandKind::Label:
             return label;
-        case TacOperandKind::Operation:
+        case ICOperandKind::Operation:
             return to_string(static_cast<int>(operationCode));
     }
 
@@ -27,55 +27,55 @@ string IntermediateInstruction::toString() const {
     string text;
     switch (opcode)
     {
-        case TacOpcode::Lit:
+        case ICOpCode::Lit:
             text = "LIT " + to_string(level) + " " + operand.toString();
             break;
-        case TacOpcode::Lda:
+        case ICOpCode::Lda:
             text = "LDA " + to_string(level) + " " + operand.toString();
             break;
-        case TacOpcode::Lod:
+        case ICOpCode::Lod:
             text = "LOD " + to_string(level) + " " + operand.toString();
             break;
-        case TacOpcode::Ldi:
+        case ICOpCode::Ldi:
             text = "LDI";
             break;
-        case TacOpcode::Sto:
+        case ICOpCode::Sto:
             text = "STO " + to_string(level) + " " + operand.toString();
             break;
-        case TacOpcode::Sti:
+        case ICOpCode::Sti:
             text = "STI";
             break;
-        case TacOpcode::Add:
+        case ICOpCode::Add:
             text = "ADD";
             break;
-        case TacOpcode::Sub:
+        case ICOpCode::Sub:
             text = "SUB";
             break;
-        case TacOpcode::Mul:
+        case ICOpCode::Mul:
             text = "MUL";
             break;
-        case TacOpcode::Div:
+        case ICOpCode::Div:
             text = "DIV";
             break;
-        case TacOpcode::Opr:
+        case ICOpCode::Opr:
             text = "OPR " + to_string(level) + " " + operand.toString();
             break;
-        case TacOpcode::Jmp:
+        case ICOpCode::Jmp:
             text = "JMP " + to_string(level) + " " + operand.toString();
             break;
-        case TacOpcode::Jpc:
+        case ICOpCode::Jpc:
             text = "JPC " + to_string(level) + " " + operand.toString();
             break;
-        case TacOpcode::Cal:
+        case ICOpCode::Cal:
             text = "CAL " + to_string(level) + " " + operand.toString();
             break;
-        case TacOpcode::Ret:
+        case ICOpCode::Ret:
             text = "RET";
             break;
-        case TacOpcode::Int:
+        case ICOpCode::Int:
             text = "INT " + to_string(level) + " " + operand.toString();
             break;
-        case TacOpcode::Label:
+        case ICOpCode::Label:
             if (operand.toString().empty()){
                 text = "LABEL";
             } else { 
@@ -87,35 +87,35 @@ string IntermediateInstruction::toString() const {
     return text;
 }
 
-const vector<IntermediateInstruction>& TacProgram::getInstructions() const {
+const vector<IntermediateInstruction>& ICProgram::getInstructions() const {
     return instructions;
 }
 
-vector<IntermediateInstruction>& TacProgram::getInstructions() {
+vector<IntermediateInstruction>& ICProgram::getInstructions() {
     return instructions;
 }
 
-void TacProgram::add(const IntermediateInstruction& instruction) {
+void ICProgram::add(const IntermediateInstruction& instruction) {
     instructions.push_back(instruction);
 }
 
-size_t TacProgram::size() const {
+size_t ICProgram::size() const {
     return instructions.size();
 }
 
-bool TacProgram::empty() const {
+bool ICProgram::empty() const {
     return instructions.empty();
 }
 
-const IntermediateInstruction& TacProgram::at(size_t index) const {
+const IntermediateInstruction& ICProgram::at(size_t index) const {
     return instructions.at(index);
 }
 
-void TacProgram::clear() {
+void ICProgram::clear() {
     instructions.clear();
 }
 
-void TacProgram::print(ostream& out) const {
+void ICProgram::print(ostream& out) const {
     for (size_t i = 0; i < instructions.size(); ++i){
         out << i << " " << instructions[i].toString() << '\n';
     }

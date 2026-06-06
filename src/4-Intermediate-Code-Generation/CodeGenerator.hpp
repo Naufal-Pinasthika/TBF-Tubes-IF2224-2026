@@ -13,14 +13,14 @@ using namespace std;
 class CodeGenerator
 {
 private:
-    TacProgram program;
+    ICProgram program;
     SymbolTable* symbols = nullptr;
     int nextLabelId = 0;
     int currentBlockIndex = 0;
     unordered_map<int, int> addressByTabIndex;
     unordered_map<int, unordered_map<string, int>> addressByNameByBlock;
     unordered_map<int, int> frameSizeByBlockIndex;
-    unordered_map<int, TacValue> constantByTabIndex;
+    unordered_map<int, ICValue> constantByTabIndex;
 
     string newLabel(const string& prefix = "L");
 
@@ -39,7 +39,7 @@ private:
     void emitAddress(ExpressionNode* node);
     void emitExpression(ExpressionNode* node);
     void emitLValue(ExpressionNode* node);
-    void emitOperation(TacOperation operation);
+    void emitOperation(ICOperation operation);
     void emitStatement(StatementNode* node);
     void emitDeclaration(DeclarationNode* node);
     void emitProgram(ProgramNode* node);
@@ -64,7 +64,7 @@ private:
 public:
     CodeGenerator() = default;
 
-    const TacProgram& generate(ProgramNode* root, SymbolTable& symbols);
-    const TacProgram& getProgram() const;
+    const ICProgram& generate(ProgramNode* root, SymbolTable& symbols);
+    const ICProgram& getProgram() const;
     void reset();
 };

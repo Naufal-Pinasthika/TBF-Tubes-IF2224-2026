@@ -381,7 +381,7 @@ int main(int argc, char* argv[])
     }
 
     CodeGenerator generator;
-    const TacProgram& program = generator.generate(ast, *symbolTable);
+    const ICProgram& program = generator.generate(ast, *symbolTable);
 
     if (target == TargetStage::Intermediate) {
         program.print(cout);

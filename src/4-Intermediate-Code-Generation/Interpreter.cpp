@@ -11,10 +11,10 @@ using namespace std;
 
 namespace
 {
-    TacValue defaultValue()
+    ICValue defaultValue()
     {
-        TacValue value;
-        value.type = TacValueType::Integer;
+        ICValue value;
+        value.type = ICValueType::Integer;
         value.text = "0";
         return value;
     }
@@ -37,43 +37,43 @@ namespace
         return text == "-0" ? "0" : text;
     }
 
-    TacValue makeInteger(long long number)
+    ICValue makeInteger(long long number)
     {
-        TacValue value;
-        value.type = TacValueType::Integer;
+        ICValue value;
+        value.type = ICValueType::Integer;
         value.text = to_string(number);
         return value;
     }
 
-    TacValue makeReal(double number)
+    ICValue makeReal(double number)
     {
-        TacValue value;
-        value.type = TacValueType::Real;
+        ICValue value;
+        value.type = ICValueType::Real;
         value.text = formatReal(number);
         return value;
     }
 
-    TacValue makeBoolean(bool boolean)
+    ICValue makeBoolean(bool boolean)
     {
-        TacValue value;
-        value.type = TacValueType::Boolean;
+        ICValue value;
+        value.type = ICValueType::Boolean;
         value.text = boolean ? "1" : "0";
         return value;
     }
 
-    bool isNumericValue(const TacValue& value)
+    bool isNumericValue(const ICValue& value)
     {
-        return value.type == TacValueType::Integer ||
-               value.type == TacValueType::Real ||
-               value.type == TacValueType::Boolean;
+        return value.type == ICValueType::Integer ||
+               value.type == ICValueType::Real ||
+               value.type == ICValueType::Boolean;
     }
 
-    bool isRealValue(const TacValue& value)
+    bool isRealValue(const ICValue& value)
     {
-        return value.type == TacValueType::Real;
+        return value.type == ICValueType::Real;
     }
 
-    double toReal(const TacValue& value)
+    double toReal(const ICValue& value)
     {
         if (value.text.empty()) return 0.0;
 
@@ -87,7 +87,7 @@ namespace
         }
     }
 
-    long long toInteger(const TacValue& value)
+    long long toInteger(const ICValue& value)
     {
         if (value.text.empty()) return 0;
 
@@ -101,7 +101,7 @@ namespace
         }
     }
 
-    size_t toAddress(const TacValue& value)
+    size_t toAddress(const ICValue& value)
     {
         long long address = toInteger(value);
         if (address < 0)
@@ -112,9 +112,9 @@ namespace
         return static_cast<size_t>(address);
     }
 
-    string outputText(const TacValue& value)
+    string outputText(const ICValue& value)
     {
-        if (value.type == TacValueType::Boolean)
+        if (value.type == ICValueType::Boolean)
         {
             return toInteger(value) == 0 ? "false" : "true";
         }
@@ -148,7 +148,7 @@ namespace
     }
 }
 
-void Interpreter::load(const TacProgram& program)
+void Interpreter::load(const ICProgram& program)
 {
     reset();
     this->program = &program;
@@ -169,49 +169,49 @@ void Interpreter::run()
 
         switch (instruction.opcode)
         {
-            case TacOpcode::Lit:
+            case ICOpCode::Lit:
                 executeLiteral(instruction);
                 break;
-            case TacOpcode::Lda:
+            case ICOpCode::Lda:
                 executeLoadAddress(instruction);
                 break;
-            case TacOpcode::Lod:
+            case ICOpCode::Lod:
                 executeLoad(instruction);
                 break;
-            case TacOpcode::Ldi:
+            case ICOpCode::Ldi:
                 executeIndirectLoad();
                 break;
-            case TacOpcode::Sto:
+            case ICOpCode::Sto:
                 executeStore(instruction);
                 break;
-            case TacOpcode::Sti:
+            case ICOpCode::Sti:
                 executeIndirectStore();
                 break;
-            case TacOpcode::Add:
-            case TacOpcode::Sub:
-            case TacOpcode::Mul:
-            case TacOpcode::Div:
+            case ICOpCode::Add:
+            case ICOpCode::Sub:
+            case ICOpCode::Mul:
+            case ICOpCode::Div:
                 executeArithmetic(instruction);
                 break;
-            case TacOpcode::Opr:
+            case ICOpCode::Opr:
                 executeOperation(instruction);
                 break;
-            case TacOpcode::Jmp:
+            case ICOpCode::Jmp:
                 executeJump(instruction);
                 break;
-            case TacOpcode::Jpc:
+            case ICOpCode::Jpc:
                 executeConditionalJump(instruction);
                 break;
-            case TacOpcode::Cal:
+            case ICOpCode::Cal:
                 executeCall(instruction);
                 break;
-            case TacOpcode::Ret:
+            case ICOpCode::Ret:
                 executeReturn(instruction);
                 break;
-            case TacOpcode::Int:
+            case ICOpCode::Int:
                 executeInt(instruction);
                 break;
-            case TacOpcode::Label:
+            case ICOpCode::Label:
                 break;
         }
     }
@@ -229,7 +229,7 @@ void Interpreter::reset()
     sp = 0;
 }
 
-const vector<TacValue>& Interpreter::getMemory() const
+const vector<ICValue>& Interpreter::getMemory() const
 {
     return memory;
 }
@@ -239,7 +239,7 @@ const vector<StackFrame>& Interpreter::getCallStack() const
     return callStack;
 }
 
-const vector<TacValue>& Interpreter::getEvalStack() const
+const vector<ICValue>& Interpreter::getEvalStack() const
 {
     return evalStack;
 }
@@ -266,8 +266,8 @@ void Interpreter::buildLabelMap()
     for (size_t i = 0; i < program->size(); ++i)
     {
         const IntermediateInstruction& instruction = program->at(i);
-        if (instruction.opcode != TacOpcode::Label) continue;
-        if (instruction.operand.kind != TacOperandKind::Label || instruction.operand.label.empty()) continue;
+        if (instruction.opcode != ICOpCode::Label) continue;
+        if (instruction.operand.kind != ICOperandKind::Label || instruction.operand.label.empty()) continue;
 
         const string& label = instruction.operand.label;
         if (labelMap.find(label) != labelMap.end())
@@ -335,20 +335,20 @@ void Interpreter::popFrame()
     sp = evalStack.size();
 }
 
-TacValue Interpreter::popValue()
+ICValue Interpreter::popValue()
 {
     if (evalStack.empty())
     {
         throw runtime_error("stack underflow: operand stack is empty");
     }
 
-    TacValue value = evalStack.back();
+    ICValue value = evalStack.back();
     evalStack.pop_back();
     sp = evalStack.size();
     return value;
 }
 
-void Interpreter::pushValue(const TacValue& value)
+void Interpreter::pushValue(const ICValue& value)
 {
     if (evalStack.size() >= maxEvalStackSize)
     {
@@ -359,33 +359,33 @@ void Interpreter::pushValue(const TacValue& value)
     sp = evalStack.size();
 }
 
-TacValue Interpreter::readOperand(const TacOperand& operand) const
+ICValue Interpreter::readOperand(const ICOperand& operand) const
 {
     switch (operand.kind)
     {
-        case TacOperandKind::Literal:
+        case ICOperandKind::Literal:
             return operand.literal;
-        case TacOperandKind::Address:
+        case ICOperandKind::Address:
             return makeInteger(operand.address);
-        case TacOperandKind::Operation:
+        case ICOperandKind::Operation:
             return makeInteger(static_cast<int>(operand.operationCode));
-        case TacOperandKind::Label:
+        case ICOperandKind::Label:
         {
-            TacValue value;
-            value.type = TacValueType::String;
+            ICValue value;
+            value.type = ICValueType::String;
             value.text = operand.label;
             return value;
         }
-        case TacOperandKind::None:
-            return TacValue{};
+        case ICOperandKind::None:
+            return ICValue{};
     }
 
-    return TacValue{};
+    return ICValue{};
 }
 
 int Interpreter::readAddressOperand(const IntermediateInstruction& instruction) const
 {
-    if (instruction.operand.kind != TacOperandKind::Address)
+    if (instruction.operand.kind != ICOperandKind::Address)
     {
         throw runtime_error("instruction expects address operand: " + instruction.toString());
     }
@@ -395,7 +395,7 @@ int Interpreter::readAddressOperand(const IntermediateInstruction& instruction) 
 
 string Interpreter::readLabelOperand(const IntermediateInstruction& instruction) const
 {
-    if (instruction.operand.kind != TacOperandKind::Label || instruction.operand.label.empty())
+    if (instruction.operand.kind != ICOperandKind::Label || instruction.operand.label.empty())
     {
         throw runtime_error("instruction expects label operand: " + instruction.toString());
     }
@@ -408,9 +408,9 @@ string Interpreter::readLabelOperand(const IntermediateInstruction& instruction)
     return instruction.operand.label;
 }
 
-TacOperation Interpreter::readOperationOperand(const IntermediateInstruction& instruction) const
+ICOperation Interpreter::readOperationOperand(const IntermediateInstruction& instruction) const
 {
-    if (instruction.operand.kind != TacOperandKind::Operation)
+    if (instruction.operand.kind != ICOperandKind::Operation)
     {
         throw runtime_error("instruction expects operation operand: " + instruction.toString());
     }
@@ -418,7 +418,7 @@ TacOperation Interpreter::readOperationOperand(const IntermediateInstruction& in
     return instruction.operand.operationCode;
 }
 
-void Interpreter::storeAtAddress(int level, int address, const TacValue& value)
+void Interpreter::storeAtAddress(int level, int address, const ICValue& value)
 {
     if (address < 0)
     {
@@ -443,7 +443,7 @@ void Interpreter::storeAtAddress(int level, int address, const TacValue& value)
     memory[absoluteAddress] = value;
 }
 
-TacValue Interpreter::loadAtAddress(int level, int address) const
+ICValue Interpreter::loadAtAddress(int level, int address) const
 {
     if (address < 0)
     {
@@ -468,9 +468,9 @@ TacValue Interpreter::loadAtAddress(int level, int address) const
     return memory[absoluteAddress];
 }
 
-bool Interpreter::isTruthy(const TacValue& value) const
+bool Interpreter::isTruthy(const ICValue& value) const
 {
-    if (value.type == TacValueType::None || value.text.empty()) return false;
+    if (value.type == ICValueType::None || value.text.empty()) return false;
     if (isNumericValue(value)) return toReal(value) != 0.0;
     return value.text != "false" && value.text != "FALSE";
 }
@@ -504,7 +504,7 @@ void Interpreter::executeInt(const IntermediateInstruction& instruction)
 
 void Interpreter::executeLiteral(const IntermediateInstruction& instruction)
 {
-    if (instruction.operand.kind != TacOperandKind::Literal)
+    if (instruction.operand.kind != ICOperandKind::Literal)
     {
         throw runtime_error("LIT expects literal operand");
     }
@@ -549,13 +549,13 @@ void Interpreter::executeIndirectLoad()
 
 void Interpreter::executeStore(const IntermediateInstruction& instruction)
 {
-    TacValue value = popValue();
+    ICValue value = popValue();
     storeAtAddress(instruction.level, readAddressOperand(instruction), value);
 }
 
 void Interpreter::executeIndirectStore()
 {
-    TacValue value = popValue();
+    ICValue value = popValue();
     size_t address = toAddress(popValue());
     if (address >= memory.size())
     {
@@ -567,11 +567,11 @@ void Interpreter::executeIndirectStore()
 
 void Interpreter::executeArithmetic(const IntermediateInstruction& instruction)
 {
-    TacValue right = popValue();
-    TacValue left = popValue();
+    ICValue right = popValue();
+    ICValue left = popValue();
     bool realResult = isRealValue(left) || isRealValue(right);
 
-    if (instruction.opcode == TacOpcode::Div)
+    if (instruction.opcode == ICOpCode::Div)
     {
         double denominator = toReal(right);
         if (denominator == 0.0)
@@ -595,9 +595,9 @@ void Interpreter::executeArithmetic(const IntermediateInstruction& instruction)
         double leftNumber = toReal(left);
         double rightNumber = toReal(right);
 
-        if (instruction.opcode == TacOpcode::Add) pushValue(makeReal(leftNumber + rightNumber));
-        else if (instruction.opcode == TacOpcode::Sub) pushValue(makeReal(leftNumber - rightNumber));
-        else if (instruction.opcode == TacOpcode::Mul) pushValue(makeReal(leftNumber * rightNumber));
+        if (instruction.opcode == ICOpCode::Add) pushValue(makeReal(leftNumber + rightNumber));
+        else if (instruction.opcode == ICOpCode::Sub) pushValue(makeReal(leftNumber - rightNumber));
+        else if (instruction.opcode == ICOpCode::Mul) pushValue(makeReal(leftNumber * rightNumber));
         else throw runtime_error("unsupported arithmetic instruction");
     }
     else
@@ -605,42 +605,42 @@ void Interpreter::executeArithmetic(const IntermediateInstruction& instruction)
         long long leftNumber = toInteger(left);
         long long rightNumber = toInteger(right);
 
-        if (instruction.opcode == TacOpcode::Add) pushValue(makeInteger(leftNumber + rightNumber));
-        else if (instruction.opcode == TacOpcode::Sub) pushValue(makeInteger(leftNumber - rightNumber));
-        else if (instruction.opcode == TacOpcode::Mul) pushValue(makeInteger(leftNumber * rightNumber));
+        if (instruction.opcode == ICOpCode::Add) pushValue(makeInteger(leftNumber + rightNumber));
+        else if (instruction.opcode == ICOpCode::Sub) pushValue(makeInteger(leftNumber - rightNumber));
+        else if (instruction.opcode == ICOpCode::Mul) pushValue(makeInteger(leftNumber * rightNumber));
         else throw runtime_error("unsupported arithmetic instruction");
     }
 }
 
 void Interpreter::executeOperation(const IntermediateInstruction& instruction)
 {
-    TacOperation operation = readOperationOperand(instruction);
+    ICOperation operation = readOperationOperand(instruction);
 
-    if (operation == TacOperation::Wrt)
+    if (operation == ICOperation::Wrt)
     {
         cout << outputText(popValue());
         return;
     }
 
-    if (operation == TacOperation::Wrtln)
+    if (operation == ICOperation::Wrtln)
     {
         if (!evalStack.empty()) cout << outputText(popValue());
         cout << '\n';
         return;
     }
 
-    if (operation == TacOperation::Neg)
+    if (operation == ICOperation::Neg)
     {
-        TacValue value = popValue();
+        ICValue value = popValue();
         if (isRealValue(value)) pushValue(makeReal(-toReal(value)));
         else pushValue(makeInteger(-toInteger(value)));
         return;
     }
 
-    if (operation == TacOperation::Mod)
+    if (operation == ICOperation::Mod)
     {
-        TacValue right = popValue();
-        TacValue left = popValue();
+        ICValue right = popValue();
+        ICValue left = popValue();
         long long denominator = toInteger(right);
         if (denominator == 0)
         {
@@ -650,48 +650,48 @@ void Interpreter::executeOperation(const IntermediateInstruction& instruction)
         return;
     }
 
-    if (operation == TacOperation::Add ||
-        operation == TacOperation::Sub ||
-        operation == TacOperation::Mul ||
-        operation == TacOperation::Div)
+    if (operation == ICOperation::Add ||
+        operation == ICOperation::Sub ||
+        operation == ICOperation::Mul ||
+        operation == ICOperation::Div)
     {
         IntermediateInstruction arithmetic;
-        arithmetic.opcode = operation == TacOperation::Add ? TacOpcode::Add :
-                            operation == TacOperation::Sub ? TacOpcode::Sub :
-                            operation == TacOperation::Mul ? TacOpcode::Mul :
-                            TacOpcode::Div;
+        arithmetic.opcode = operation == ICOperation::Add ? ICOpCode::Add :
+                            operation == ICOperation::Sub ? ICOpCode::Sub :
+                            operation == ICOperation::Mul ? ICOpCode::Mul :
+                            ICOpCode::Div;
         executeArithmetic(arithmetic);
         return;
     }
 
-    TacValue right = popValue();
-    TacValue left = popValue();
+    ICValue right = popValue();
+    ICValue left = popValue();
     bool numericComparison = isNumericValue(left) && isNumericValue(right);
     bool result = false;
 
     switch (operation)
     {
-        case TacOperation::Eql:
+        case ICOperation::Eql:
             result = numericComparison ? fabs(toReal(left) - toReal(right)) < numeric_limits<double>::epsilon()
                                        : left.text == right.text;
             break;
-        case TacOperation::Neq:
+        case ICOperation::Neq:
             result = numericComparison ? fabs(toReal(left) - toReal(right)) >= numeric_limits<double>::epsilon()
                                        : left.text != right.text;
             break;
-        case TacOperation::Lss:
+        case ICOperation::Lss:
             result = numericComparison ? toReal(left) < toReal(right)
                                        : left.text < right.text;
             break;
-        case TacOperation::Geq:
+        case ICOperation::Geq:
             result = numericComparison ? toReal(left) >= toReal(right)
                                        : left.text >= right.text;
             break;
-        case TacOperation::Gtr:
+        case ICOperation::Gtr:
             result = numericComparison ? toReal(left) > toReal(right)
                                        : left.text > right.text;
             break;
-        case TacOperation::Leq:
+        case ICOperation::Leq:
             result = numericComparison ? toReal(left) <= toReal(right)
                                        : left.text <= right.text;
             break;
@@ -710,7 +710,7 @@ void Interpreter::executeJump(const IntermediateInstruction& instruction)
 
 void Interpreter::executeConditionalJump(const IntermediateInstruction& instruction)
 {
-    TacValue condition = popValue();
+    ICValue condition = popValue();
     if (!isTruthy(condition))
     {
         string label = readLabelOperand(instruction);

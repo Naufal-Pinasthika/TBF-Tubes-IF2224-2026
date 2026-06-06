@@ -22,10 +22,10 @@ struct StackFrame
 class Interpreter
 {
 private:
-    const TacProgram* program = nullptr;
-    vector<TacValue> memory;
+    const ICProgram* program = nullptr;
+    vector<ICValue> memory;
     vector<StackFrame> callStack;
-    vector<TacValue> evalStack;
+    vector<ICValue> evalStack;
     unordered_map<string, size_t> labelMap;
     size_t pc = 0;
     size_t bp = 0;
@@ -37,15 +37,15 @@ private:
     void pushFrame(int level, int frameSize, int returnAddress, int staticLink, int dynamicLink);
     void popFrame();
 
-    TacValue popValue();
-    void pushValue(const TacValue& value);
-    TacValue readOperand(const TacOperand& operand) const;
+    ICValue popValue();
+    void pushValue(const ICValue& value);
+    ICValue readOperand(const ICOperand& operand) const;
     int readAddressOperand(const IntermediateInstruction& instruction) const;
     string readLabelOperand(const IntermediateInstruction& instruction) const;
-    TacOperation readOperationOperand(const IntermediateInstruction& instruction) const;
-    void storeAtAddress(int level, int address, const TacValue& value);
-    TacValue loadAtAddress(int level, int address) const;
-    bool isTruthy(const TacValue& value) const;
+    ICOperation readOperationOperand(const IntermediateInstruction& instruction) const;
+    void storeAtAddress(int level, int address, const ICValue& value);
+    ICValue loadAtAddress(int level, int address) const;
+    bool isTruthy(const ICValue& value) const;
 
     void executeInt(const IntermediateInstruction& instruction);
     void executeLiteral(const IntermediateInstruction& instruction);
@@ -64,13 +64,13 @@ private:
 public:
     Interpreter() = default;
 
-    void load(const TacProgram& program);
+    void load(const ICProgram& program);
     void run();
     void reset();
 
-    const vector<TacValue>& getMemory() const;
+    const vector<ICValue>& getMemory() const;
     const vector<StackFrame>& getCallStack() const;
-    const vector<TacValue>& getEvalStack() const;
+    const vector<ICValue>& getEvalStack() const;
     size_t getProgramCounter() const;
     size_t getBasePointer() const;
     size_t getStackPointer() const;

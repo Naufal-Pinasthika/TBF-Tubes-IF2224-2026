@@ -8,7 +8,7 @@ string CodeGenerator::newLabel(const string& prefix) {
     return prefix + to_string(nextLabelId++);
 }
 
-const TacProgram& CodeGenerator::generate(ProgramNode* root, SymbolTable& symbols) {
+const ICProgram& CodeGenerator::generate(ProgramNode* root, SymbolTable& symbols) {
     reset();
     this->symbols = &symbols;
     buildAddressMap(root);
@@ -16,7 +16,7 @@ const TacProgram& CodeGenerator::generate(ProgramNode* root, SymbolTable& symbol
     return program;
 }
 
-const TacProgram& CodeGenerator::getProgram() const {
+const ICProgram& CodeGenerator::getProgram() const {
     return program;
 }
 
@@ -50,18 +50,18 @@ void CodeGenerator::buildAddressMap(ProgramNode* root) {
             }
         } else if (auto constDecl = dynamic_cast<ConstDeclNode*>(declaration)){
             if (constDecl->tabIndex != -1){
-                TacValue value;
+                ICValue value;
                 if (auto number = dynamic_cast<NumberNode*>(constDecl->value)){
-                    value.type = number->isReal ? TacValueType::Real : TacValueType::Integer;
+                    value.type = number->isReal ? ICValueType::Real : ICValueType::Integer;
                     value.text = number->value;
                 } else if (auto str = dynamic_cast<StringNode*>(constDecl->value)){
-                    value.type = TacValueType::String;
+                    value.type = ICValueType::String;
                     value.text = str->value;
                 } else if (auto chr = dynamic_cast<CharNode*>(constDecl->value)){
-                    value.type = TacValueType::Char;
+                    value.type = ICValueType::Char;
                     value.text = chr->value;
                 } else if (auto boolean = dynamic_cast<BoolNode*>(constDecl->value)){
-                    value.type = TacValueType::Boolean;
+                    value.type = ICValueType::Boolean;
                     value.text = boolean->value ? "1" : "0";
                 }
                 constantByTabIndex[constDecl->tabIndex] = value;
@@ -100,18 +100,18 @@ void CodeGenerator::collectDeclarations(const vector<DeclarationNode*>& declarat
                     }
                 } else if (auto constDecl = dynamic_cast<ConstDeclNode*>(localDeclaration)){
                     if (constDecl->tabIndex != -1){
-                        TacValue value;
+                        ICValue value;
                         if (auto number = dynamic_cast<NumberNode*>(constDecl->value)){
-                            value.type = number->isReal ? TacValueType::Real : TacValueType::Integer;
+                            value.type = number->isReal ? ICValueType::Real : ICValueType::Integer;
                             value.text = number->value;
                         } else if (auto str = dynamic_cast<StringNode*>(constDecl->value)){
-                            value.type = TacValueType::String;
+                            value.type = ICValueType::String;
                             value.text = str->value;
                         } else if (auto chr = dynamic_cast<CharNode*>(constDecl->value)){
-                            value.type = TacValueType::Char;
+                            value.type = ICValueType::Char;
                             value.text = chr->value;
                         } else if (auto boolean = dynamic_cast<BoolNode*>(constDecl->value)){
-                            value.type = TacValueType::Boolean;
+                            value.type = ICValueType::Boolean;
                             value.text = boolean->value ? "1" : "0";
                         }
                         constantByTabIndex[constDecl->tabIndex] = value;
@@ -265,9 +265,9 @@ void CodeGenerator::emitAddress(ExpressionNode* node) {
 
     if (auto var = dynamic_cast<VarNode*>(node)){
         IntermediateInstruction instruction;
-        instruction.opcode = TacOpcode::Lda;
+        instruction.opcode = ICOpCode::Lda;
         instruction.level = 0;
-        instruction.operand.kind = TacOperandKind::Address;
+        instruction.operand.kind = ICOperandKind::Address;
         instruction.operand.address = addressOf(var);
         program.add(instruction);
     } else if (auto access = dynamic_cast<ArrayAccessNode*>(node)){
@@ -281,33 +281,33 @@ void CodeGenerator::emitAddress(ExpressionNode* node) {
 
         if (entry != nullptr && entry->low != 0){
             IntermediateInstruction low;
-            low.opcode = TacOpcode::Lit;
-            low.operand.kind = TacOperandKind::Literal;
-            low.operand.literal.type = TacValueType::Integer;
+            low.opcode = ICOpCode::Lit;
+            low.operand.kind = ICOperandKind::Literal;
+            low.operand.literal.type = ICValueType::Integer;
             low.operand.literal.text = to_string(entry->low);
             program.add(low);
 
             IntermediateInstruction subtract;
-            subtract.opcode = TacOpcode::Sub;
+            subtract.opcode = ICOpCode::Sub;
             program.add(subtract);
         }
 
         int elementSize = entry != nullptr ? typeSize(static_cast<TypeClass>(entry->etype), entry->eref) : 1;
         if (elementSize != 1){
             IntermediateInstruction size;
-            size.opcode = TacOpcode::Lit;
-            size.operand.kind = TacOperandKind::Literal;
-            size.operand.literal.type = TacValueType::Integer;
+            size.opcode = ICOpCode::Lit;
+            size.operand.kind = ICOperandKind::Literal;
+            size.operand.literal.type = ICValueType::Integer;
             size.operand.literal.text = to_string(elementSize);
             program.add(size);
 
             IntermediateInstruction multiply;
-            multiply.opcode = TacOpcode::Mul;
+            multiply.opcode = ICOpCode::Mul;
             program.add(multiply);
         }
 
         IntermediateInstruction add;
-        add.opcode = TacOpcode::Add;
+        add.opcode = ICOpCode::Add;
         program.add(add);
     } else if (auto access = dynamic_cast<RecordAccessNode*>(node)){
         emitAddress(access->record);
@@ -315,14 +315,14 @@ void CodeGenerator::emitAddress(ExpressionNode* node) {
         int offset = access->record != nullptr ? recordFieldOffset(access->record->btabIndex, access->field) : 0;
         if (offset != 0){
             IntermediateInstruction literal;
-            literal.opcode = TacOpcode::Lit;
-            literal.operand.kind = TacOperandKind::Literal;
-            literal.operand.literal.type = TacValueType::Integer;
+            literal.opcode = ICOpCode::Lit;
+            literal.operand.kind = ICOperandKind::Literal;
+            literal.operand.literal.type = ICValueType::Integer;
             literal.operand.literal.text = to_string(offset);
             program.add(literal);
 
             IntermediateInstruction add;
-            add.opcode = TacOpcode::Add;
+            add.opcode = ICOpCode::Add;
             program.add(add);
         }
     }
@@ -333,73 +333,73 @@ void CodeGenerator::emitExpression(ExpressionNode* node) {
 
     if (auto number = dynamic_cast<NumberNode*>(node)) {
         IntermediateInstruction instruction;
-        instruction.opcode = TacOpcode::Lit;
-        instruction.operand.kind = TacOperandKind::Literal;
-        instruction.operand.literal.type = number->isReal ? TacValueType::Real : TacValueType::Integer;
+        instruction.opcode = ICOpCode::Lit;
+        instruction.operand.kind = ICOperandKind::Literal;
+        instruction.operand.literal.type = number->isReal ? ICValueType::Real : ICValueType::Integer;
         instruction.operand.literal.text = number->value;
         program.add(instruction);
     } else if (auto str = dynamic_cast<StringNode*>(node)){
         IntermediateInstruction instruction;
-        instruction.opcode = TacOpcode::Lit;
-        instruction.operand.kind = TacOperandKind::Literal;
-        instruction.operand.literal.type = TacValueType::String;
+        instruction.opcode = ICOpCode::Lit;
+        instruction.operand.kind = ICOperandKind::Literal;
+        instruction.operand.literal.type = ICValueType::String;
         instruction.operand.literal.text = str->value;
         program.add(instruction);
     } else if (auto chr = dynamic_cast<CharNode*>(node)){
         IntermediateInstruction instruction;
-        instruction.opcode = TacOpcode::Lit;
-        instruction.operand.kind = TacOperandKind::Literal;
-        instruction.operand.literal.type = TacValueType::Char;
+        instruction.opcode = ICOpCode::Lit;
+        instruction.operand.kind = ICOperandKind::Literal;
+        instruction.operand.literal.type = ICValueType::Char;
         instruction.operand.literal.text = chr->value;
         program.add(instruction);
     } else if (auto boolean = dynamic_cast<BoolNode*>(node)){
         IntermediateInstruction instruction;
-        instruction.opcode = TacOpcode::Lit;
-        instruction.operand.kind = TacOperandKind::Literal;
-        instruction.operand.literal.type = TacValueType::Boolean;
+        instruction.opcode = ICOpCode::Lit;
+        instruction.operand.kind = ICOperandKind::Literal;
+        instruction.operand.literal.type = ICValueType::Boolean;
         instruction.operand.literal.text = boolean->value ? "1" : "0";
         program.add(instruction);
     } else if (auto var = dynamic_cast<VarNode*>(node)){
         auto constant = constantByTabIndex.find(var->tabIndex);
         if (constant != constantByTabIndex.end()){
             IntermediateInstruction instruction;
-            instruction.opcode = TacOpcode::Lit;
-            instruction.operand.kind = TacOperandKind::Literal;
+            instruction.opcode = ICOpCode::Lit;
+            instruction.operand.kind = ICOperandKind::Literal;
             instruction.operand.literal = constant->second;
             program.add(instruction);
         } else if (symbols != nullptr){
             TabEntry* entry = symbols->getTab(var->tabIndex);
             if (entry != nullptr && entry->obj == ObjClass::Constant){
                 IntermediateInstruction instruction;
-                instruction.opcode = TacOpcode::Lit;
-                instruction.operand.kind = TacOperandKind::Literal;
+                instruction.opcode = ICOpCode::Lit;
+                instruction.operand.kind = ICOperandKind::Literal;
 
                 if (entry->type == TypeClass::Boolean){
-                    instruction.operand.literal.type = TacValueType::Boolean;
+                    instruction.operand.literal.type = ICValueType::Boolean;
                     instruction.operand.literal.text = entry->adr == 0 ? "0" : "1";
                     program.add(instruction);
                 } else if (entry->type == TypeClass::Integer){
-                    instruction.operand.literal.type = TacValueType::Integer;
+                    instruction.operand.literal.type = ICValueType::Integer;
                     instruction.operand.literal.text = to_string(entry->adr);
                     program.add(instruction);
                 } else if (entry->type == TypeClass::Char){
-                    instruction.operand.literal.type = TacValueType::Char;
+                    instruction.operand.literal.type = ICValueType::Char;
                     instruction.operand.literal.text = string(1, static_cast<char>(entry->adr));
                     program.add(instruction);
                 }
             } else {
                 IntermediateInstruction instruction;
-                instruction.opcode = TacOpcode::Lod;
+                instruction.opcode = ICOpCode::Lod;
                 instruction.level = 0;
-                instruction.operand.kind = TacOperandKind::Address;
+                instruction.operand.kind = ICOperandKind::Address;
                 instruction.operand.address = addressOf(var);
                 program.add(instruction);
             }
         } else {
             IntermediateInstruction instruction;
-            instruction.opcode = TacOpcode::Lod;
+            instruction.opcode = ICOpCode::Lod;
             instruction.level = 0;
-            instruction.operand.kind = TacOperandKind::Address;
+            instruction.operand.kind = ICOperandKind::Address;
             instruction.operand.address = addressOf(var);
             program.add(instruction);
         }
@@ -407,7 +407,7 @@ void CodeGenerator::emitExpression(ExpressionNode* node) {
         emitAddress(node);
 
         IntermediateInstruction instruction;
-        instruction.opcode = TacOpcode::Ldi;
+        instruction.opcode = ICOpCode::Ldi;
         program.add(instruction);
     } else if (auto binary = dynamic_cast<BinOpNode*>(node)){
         emitBinary(binary);
@@ -422,11 +422,11 @@ void CodeGenerator::emitLValue(ExpressionNode* node) {
     emitAddress(node);
 }
 
-void CodeGenerator::emitOperation(TacOperation operation) {
+void CodeGenerator::emitOperation(ICOperation operation) {
     IntermediateInstruction instruction;
-    instruction.opcode = TacOpcode::Opr;
+    instruction.opcode = ICOpCode::Opr;
     instruction.level = 0;
-    instruction.operand.kind = TacOperandKind::Operation;
+    instruction.operand.kind = ICOperandKind::Operation;
     instruction.operand.operationCode = operation;
     program.add(instruction);
 }
@@ -454,9 +454,9 @@ void CodeGenerator::emitParameterStores(const vector<VarDeclNode*>& parameters) 
 
     for (auto it = tabIndices.rbegin(); it != tabIndices.rend(); ++it){
         IntermediateInstruction instruction;
-        instruction.opcode = TacOpcode::Sto;
+        instruction.opcode = ICOpCode::Sto;
         instruction.level = 0;
-        instruction.operand.kind = TacOperandKind::Address;
+        instruction.operand.kind = ICOperandKind::Address;
         instruction.operand.address = addressOf(*it);
         program.add(instruction);
     }
@@ -468,15 +468,15 @@ void CodeGenerator::emitDeclaration(DeclarationNode* node) {
         currentBlockIndex = procDecl->btabIndex;
 
         IntermediateInstruction label;
-        label.opcode = TacOpcode::Label;
-        label.operand.kind = TacOperandKind::Label;
+        label.opcode = ICOpCode::Label;
+        label.operand.kind = ICOperandKind::Label;
         label.operand.label = "P_" + to_string(procDecl->tabIndex);
         program.add(label);
 
         IntermediateInstruction init;
-        init.opcode = TacOpcode::Int;
+        init.opcode = ICOpCode::Int;
         init.level = 0;
-        init.operand.kind = TacOperandKind::Address;
+        init.operand.kind = ICOperandKind::Address;
         init.operand.address = frameSizeOf(procDecl->btabIndex);
         program.add(init);
 
@@ -484,7 +484,7 @@ void CodeGenerator::emitDeclaration(DeclarationNode* node) {
         emitStatement(procDecl->body);
 
         IntermediateInstruction ret;
-        ret.opcode = TacOpcode::Ret;
+        ret.opcode = ICOpCode::Ret;
         program.add(ret);
 
         currentBlockIndex = previousBlock;
@@ -493,15 +493,15 @@ void CodeGenerator::emitDeclaration(DeclarationNode* node) {
         currentBlockIndex = funcDecl->btabIndex;
 
         IntermediateInstruction label;
-        label.opcode = TacOpcode::Label;
-        label.operand.kind = TacOperandKind::Label;
+        label.opcode = ICOpCode::Label;
+        label.operand.kind = ICOperandKind::Label;
         label.operand.label = "F_" + to_string(funcDecl->tabIndex);
         program.add(label);
 
         IntermediateInstruction init;
-        init.opcode = TacOpcode::Int;
+        init.opcode = ICOpCode::Int;
         init.level = 0;
-        init.operand.kind = TacOperandKind::Address;
+        init.operand.kind = ICOperandKind::Address;
         init.operand.address = frameSizeOf(funcDecl->btabIndex);
         program.add(init);
 
@@ -509,7 +509,7 @@ void CodeGenerator::emitDeclaration(DeclarationNode* node) {
         emitStatement(funcDecl->body);
 
         IntermediateInstruction ret;
-        ret.opcode = TacOpcode::Ret;
+        ret.opcode = ICOpCode::Ret;
         program.add(ret);
 
         currentBlockIndex = previousBlock;
@@ -529,9 +529,9 @@ void CodeGenerator::emitProgram(ProgramNode* node) {
     string mainLabel = "MAIN";
     if (hasSubprogram){
         IntermediateInstruction jumpMain;
-        jumpMain.opcode = TacOpcode::Jmp;
+        jumpMain.opcode = ICOpCode::Jmp;
         jumpMain.level = 0;
-        jumpMain.operand.kind = TacOperandKind::Label;
+        jumpMain.operand.kind = ICOperandKind::Label;
         jumpMain.operand.label = mainLabel;
         program.add(jumpMain);
     }
@@ -542,8 +542,8 @@ void CodeGenerator::emitProgram(ProgramNode* node) {
 
     if (hasSubprogram){
         IntermediateInstruction label;
-        label.opcode = TacOpcode::Label;
-        label.operand.kind = TacOperandKind::Label;
+        label.opcode = ICOpCode::Label;
+        label.operand.kind = ICOperandKind::Label;
         label.operand.label = mainLabel;
         program.add(label);
     }
@@ -551,16 +551,16 @@ void CodeGenerator::emitProgram(ProgramNode* node) {
     currentBlockIndex = node->body != nullptr ? node->body->btabIndex : 0;
 
     IntermediateInstruction init;
-    init.opcode = TacOpcode::Int;
+    init.opcode = ICOpCode::Int;
     init.level = 0;
-    init.operand.kind = TacOperandKind::Address;
+    init.operand.kind = ICOperandKind::Address;
     init.operand.address = frameSizeOf(node->body != nullptr ? node->body->btabIndex : 0);
     program.add(init);
 
     emitStatement(node->body);
 
     IntermediateInstruction ret;
-    ret.opcode = TacOpcode::Ret;
+    ret.opcode = ICOpCode::Ret;
     program.add(ret);
 }
 
@@ -575,9 +575,9 @@ void CodeGenerator::emitAssign(AssignNode* node) {
         emitExpression(node->value);
 
         IntermediateInstruction instruction;
-        instruction.opcode = TacOpcode::Sto;
+        instruction.opcode = ICOpCode::Sto;
         instruction.level = 0;
-        instruction.operand.kind = TacOperandKind::Address;
+        instruction.operand.kind = ICOperandKind::Address;
         instruction.operand.address = addressOf(var);
         program.add(instruction);
     } else {
@@ -585,7 +585,7 @@ void CodeGenerator::emitAssign(AssignNode* node) {
         emitExpression(node->value);
 
         IntermediateInstruction instruction;
-        instruction.opcode = TacOpcode::Sti;
+        instruction.opcode = ICOpCode::Sti;
         program.add(instruction);
     }
 }
@@ -597,9 +597,9 @@ void CodeGenerator::emitIf(IfNode* node) {
     emitExpression(node->condition);
 
     IntermediateInstruction jumpElse;
-    jumpElse.opcode = TacOpcode::Jpc;
+    jumpElse.opcode = ICOpCode::Jpc;
     jumpElse.level = 0;
-    jumpElse.operand.kind = TacOperandKind::Label;
+    jumpElse.operand.kind = ICOperandKind::Label;
     jumpElse.operand.label = node->elseBranch != nullptr ? elseLabel : endLabel;
     program.add(jumpElse);
 
@@ -607,15 +607,15 @@ void CodeGenerator::emitIf(IfNode* node) {
 
     if (node->elseBranch != nullptr){
         IntermediateInstruction jumpEnd;
-        jumpEnd.opcode = TacOpcode::Jmp;
+        jumpEnd.opcode = ICOpCode::Jmp;
         jumpEnd.level = 0;
-        jumpEnd.operand.kind = TacOperandKind::Label;
+        jumpEnd.operand.kind = ICOperandKind::Label;
         jumpEnd.operand.label = endLabel;
         program.add(jumpEnd);
 
         IntermediateInstruction elseInstruction;
-        elseInstruction.opcode = TacOpcode::Label;
-        elseInstruction.operand.kind = TacOperandKind::Label;
+        elseInstruction.opcode = ICOpCode::Label;
+        elseInstruction.operand.kind = ICOperandKind::Label;
         elseInstruction.operand.label = elseLabel;
         program.add(elseInstruction);
 
@@ -623,8 +623,8 @@ void CodeGenerator::emitIf(IfNode* node) {
     }
 
     IntermediateInstruction endInstruction;
-    endInstruction.opcode = TacOpcode::Label;
-    endInstruction.operand.kind = TacOperandKind::Label;
+    endInstruction.opcode = ICOpCode::Label;
+    endInstruction.operand.kind = ICOperandKind::Label;
     endInstruction.operand.label = endLabel;
     program.add(endInstruction);
 }
@@ -634,32 +634,32 @@ void CodeGenerator::emitWhile(WhileNode* node) {
     string endLabel = newLabel("L_END_");
 
     IntermediateInstruction startInstruction;
-    startInstruction.opcode = TacOpcode::Label;
-    startInstruction.operand.kind = TacOperandKind::Label;
+    startInstruction.opcode = ICOpCode::Label;
+    startInstruction.operand.kind = ICOperandKind::Label;
     startInstruction.operand.label = startLabel;
     program.add(startInstruction);
 
     emitExpression(node->condition);
 
     IntermediateInstruction jumpEnd;
-    jumpEnd.opcode = TacOpcode::Jpc;
+    jumpEnd.opcode = ICOpCode::Jpc;
     jumpEnd.level = 0;
-    jumpEnd.operand.kind = TacOperandKind::Label;
+    jumpEnd.operand.kind = ICOperandKind::Label;
     jumpEnd.operand.label = endLabel;
     program.add(jumpEnd);
 
     emitStatement(node->body);
 
     IntermediateInstruction jumpStart;
-    jumpStart.opcode = TacOpcode::Jmp;
+    jumpStart.opcode = ICOpCode::Jmp;
     jumpStart.level = 0;
-    jumpStart.operand.kind = TacOperandKind::Label;
+    jumpStart.operand.kind = ICOperandKind::Label;
     jumpStart.operand.label = startLabel;
     program.add(jumpStart);
 
     IntermediateInstruction endInstruction;
-    endInstruction.opcode = TacOpcode::Label;
-    endInstruction.operand.kind = TacOperandKind::Label;
+    endInstruction.opcode = ICOpCode::Label;
+    endInstruction.operand.kind = ICOperandKind::Label;
     endInstruction.operand.label = endLabel;
     program.add(endInstruction);
 }
@@ -672,72 +672,72 @@ void CodeGenerator::emitFor(ForNode* node) {
     emitExpression(node->start);
 
     IntermediateInstruction storeStart;
-    storeStart.opcode = TacOpcode::Sto;
+    storeStart.opcode = ICOpCode::Sto;
     storeStart.level = 0;
-    storeStart.operand.kind = TacOperandKind::Address;
+    storeStart.operand.kind = ICOperandKind::Address;
     storeStart.operand.address = loopAddress;
     program.add(storeStart);
 
     IntermediateInstruction startInstruction;
-    startInstruction.opcode = TacOpcode::Label;
-    startInstruction.operand.kind = TacOperandKind::Label;
+    startInstruction.opcode = ICOpCode::Label;
+    startInstruction.operand.kind = ICOperandKind::Label;
     startInstruction.operand.label = startLabel;
     program.add(startInstruction);
 
     IntermediateInstruction loadLoop;
-    loadLoop.opcode = TacOpcode::Lod;
+    loadLoop.opcode = ICOpCode::Lod;
     loadLoop.level = 0;
-    loadLoop.operand.kind = TacOperandKind::Address;
+    loadLoop.operand.kind = ICOperandKind::Address;
     loadLoop.operand.address = loopAddress;
     program.add(loadLoop);
 
     emitExpression(node->stop);
-    emitOperation(node->isDownto ? TacOperation::Geq : TacOperation::Leq);
+    emitOperation(node->isDownto ? ICOperation::Geq : ICOperation::Leq);
 
     IntermediateInstruction jumpEnd;
-    jumpEnd.opcode = TacOpcode::Jpc;
+    jumpEnd.opcode = ICOpCode::Jpc;
     jumpEnd.level = 0;
-    jumpEnd.operand.kind = TacOperandKind::Label;
+    jumpEnd.operand.kind = ICOperandKind::Label;
     jumpEnd.operand.label = endLabel;
     program.add(jumpEnd);
 
     emitStatement(node->body);
 
     IntermediateInstruction reloadLoop;
-    reloadLoop.opcode = TacOpcode::Lod;
+    reloadLoop.opcode = ICOpCode::Lod;
     reloadLoop.level = 0;
-    reloadLoop.operand.kind = TacOperandKind::Address;
+    reloadLoop.operand.kind = ICOperandKind::Address;
     reloadLoop.operand.address = loopAddress;
     program.add(reloadLoop);
 
     IntermediateInstruction one;
-    one.opcode = TacOpcode::Lit;
-    one.operand.kind = TacOperandKind::Literal;
-    one.operand.literal.type = TacValueType::Integer;
+    one.opcode = ICOpCode::Lit;
+    one.operand.kind = ICOperandKind::Literal;
+    one.operand.literal.type = ICValueType::Integer;
     one.operand.literal.text = "1";
     program.add(one);
 
     IntermediateInstruction step;
-    step.opcode = node->isDownto ? TacOpcode::Sub : TacOpcode::Add;
+    step.opcode = node->isDownto ? ICOpCode::Sub : ICOpCode::Add;
     program.add(step);
 
     IntermediateInstruction storeStep;
-    storeStep.opcode = TacOpcode::Sto;
+    storeStep.opcode = ICOpCode::Sto;
     storeStep.level = 0;
-    storeStep.operand.kind = TacOperandKind::Address;
+    storeStep.operand.kind = ICOperandKind::Address;
     storeStep.operand.address = loopAddress;
     program.add(storeStep);
 
     IntermediateInstruction jumpStart;
-    jumpStart.opcode = TacOpcode::Jmp;
+    jumpStart.opcode = ICOpCode::Jmp;
     jumpStart.level = 0;
-    jumpStart.operand.kind = TacOperandKind::Label;
+    jumpStart.operand.kind = ICOperandKind::Label;
     jumpStart.operand.label = startLabel;
     program.add(jumpStart);
 
     IntermediateInstruction endInstruction;
-    endInstruction.opcode = TacOpcode::Label;
-    endInstruction.operand.kind = TacOperandKind::Label;
+    endInstruction.opcode = ICOpCode::Label;
+    endInstruction.operand.kind = ICOperandKind::Label;
     endInstruction.operand.label = endLabel;
     program.add(endInstruction);
 }
@@ -746,8 +746,8 @@ void CodeGenerator::emitRepeat(RepeatNode* node) {
     string startLabel = newLabel("L_REPEAT_");
 
     IntermediateInstruction startInstruction;
-    startInstruction.opcode = TacOpcode::Label;
-    startInstruction.operand.kind = TacOperandKind::Label;
+    startInstruction.opcode = ICOpCode::Label;
+    startInstruction.operand.kind = ICOperandKind::Label;
     startInstruction.operand.label = startLabel;
     program.add(startInstruction);
 
@@ -758,9 +758,9 @@ void CodeGenerator::emitRepeat(RepeatNode* node) {
     emitExpression(node->condition);
 
     IntermediateInstruction jumpStart;
-    jumpStart.opcode = TacOpcode::Jpc;
+    jumpStart.opcode = ICOpCode::Jpc;
     jumpStart.level = 0;
-    jumpStart.operand.kind = TacOperandKind::Label;
+    jumpStart.operand.kind = ICOperandKind::Label;
     jumpStart.operand.label = startLabel;
     program.add(jumpStart);
 }
@@ -778,34 +778,34 @@ void CodeGenerator::emitCase(CaseNode* node) {
 
         emitExpression(node->expression);
         emitExpression(branch->labels.front());
-        emitOperation(TacOperation::Eql);
+        emitOperation(ICOperation::Eql);
 
         IntermediateInstruction jumpNext;
-        jumpNext.opcode = TacOpcode::Jpc;
+        jumpNext.opcode = ICOpCode::Jpc;
         jumpNext.level = 0;
-        jumpNext.operand.kind = TacOperandKind::Label;
+        jumpNext.operand.kind = ICOperandKind::Label;
         jumpNext.operand.label = nextLabel;
         program.add(jumpNext);
 
         emitStatement(branch->statement);
 
         IntermediateInstruction jumpEnd;
-        jumpEnd.opcode = TacOpcode::Jmp;
+        jumpEnd.opcode = ICOpCode::Jmp;
         jumpEnd.level = 0;
-        jumpEnd.operand.kind = TacOperandKind::Label;
+        jumpEnd.operand.kind = ICOperandKind::Label;
         jumpEnd.operand.label = endLabel;
         program.add(jumpEnd);
 
         IntermediateInstruction nextInstruction;
-        nextInstruction.opcode = TacOpcode::Label;
-        nextInstruction.operand.kind = TacOperandKind::Label;
+        nextInstruction.opcode = ICOpCode::Label;
+        nextInstruction.operand.kind = ICOperandKind::Label;
         nextInstruction.operand.label = nextLabel;
         program.add(nextInstruction);
     }
 
     IntermediateInstruction endInstruction;
-    endInstruction.opcode = TacOpcode::Label;
-    endInstruction.operand.kind = TacOperandKind::Label;
+    endInstruction.opcode = ICOpCode::Label;
+    endInstruction.operand.kind = ICOperandKind::Label;
     endInstruction.operand.label = endLabel;
     program.add(endInstruction);
 }
@@ -821,9 +821,9 @@ void CodeGenerator::emitCall(CallNode* node) {
     }
 
     IntermediateInstruction instruction;
-    instruction.opcode = TacOpcode::Cal;
+    instruction.opcode = ICOpCode::Cal;
     instruction.level = 0;
-    instruction.operand.kind = TacOperandKind::Label;
+    instruction.operand.kind = ICOperandKind::Label;
     instruction.operand.label = "P_" + to_string(node->tabIndex);
     program.add(instruction);
 }
@@ -833,11 +833,11 @@ void CodeGenerator::emitWriteCall(CallNode* node) {
         emitExpression(node->arguments[i]);
         bool lastArgument = i + 1 == node->arguments.size();
         bool newline = symbols != nullptr && symbols->toUpper(node->name) == "WRITELN" && lastArgument;
-        emitOperation(newline ? TacOperation::Wrtln : TacOperation::Wrt);
+        emitOperation(newline ? ICOperation::Wrtln : ICOperation::Wrt);
     }
 
     if (node->arguments.empty() && symbols != nullptr && symbols->toUpper(node->name) == "WRITELN"){
-        emitOperation(TacOperation::Wrtln);
+        emitOperation(ICOperation::Wrtln);
     }
 }
 
@@ -850,41 +850,41 @@ void CodeGenerator::emitBinary(BinOpNode* node) {
 
     if (op == "+") {
         IntermediateInstruction instruction;
-        instruction.opcode = TacOpcode::Add;
+        instruction.opcode = ICOpCode::Add;
         program.add(instruction);
     } else if (op == "-") {
         IntermediateInstruction instruction;
-        instruction.opcode = TacOpcode::Sub;
+        instruction.opcode = ICOpCode::Sub;
         program.add(instruction);
     } else if (op == "*") {
         IntermediateInstruction instruction;
-        instruction.opcode = TacOpcode::Mul;
+        instruction.opcode = ICOpCode::Mul;
         program.add(instruction);
     } else if (op == "/" || op == "DIV") {
         IntermediateInstruction instruction;
-        instruction.opcode = TacOpcode::Div;
+        instruction.opcode = ICOpCode::Div;
         program.add(instruction);
     } else if (op == "MOD") {
-        emitOperation(TacOperation::Mod);
+        emitOperation(ICOperation::Mod);
     } else if (op == "==" || op == "=") {
-        emitOperation(TacOperation::Eql);
+        emitOperation(ICOperation::Eql);
     } else if (op == "<>") {
-        emitOperation(TacOperation::Neq);
+        emitOperation(ICOperation::Neq);
     } else if (op == "<") {
-        emitOperation(TacOperation::Lss);
+        emitOperation(ICOperation::Lss);
     } else if (op == ">=") {
-        emitOperation(TacOperation::Geq);
+        emitOperation(ICOperation::Geq);
     } else if (op == ">") {
-        emitOperation(TacOperation::Gtr);
+        emitOperation(ICOperation::Gtr);
     } else if (op == "<=") {
-        emitOperation(TacOperation::Leq);
+        emitOperation(ICOperation::Leq);
     } else if (op == "AND") {
         IntermediateInstruction instruction;
-        instruction.opcode = TacOpcode::Mul;
+        instruction.opcode = ICOpCode::Mul;
         program.add(instruction);
     } else if (op == "OR") {
         IntermediateInstruction instruction;
-        instruction.opcode = TacOpcode::Add;
+        instruction.opcode = ICOpCode::Add;
         program.add(instruction);
     }
 }
@@ -896,15 +896,15 @@ void CodeGenerator::emitUnary(UnaryOpNode* node) {
     emitExpression(node->operand);
 
     if (op == "-") {
-        emitOperation(TacOperation::Neg);
+        emitOperation(ICOperation::Neg);
     } else if (op == "NOT") {
         IntermediateInstruction zero;
-        zero.opcode = TacOpcode::Lit;
-        zero.operand.kind = TacOperandKind::Literal;
-        zero.operand.literal.type = TacValueType::Integer;
+        zero.opcode = ICOpCode::Lit;
+        zero.operand.kind = ICOperandKind::Literal;
+        zero.operand.literal.type = ICValueType::Integer;
         zero.operand.literal.text = "0";
         program.add(zero);
-        emitOperation(TacOperation::Eql);
+        emitOperation(ICOperation::Eql);
     }
 }
 
@@ -914,9 +914,9 @@ void CodeGenerator::emitCallExpr(ProcedureFunctionCallNode* node) {
     }
 
     IntermediateInstruction instruction;
-    instruction.opcode = TacOpcode::Cal;
+    instruction.opcode = ICOpCode::Cal;
     instruction.level = 0;
-    instruction.operand.kind = TacOperandKind::Label;
+    instruction.operand.kind = ICOperandKind::Label;
     instruction.operand.label = "F_" + to_string(node->tabIndex);
     program.add(instruction);
 }
