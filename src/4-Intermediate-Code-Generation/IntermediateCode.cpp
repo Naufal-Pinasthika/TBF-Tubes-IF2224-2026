@@ -91,10 +91,6 @@ const vector<IntermediateInstruction>& ICProgram::getInstructions() const {
     return instructions;
 }
 
-vector<IntermediateInstruction>& ICProgram::getInstructions() {
-    return instructions;
-}
-
 void ICProgram::add(const IntermediateInstruction& instruction) {
     instructions.push_back(instruction);
 }

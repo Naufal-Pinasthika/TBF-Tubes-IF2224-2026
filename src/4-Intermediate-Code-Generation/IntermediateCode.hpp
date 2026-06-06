@@ -100,7 +100,6 @@ private:
 
 public:
     const vector<IntermediateInstruction>& getInstructions() const;
-    vector<IntermediateInstruction>& getInstructions();
     void add(const IntermediateInstruction& instruction);
     size_t size() const;
     bool empty() const;
