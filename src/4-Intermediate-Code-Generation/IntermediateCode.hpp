@@ -11,22 +11,22 @@ using namespace std;
 enum class ICOpCode
 {
     Lit, // push(v)
-    Lda, // push(a)
-    Lod, // push(mem[a])
+    Lda, // push(addr(a))
+    Lod, // push(mem[addr(a)])
     Ldi, // addr=pop; push(mem[addr])
-    Sto, // pop(val); mem[a] = val
+    Sto, // val=pop; mem[addr(a)] = val
     Sti, // val=pop; addr=pop; mem[addr] = val
     Add, // v2=pop; v1=pop; push(v1+v2)
-    Sub, // v2=pop; v1=pop; push(v1-v2) 
+    Sub, // v2=pop; v1=pop; push(v1-v2)
     Mul, // v2=pop; v1=pop; push(v1*v2)
     Div, // v2=pop; v1=pop; push(v1/v2)
     Opr, // execute ICOperation for non-core stack operations
     Jmp, // PC = l
     Jpc, // val=pop; if val==0 then PC=l
-    Cal, // Simpan konteks (PC, BP)
-    Ret, // Pulihkan konteks    
-    Int, // Initiate Memory size of m
-    Label // Kinda need it to define things
+    Cal, // save context (PC, BP)
+    Ret, // restore context
+    Int, // allocate memory frame of size m
+    Label // define a jump/call target
 };
 
 enum class ICOperation
