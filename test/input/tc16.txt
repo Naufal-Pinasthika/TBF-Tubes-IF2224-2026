@@ -1,5 +1,13 @@
-program IntegerUnderflowBonus;
+program ArrayHighOutOfBoundsBonus;
+
+var
+    nums: array[1..3] of Integer;
+    i: Integer;
 
 begin
-    writeln(0 - 2147483647 - 2)
+    nums[4] := 99;
+    i := -10;
+    i := nums[99];
+    writeln(i)
 end.
+ 

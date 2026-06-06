@@ -1,5 +1,5 @@
-program IntegerOverflowBonus;
+program LiteralOverflowBonus;
 
 begin
-    writeln(2147483647 + 1)
+    writeln(2147483648)
 end.
